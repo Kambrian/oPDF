@@ -88,7 +88,17 @@ printf("loading %s...\n",datafile);
     }
 //     printf("%g,%g,%g\n",P[2].r,P[2].K,P[2].L2);
     //select particles....
-    
+    for(i=0,j=0;i<nP;i++)
+    {
+      if(P[i].r>R_MIN&P[i].r<R_MAX)
+      {
+	if(i>j)	memmove(P+j,P+i,sizeof(Particle));
+	j++;
+      }
+    }
+    nP=j;
+    P=realloc(P,sizeof(Particle)*nP);
     //sort
    // qsort(P, nP, sizeof(Particle), cmpPartR); //sort according to r
+    printf("%d particles loaded\n",nP);
 } 

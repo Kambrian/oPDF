@@ -12,8 +12,6 @@
 #include "models.h"
 
 struct NFWParZ Halo;
-#define R_MIN 30
-#define R_MAX 100
 
 #define TOL_BIN 1e-2 //bin size relative error
 #define TOL_REL 1e-5 //relative tolerance for PERIOD integral
@@ -24,63 +22,67 @@ double halo_pot(double r)
   double x=r/Halo.Rs;
   return Halo.Pots*log(1+x)/x; //the halo boundary is irrelevant in this problem, since only the potential difference affects the orbit
 }
-static int is_forbidden(double r, void *params)
+static int is_forbidden(double r, int pid)
 {
-  double *p=params; //p[0]=E,p[1]=L^2
-  if(p[0]-p[1]/2./r/r-halo_pot(r)<0) 
+  if(P[pid].E-P[pid].L2/2./r/r-halo_pot(r)<0) 
     return 1;
 
   return 0;
 }
-void zoom_bin(double rref, double x[2], void *params)
-{
-  if(!is_forbidden(x[0],params)&!is_forbidden(x[1],params)) return; //no need to zoom
+
+void solve_radial_limits(int pid)
+{//estimate pericenter and apocenter (outer bounds, to serve as integration limits)
+  P[pid].rlim[0]=R_MIN;
+  P[pid].rlim[1]=R_MAX;
+  if(!is_forbidden(P[pid].rlim[0],pid)&!is_forbidden(P[pid].rlim[1],pid)) return; //no need to zoom
   
   double xmid;
-  xmid=(x[0]+x[1])/2;
-  if(is_forbidden(xmid, params)) //
+  xmid=(P[pid].rlim[0]+P[pid].rlim[1])/2;
+  while(is_forbidden(xmid, pid)) //shrink the bin till midpoint is allowed
   {
-    if(xmid<rref) 
-      x[0]=xmid;
+    if(xmid<P[pid].r) 
+      P[pid].rlim[0]=xmid;
     else
-      x[1]=xmid;
-    zoom_bin(rref, x, params);
+      P[pid].rlim[1]=xmid;
+    xmid=(P[pid].rlim[0]+P[pid].rlim[1])/2;
   }
-  else
-  {//now good mid
+
+  //now good mid
     double lbin[2], rbin[2], dx;
-    lbin[0]=x[0];lbin[1]=xmid;
-    rbin[0]=xmid;rbin[1]=x[1];
-    dx=(x[1]-x[0])/2;
+    lbin[0]=P[pid].rlim[0];lbin[1]=xmid;
+    rbin[0]=xmid;rbin[1]=P[pid].rlim[1];
+    dx=(P[pid].rlim[1]-P[pid].rlim[0])/2;
     while(1)
     {
       dx/=2.;
       
       xmid=(lbin[0]+lbin[1])/2.;
-      if(is_forbidden(xmid, params)) 
+      if(is_forbidden(xmid, pid)) 
 	lbin[0]=xmid;
       else
 	lbin[1]=xmid;
       
       xmid=(rbin[0]+rbin[1])/2.;
-      if(is_forbidden(xmid, params))
+      if(is_forbidden(xmid, pid))
 	rbin[1]=xmid;
       else
 	rbin[0]=xmid;
       
       if(dx/(rbin[1]-lbin[0])<TOL_BIN) break; 
     }
-    x[0]=lbin[0];
-    x[1]=rbin[1];
-  }
+    P[pid].rlim[0]=lbin[0];
+    P[pid].rlim[1]=rbin[1];
 }
 
-double vr_inv(double r, void *params)
-{ /*--- 1/vel_r ---*/
-  double *p=params; //p[0]=E,p[1]=L^2
-  double vr2=2*(p[0]-p[1]/2./r/r-halo_pot(r));
+double vr_inv_part(double r, int pid)
+{
+  double vr2=2*(P[pid].E-P[pid].L2/2./r/r-halo_pot(r));
   if(vr2<0) return 0.;
   return 1./sqrt(vr2);
+}
+static double vr_inv_rfunc(double r, void *params)
+{ /*--- 1/vel_r ---*/
+  return vr_inv_part(r, *(int *)params);
 }
 // static gsl_integration_workspace * GSL_workspace;
 // #pragma omp threadprivate(GSL_workspaceC)
@@ -98,57 +100,53 @@ void free_integration_space()
   {//gsl_integration_workspace_free (GSL_workspace);
     gsl_integration_cquad_workspace_free (GSL_workspaceC);}
 }
-double Period(double r, double K, double L2, double rmin, double rmax)
-{
- //integrate the period 
-  double p[2];
-  p[0]=K+halo_pot(r); //E=K+pot
-  p[1]=L2; //L^2
-//   printf("%g,%g,%g,%g\n",r,K,p[0],p[1]);
+void solve_radial_orbit(int pid)
+{//find peri(apo)-centers and integrate the period 
+  P[pid].E=P[pid].K+halo_pot(P[pid].r);
+  solve_radial_limits(pid);
+  
   gsl_function F;
-  F.function = &vr_inv;
-  F.params = p;
-  double xlim[2];
-  xlim[0]=rmin;xlim[1]=rmax;
-  zoom_bin(r,xlim,p);
-//   printf("bin:[%g,%g]\n", xlim[0], xlim[1]);
-//   double x;
-//   for(x=xlim[0];x<xlim[1];x+=(xlim[1]-xlim[0])/20)
-//     printf("r=%g,1/v=%g\n",x,vr_inv(x,p));
-  double result,error;
-//   gsl_integration_qags (&F, xlim[0],xlim[1], 0, TOL_REL, MAX_INTVAL, //3, 
-// 		       GSL_workspace, &result, &error);
+  F.function = &vr_inv_rfunc;
+  F.params = &pid;
+  
+  double error;
+  //   gsl_integration_qags (&F, xlim[0],xlim[1], 0, TOL_REL, MAX_INTVAL, //3, 
+  // 		       GSL_workspace, &result, &error);
   size_t neval;
-  gsl_integration_cquad (&F, xlim[0],xlim[1], 0, TOL_REL, //3, 
-		       GSL_workspaceC, &result, &error, &neval);
+  gsl_integration_cquad (&F, P[pid].rlim[0],P[pid].rlim[1], 0, TOL_REL, //3, 
+			 GSL_workspaceC, &(P[pid].T), &error, &neval);
   //   result=smpintD(&F,xlim[0],xlim[1],TOL_REL); //too slow
-  if(result<=0) printf("%g,%g(%g),%g: %g (vt/v=%g)\n", r, K, p[0], L2, result, sqrt(L2/r/r/2./K));
-  return result; 
+  if(P[pid].T<=0) printf("Part %d: r=%g,K=%g, E=%g, L2=%g; T=%g (vt/v=%g)\n",pid, P[pid].r, P[pid].K, P[pid].E, P[pid].L2, P[pid].T, sqrt(P[pid].L2/P[pid].r/P[pid].r/2./P[pid].K));
 }
 
 double likelihood(double pars[])
 {
-  int i;
-  double lnL=0.;
+  int i,j;
+  double lnL=0.,p;
   double z=0., M=pars[0], c=pars[1];
   decode_NFWprof(z,M,c,VIR_C200,&Halo);  
   
-  #pragma omp parallel for reduction(+:lnL)
-  for(i=0;i<nP;i++)
+  #pragma omp parallel 
   {
-    if(P[i].r<R_MIN||P[i].r>R_MAX) continue;
-    double T=Period(P[i].r,P[i].K,P[i].L2, R_MIN,R_MAX);
-    if(T<=0) 
+    #pragma omp for reduction(+:lnL)
+    for(i=0;i<nP;i++)
     {
-      printf("%g,%g,%g\n", P[i].r, P[i].K+halo_pot(P[i].r), P[i].L2);
-      printf("%d:T=%g,[%g,%g,%g],[%g,%g,%g]\n",i,T,P[i].x[0],P[i].x[1],P[i].x[2],P[i].v[0],P[i].v[1],P[i].v[2]); 
-      printf("rs=%g, pots=%g\n",Halo.Rs,Halo.Pots);
-      exit(1);
-    };
-    lnL+=-log(T);
-//     lnL+=-log(Period(P[i].r,P[i].K,P[i].L2)); //scale the period with L/K?
+      if(P[i].r<R_MIN||P[i].r>R_MAX) continue;
+      solve_radial_orbit(i);
+    }
+    #pragma omp for private(i,p,j) reduction(+:lnL)
+    for(i=0;i<nP;i++)
+    {
+      for(p=0,j=0;j<nP;j++)
+      {
+	if(P[i].r<P[j].rlim[0]||P[i].r>P[j].rlim[1]) continue;
+	p+=vr_inv_part(P[i].r,j)/P[j].T;//contribution from j to i;
+      }
+      if(p<=0)
+	printf("id=%d, p=%g\n",i, p);
+      lnL+=log(p);
+    }
   }
-  
   return lnL;
 }
 
@@ -166,9 +164,7 @@ int main(int argc, char **argv)
   
   load_data(datafile);
   alloc_integration_space();
-//   decode_NFWprof(0,MPAR,CPAR,VIR_C200,&Halo);
-//   int i=618;
-//   printf("T=%g\n",Period(P[i].r,P[i].K,P[i].L2,63,63.3));
+
  double lnL=likelihood(pars);
   printf("M=%g,c=%g,lnL=%g\n",MPAR,CPAR,lnL);
 

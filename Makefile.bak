@@ -1,7 +1,7 @@
 #-----------setup server env ------------------
-#Platform=Medivh
+Platform=Medivh
 #Platform=COSMA
-Platform=Bright
+#Platform=Bright
 ifeq ($(shell uname -n), Medivh)
 	Platform=Medivh
 endif
@@ -16,7 +16,7 @@ ifeq ($(Platform), COSMA)
 	CC = icc
 	#CC=h5cc
 	MPICC=mpicc 	
-	ROOTDIR='"/cosma/home/jvbq85/data/Dynamical"'
+	ROOTDIR='"/cosma/home/jvbq85/data/DynDistr"'
 # 	LAPACKLIB=-mkl #no longer needed.
 # 	LAPACKINC=-I$(MKLINCLUDE)
 endif
@@ -39,7 +39,7 @@ ifeq ($(Platform), Medivh)
 	MPICC=icc -lmpi
 # 	LAPACKLIB=-mkl
 # 	LAPACKINC=-I$(MKLINCLUDE)
-	ROOTDIR='"/work/Projects/DynamicalDistr/data"' 	
+	ROOTDIR='"/work/Projects/DynDistr"' 	
 endif
 #--------other flags----------------------------
 DEBUG=on
@@ -64,7 +64,7 @@ CFLAGS+= -DHDF_V16
 endif
 
 ifeq ($(DEBUG),on)
-CFLAGS+= -g
+CFLAGS+= -g -Wall
 LDFLAGS+= -g
 endif
 
@@ -133,4 +133,12 @@ clean:
 	rm -f $(OBJS) $(OBJS_COMM) $(OBJS_MAIN)
 	
 distclean: clean
-	rm -f $(EXEC) libdyn.so *~ *.pyc
+	rm -f $(EXEC) libdyn.so *~ *.pyc# DO NOT DELETE
+#-----end--- auto dependencies below---------	
+# DO NOT DELETE
+
+io.o: mymath.h hdf_util.h io.h
+hdf_util.o: hdf_util.h mymath.h
+cosmology.o: mymath.h cosmology.h
+mymath.o: mymath.h
+models.o: mymath.h cosmology.h io.h models.h
