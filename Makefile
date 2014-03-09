@@ -91,8 +91,8 @@ all: $(EXEC)
 #Additional Dependencies
 
 #Additional Flags
-models: CFLAGS+=$(OMPLIB)	
-		LDFLAGS+=$(OMPLIB)
+models lib: CFLAGS+=$(OMPLIB)	
+	LDFLAGS+=$(OMPLIB)
 #mpi flags
 #gama_WL_rand: CC:=$(MPICC)
 
@@ -133,7 +133,7 @@ clean:
 	rm -f $(OBJS) $(OBJS_COMM) $(OBJS_MAIN)
 	
 distclean: clean
-	rm -f $(EXEC) libdyn.so *~ *.pyc# DO NOT DELETE
+	rm -f $(EXEC) libdyn.so *~ *.pyc
 #-----end--- auto dependencies below---------	
 # DO NOT DELETE
 

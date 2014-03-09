@@ -15,7 +15,7 @@ struct NFWParZ Halo;
 
 #define TOL_BIN 1e-2 //bin size relative error
 #define TOL_REL 1e-5 //relative tolerance for PERIOD integral
-#define MAX_INTVAL 5000
+#define MAX_INTVAL 1000
 
 double halo_pot(double r)
 {
@@ -116,23 +116,28 @@ void solve_radial_orbit(int pid)
   gsl_integration_cquad (&F, P[pid].rlim[0],P[pid].rlim[1], 0, TOL_REL, //3, 
 			 GSL_workspaceC, &(P[pid].T), &error, &neval);
   //   result=smpintD(&F,xlim[0],xlim[1],TOL_REL); //too slow
-  if(P[pid].T<=0) printf("Part %d: r=%g,K=%g, E=%g, L2=%g; T=%g (vt/v=%g)\n",pid, P[pid].r, P[pid].K, P[pid].E, P[pid].L2, P[pid].T, sqrt(P[pid].L2/P[pid].r/P[pid].r/2./P[pid].K));
+  if(P[pid].T<=0) printf("Part %d (M=%g,c=%g): r=%g,K=%g, E=%g, L2=%g; T=%g (vt/v=%g)\n",pid, Halo.M, Halo.c, P[pid].r, P[pid].K, P[pid].E, P[pid].L2, P[pid].T, sqrt(P[pid].L2/P[pid].r/P[pid].r/2./P[pid].K));
 }
 
 double likelihood(double pars[])
 {
+#define Rhos0 2.187762e-3
+#define Rs0 15.2
+#define M0 200.
+#define C0 15.
+#define Z0 0.
   int i,j;
   double lnL=0.,p;
-  double z=0., M=pars[0], c=pars[1];
-  decode_NFWprof(z,M,c,VIR_C200,&Halo);  
+//   decode_NFWprof(Z0,pow(10,pars[0])*M0,pow(10.,pars[1])*C0,VIR_C200,&Halo);  
+  decode_NFWprof2(Z0,pow(10.,pars[0])*Rhos0,pow(10.,pars[1])*Rs0,VIR_C200,&Halo);
   
   #pragma omp parallel 
   {
     #pragma omp for reduction(+:lnL)
     for(i=0;i<nP;i++)
     {
-      if(P[i].r<R_MIN||P[i].r>R_MAX) continue;
       solve_radial_orbit(i);
+//       printf("T=%g\n",P[i].T);
     }
     #pragma omp for private(i,p,j) reduction(+:lnL)
     for(i=0;i<nP;i++)
@@ -141,34 +146,48 @@ double likelihood(double pars[])
       {
 	if(P[i].r<P[j].rlim[0]||P[i].r>P[j].rlim[1]) continue;
 	p+=vr_inv_part(P[i].r,j)/P[j].T;//contribution from j to i;
+// 	printf("%g,%g;", p, P[j].T);
       }
       if(p<=0)
 	printf("id=%d, p=%g\n",i, p);
       lnL+=log(p);
+//       lnL+=log(P[i].T); //this seems to work, although it should be -log(T)
     }
   }
+//   printf("T1=%g\n",P[1].T);
+//   printf("M=%g,c=%g,lnL=%g\n",M,c,lnL);
   return lnL;
 }
 
-#define MPAR pars[0]
-#define CPAR pars[1]
 int main(int argc, char **argv)
 {
-  char datafile[1024]=ROOTDIR"/data/mockhalo.hdf5";
-  double pars[NUM_PAR_MAX]={2e2,15};
+  double pars[NUM_PAR_MAX]={0.,0.};
   if(argc==3)
   {
-    MPAR=atof(argv[1]);
-    CPAR=atof(argv[2]);
+    pars[0]=atof(argv[1]);
+    pars[1]=atof(argv[2]);
   }
   
-  load_data(datafile);
-  alloc_integration_space();
+  init();
 
- double lnL=likelihood(pars);
-  printf("M=%g,c=%g,lnL=%g\n",MPAR,CPAR,lnL);
+//  double x;
+//  for(x=-1;x<1;x+=0.1)
+//  {
+//    pars[0]=x;
+//    printf("%g,%g\n",pow(10.,x), likelihood(pars));
+//  }
+  double lnL=likelihood(pars);
+  printf("Rhos=%g,Rs=%g,lnL=%g\n",pow(10.,pars[0]),pow(10.,pars[1]),lnL);
 
   free_integration_space();
   
   return 0;
+}
+
+void init()
+{
+  char datafile[1024]=ROOTDIR"/data/mockhalo.hdf5";
+  
+  load_data(datafile);
+  alloc_integration_space();
 }

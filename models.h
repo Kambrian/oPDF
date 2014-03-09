@@ -11,3 +11,5 @@ extern void solve_radial_limits(int pid);
 extern double vr_inv_part(double r, int pid);
 extern void solve_radial_orbit(int pid);
 extern double likelihood(double pars[]);
+
+extern void init();

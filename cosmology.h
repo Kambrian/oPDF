@@ -57,6 +57,7 @@ extern double AD_dist_flat(double z1,double z2);
 extern double sigma_crit(double zl,double zs);
 extern double NFW_concentration(double M, double z, int virtype);
 extern void decode_NFWprof(double z, double M, double c, int virtype, struct NFWParZ *halo);
+extern void decode_NFWprof2(double z, double Rhos, double Rs, int virtype, struct NFWParZ *halo);
 extern double NFW_DeltSig(double r,struct NFWParZ *halo);
 extern double ISO_DeltSig(double r, struct ISOParZ *halo);
 extern double halo_DeltSig(double r, struct HaloParZ *halo);

@@ -157,14 +157,38 @@ halo->virtype=virtype;
 evolve_cosmology(halo->z,&cosm);
 // scaleF=1.0/(1+halo->z);
 rhoc=(3.0*cosm.Hz*cosm.Hz)/(8.0*M_PI*G);
-printf("rhoc=%g\n",rhoc);
+// printf("rhoc=%g\n",rhoc);
 halo->Rhos=cosm.virialF[halo->virtype]/3.0*halo->c*halo->c*halo->c/(log(1+halo->c)-halo->c/(1+halo->c))*rhoc;//physical
 //halo->Rhos*=scaleF*scaleF*scaleF;//convert to comoving
 halo->Rv=cbrt(fabs(halo->M)/(4.0*M_PI/3.0*cosm.virialF[halo->virtype]*rhoc));//physical, generalized to negative mass
 //halo->Rv/=scaleF;//convert to comoving
 halo->Rs=halo->Rv/halo->c;	//physical
 halo->Pots=-4*M_PI*G*halo->Rhos*halo->Rs*halo->Rs;
-printf("Rhos=%g,Rs=%g,Rv=%g,Pots=%g\n", halo->Rhos, halo->Rs, halo->Rv, halo->Pots);
+// printf("Rhos=%g,Rs=%g,Rv=%g,Pots=%g\n", halo->Rhos, halo->Rs, halo->Rv, halo->Pots);
+}
+
+void decode_NFWprof2(double z, double Rhos, double Rs, int virtype, struct NFWParZ *halo)
+{//translate halo (M,c) to other profile parameters
+ //M: 10^10Msun/h
+// (z,virtype) also need to be present upon input.
+double scaleF,rhoc;
+struct CosmParZ cosm;
+
+halo->z=z;
+halo->Rhos=Rhos;
+halo->Rs=Rs;
+halo->virtype=virtype;
+
+evolve_cosmology(halo->z,&cosm);
+// scaleF=1.0/(1+halo->z);
+rhoc=(3.0*cosm.Hz*cosm.Hz)/(8.0*M_PI*G);
+// printf("rhoc=%g\n",rhoc);
+halo->Pots=-4.0*M_PI*G*halo->Rhos*halo->Rs*halo->Rs;
+//to be done:xxxxxxxxxxxxxxxx
+halo->M=0.;
+halo->c=0.;
+halo->Rv=0.;
+// printf("Rhos=%g,Rs=%g,Rv=%g,Pots=%g\n", halo->Rhos, halo->Rs, halo->Rv, halo->Pots);
 }
 
 double NFW_DeltSig(double r,struct NFWParZ *halo)

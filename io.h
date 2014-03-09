@@ -1,5 +1,5 @@
-#define R_MIN 40
-#define R_MAX 50
+#define R_MIN 0.
+#define R_MAX 1000
 
 typedef struct
   {
