@@ -13,17 +13,13 @@
 
 struct NFWParZ Halo;
 
-#define TOL_BIN 1e-2 //bin size relative error
-#define TOL_REL 1e-5 //relative tolerance for PERIOD integral
-#define MAX_INTVAL 1000
-
 double halo_pot(double r)
 {
   double x=r/Halo.Rs;
   return Halo.Pots*log(1+x)/x; //the halo boundary is irrelevant in this problem, since only the potential difference affects the orbit
 }
 static int is_forbidden(double r, int pid)
-{
+{//according to current potential and E,L,r
   if(P[pid].E-P[pid].L2/2./r/r-halo_pot(r)<0) 
     return 1;
 
@@ -31,9 +27,16 @@ static int is_forbidden(double r, int pid)
 }
 
 void solve_radial_limits(int pid)
-{//estimate pericenter and apocenter (outer bounds, to serve as integration limits)
+{//estimate pericenter and apocenter (outer bounds, to serve as integration limits), 
+  //according to current potential and E,L,r
   P[pid].rlim[0]=R_MIN;
   P[pid].rlim[1]=R_MAX;
+  if(is_forbidden(P[pid].r,pid)) //forbidden due to large difference between current pot and initial pot
+  {
+    P[pid].rlim[0]=P[pid].r;
+    P[pid].rlim[1]=P[pid].r;
+    return;
+  }
   if(!is_forbidden(P[pid].rlim[0],pid)&!is_forbidden(P[pid].rlim[1],pid)) return; //no need to zoom
   
   double xmid;
@@ -68,7 +71,7 @@ void solve_radial_limits(int pid)
       else
 	rbin[0]=xmid;
       
-      if(dx/(rbin[1]-lbin[0])<TOL_BIN) break; 
+      if(dx/(rbin[1]-lbin[0])<MODEL_TOL_BIN) break; 
     }
     P[pid].rlim[0]=lbin[0];
     P[pid].rlim[1]=rbin[1];
@@ -91,8 +94,8 @@ static gsl_integration_cquad_workspace * GSL_workspaceC;
 void alloc_integration_space()
 {//have to allocate two workspaces when evaluating double integral, to avoid entangling inner and outer workspaces.
 	#pragma omp parallel
-  {//GSL_workspace=gsl_integration_workspace_alloc(MAX_INTVAL);
-	GSL_workspaceC=gsl_integration_cquad_workspace_alloc(MAX_INTVAL);}
+  {//GSL_workspace=gsl_integration_workspace_alloc(MODEL_MAX_INTVAL);
+	GSL_workspaceC=gsl_integration_cquad_workspace_alloc(MODEL_MAX_INTVAL);}
 }
 void free_integration_space()
 {
@@ -102,30 +105,29 @@ void free_integration_space()
 }
 void solve_radial_orbit(int pid)
 {//find peri(apo)-centers and integrate the period 
-  P[pid].E=P[pid].K+halo_pot(P[pid].r);
-  solve_radial_limits(pid);
+  solve_radial_limits(pid); //according to current potential and E,L,r; E must be initialized with a initial potential
+  if(is_forbidden(P[pid].r,pid))
+  {
+    P[pid].T=1.;  //arbitrary, just to avoid 1/v/T=NaN, since 1/v=0.
+    return;
+  }
   
   gsl_function F;
   F.function = &vr_inv_rfunc;
   F.params = &pid;
   
   double error;
-  //   gsl_integration_qags (&F, xlim[0],xlim[1], 0, TOL_REL, MAX_INTVAL, //3, 
+  //   gsl_integration_qags (&F, xlim[0],xlim[1], 0, MODEL_TOL_REL, MODEL_MAX_INTVAL, //3, 
   // 		       GSL_workspace, &result, &error);
   size_t neval;
-  gsl_integration_cquad (&F, P[pid].rlim[0],P[pid].rlim[1], 0, TOL_REL, //3, 
+  gsl_integration_cquad (&F, P[pid].rlim[0],P[pid].rlim[1], 0, MODEL_TOL_REL, //3, 
 			 GSL_workspaceC, &(P[pid].T), &error, &neval);
-  //   result=smpintD(&F,xlim[0],xlim[1],TOL_REL); //too slow
-  if(P[pid].T<=0) printf("Part %d (M=%g,c=%g): r=%g,K=%g, E=%g, L2=%g; T=%g (vt/v=%g)\n",pid, Halo.M, Halo.c, P[pid].r, P[pid].K, P[pid].E, P[pid].L2, P[pid].T, sqrt(P[pid].L2/P[pid].r/P[pid].r/2./P[pid].K));
+  //   result=smpintD(&F,xlim[0],xlim[1],MODEL_TOL_REL); //too slow
+//   if(P[pid].T<=0) printf("Part %d (M=%g,c=%g): r=%g,K=%g, E=%g, L2=%g; T=%g (vt/v=%g)\n",pid, Halo.M, Halo.c, P[pid].r, P[pid].K, P[pid].E, P[pid].L2, P[pid].T, sqrt(P[pid].L2/P[pid].r/P[pid].r/2./P[pid].K));
 }
 
 double likelihood(double pars[])
 {
-#define Rhos0 2.187762e-3
-#define Rs0 15.2
-#define M0 200.
-#define C0 15.
-#define Z0 0.
   int i,j;
   double lnL=0.,p;
 //   decode_NFWprof(Z0,pow(10,pars[0])*M0,pow(10.,pars[1])*C0,VIR_C200,&Halo);  
@@ -133,7 +135,7 @@ double likelihood(double pars[])
   
   #pragma omp parallel 
   {
-    #pragma omp for reduction(+:lnL)
+    #pragma omp for
     for(i=0;i<nP;i++)
     {
       solve_radial_orbit(i);
@@ -142,16 +144,21 @@ double likelihood(double pars[])
     #pragma omp for private(i,p,j) reduction(+:lnL)
     for(i=0;i<nP;i++)
     {
+#if ESTIMATOR==MIXED_RADIAL_ESTIMATOR
       for(p=0,j=0;j<nP;j++)
       {
 	if(P[i].r<P[j].rlim[0]||P[i].r>P[j].rlim[1]) continue;
 	p+=vr_inv_part(P[i].r,j)/P[j].T;//contribution from j to i;
 // 	printf("%g,%g;", p, P[j].T);
       }
-      if(p<=0)
-	printf("id=%d, p=%g\n",i, p);
+//       if(p<=0)
+// 	printf("id=%d, p=%g\n",i, p);
       lnL+=log(p);
-//       lnL+=log(P[i].T); //this seems to work, although it should be -log(T)
+#elif ESTIMATOR==ITERATIVE_ESTIMATOR
+      lnL+=log(vr_inv_part(P[i].r,i)/P[i].T); 
+#elif ESTIMATOR==ENTROPY_ESTIMATOR
+      lnL-=log(P[i].T);//maximum entropy estimator
+#endif
     }
   }
 //   printf("T1=%g\n",P[1].T);
@@ -169,7 +176,7 @@ int main(int argc, char **argv)
   }
   
   init();
-
+  freeze_energy(pars);
 //  double x;
 //  for(x=-1;x<1;x+=0.1)
 //  {
@@ -190,4 +197,12 @@ void init()
   
   load_data(datafile);
   alloc_integration_space();
+}
+void freeze_energy(double pars[])
+{//fix the energy parameter according to initial potential
+  int i;
+  decode_NFWprof2(Z0,pow(10.,pars[0])*Rhos0,pow(10.,pars[1])*Rs0,VIR_C200,&Halo);
+  #pragma omp parallel for
+  for(i=0;i<nP;i++)
+      P[i].E=P[i].K+halo_pot(P[i].r);
 }

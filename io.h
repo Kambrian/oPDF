@@ -1,6 +1,12 @@
 #define R_MIN 0.
 #define R_MAX 1000
 
+#define Rhos0 2.187762e-3
+#define Rs0 15.2
+#define M0 200.
+#define C0 15.
+#define Z0 0.
+
 typedef struct
   {
     int flag;

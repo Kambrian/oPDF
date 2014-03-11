@@ -7,11 +7,14 @@ MaxNPar=10
 PARTYPE=c_double*MaxNPar
 prototype=CFUNCTYPE(c_double, PARTYPE)
 likefunc=prototype(("likelihood",lib))#,paramflags)
+prototype=CFUNCTYPE(None, PARTYPE)
+freezefunc=prototype(("freeze_energy",lib))
 init=lib.init
 #GAMA_init.argtypes=[c_char_p]
 
 neglike=lambda m,c: -likefunc(PARTYPE(m,c))
 like=lambda m,c: likefunc(PARTYPE(m,c))
+freeze_energy=lambda m,c: freezefunc(PARTYPE(m,c))
 
 def gen_par(p):
   "convert parameter array p into PARTYPE() array"
