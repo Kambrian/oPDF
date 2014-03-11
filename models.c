@@ -206,3 +206,8 @@ void freeze_energy(double pars[])
   for(i=0;i<nP;i++)
       P[i].E=P[i].K+halo_pot(P[i].r);
 }
+double freeze_and_like(double pars[])
+{
+  freeze_energy(pars);
+  return likelihood(pars);
+}

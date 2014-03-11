@@ -24,3 +24,4 @@ extern double likelihood(double pars[]);
 
 extern void init();
 extern void freeze_energy(double pars[]);
+extern double freeze_and_like(double pars[]);
