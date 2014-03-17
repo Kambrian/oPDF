@@ -1,25 +1,22 @@
 import sys,os
-from gama_io import *
+from dynio import *
 os.environ['OMP_NUM_THREADS']='32'
 
-paramfile=sys.argv[1]
-p=load_params(paramfile)
-srcfile='shearmap_ZEBRA.mat'
+init()
 
-GAMA_init(srcfile)
-
-loglike=gen_func2(p['modelid'],p['npar']) #logProb
+loglike=lambda par: likefunc2(PARTYPE(par[0],par[1]))
 
 import emcee
 from numpy import *
 
-nwalkers=10
-nsteps=1000
-nburn=100
-ndim=p['npar']
-x00=array(p['par'])
+nwalkers=4
+nsteps=500
+nburn=300
+ndim=2
+x00=array([0.,0.])
+labels=[r"$\log (\rho_s/\rho_{s0})$",r"$\log (r_s/r_{s0})$"]
 
-x0=kron(ones([nwalkers,1]),x00)#repmat to nwalkders rows
+x0=kron(ones([nwalkers,1]),x00)#repmat to nwalkers rows
 x0+=random.rand(ndim*nwalkers).reshape(nwalkers,ndim)-0.5 #random offset, [-0.5,0.5]
 
 sampler=emcee.EnsembleSampler(nwalkers,ndim,loglike)
@@ -30,11 +27,14 @@ sampler.run_mcmc(x0,nsteps)
 #sampler.run_mcmc(pos,nsteps)
 
 from matplotlib.pyplot import *
+ion()
 figure()
 for i in range(ndim):
   subplot(ndim,1,i)
   for j in range(nwalkers):
     plot(range(nsteps),sampler.chain[j,:,i],'.')
+  ylabel(labels[i])
+xlabel('Step')  
 
 sample=sampler.chain[:,nburn:,:]
 flatchain=sample.reshape([-1,ndim])
@@ -44,9 +44,11 @@ for i in range(ndim):
     hist(flatchain[:,i], 50, color="k", histtype="step")
     title("Dimension {0:d}".format(i))
     #plt.xlim(-1000,1000)
+    xlabel(labels[i])
+ylabel('Counts')    
 
 show()    
-#import triangle
-fig=triangle.corner(flatchain,labels=["$\log M_p$",r"$\alpha$"],truths=median(flatchain,axis=0),quantiles=[0.5-0.683/2,0.5+0.683/2])
+import triangle
+fig=triangle.corner(flatchain,labels=labels,truths=median(flatchain,axis=0),quantiles=[0.5-0.683/2,0.5+0.683/2])
 #fig.savefig("triangle.png")
 

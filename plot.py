@@ -9,19 +9,18 @@ freeze_energy(m,0.)
 from matplotlib.pyplot import *
 from numpy import *
 
-"""
-x=m+linspace(-0.5,1,100)
-y=array([like(a,0.) for a in x])
+x=m+linspace(-2,2,100)
+y=array([like2(a,0.) for a in x])
 print zip(x,y)
 plot(x,y)
-plot([m,m],ylim(),'r--')
+#plot([m,m],ylim(),'r--')
 xlabel('log10(Rhos/Rhos0)')
 ylabel('ln(Like)')
-title('Initial log10(Rhos/Rhos0)=-0.1')
+#title('Initial log10(Rhos/Rhos0)=-0.1')
 #savefig('Like_iterative_step.eps')
-#show()
+show()
 
-
+"""
 figure()
 x0=linspace(-0.5,1,10)
 for i,m in enumerate(x0):
@@ -30,7 +29,6 @@ for i,m in enumerate(x0):
 	y=array([like(a,0.) for a in x])
 	plot(x,y)
 	hold('on')
-"""
 
 x0=linspace(-0.01,0.01,50)
 y0=zeros_like(x0)
@@ -42,3 +40,4 @@ xlabel('log10(Rhos/Rhos0)')
 ylabel('ln(Like)')
 #savefig('Like_iterative_mixed.eps')
 show()
+"""

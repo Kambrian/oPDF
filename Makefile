@@ -92,7 +92,7 @@ all: $(EXEC)
 
 #Additional Flags
 models lib: CFLAGS+=$(OMPLIB)	
-	LDFLAGS+=$(OMPLIB)
+models lib: LDFLAGS+=$(OMPLIB)
 #mpi flags
 #gama_WL_rand: CC:=$(MPICC)
 

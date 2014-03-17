@@ -16,7 +16,7 @@ init=lib.init
 neglike=lambda m,c: -likefunc(PARTYPE(m,c))
 like=lambda m,c: likefunc(PARTYPE(m,c))
 freeze_energy=lambda m,c: freezefunc(PARTYPE(m,c))
-like2=lambda m,c: likefunc2(PATYPE(m,c)) #freeze_and_like()
+like2=lambda m,c: likefunc2(PARTYPE(m,c)) #freeze_and_like()
 
 def gen_par(p):
   "convert parameter array p into PARTYPE() array"
