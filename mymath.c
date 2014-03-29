@@ -6,6 +6,30 @@
 
 #include "mymath.h"
 
+double factorial(int n)
+{
+  double result=1.;
+
+  while(n>0)
+  {
+    result*=n;
+    n--;
+  }
+
+  return result;
+}
+double log_factorial(int n)
+{
+  double result=0.;
+
+  while(n>0)
+  {
+    result+=log(n);
+    n--;
+  }
+
+  return result;
+}
 double smpintD(gsl_function *F, double lowerlim,double upperlim, double tol)
 {
 	//double tol=1e-3; //relative tolerance

@@ -19,6 +19,8 @@ typedef char Bool;
 #define SATURATE(x,x0) ((x)>(x0)?1.0:(x)/(x0))
 #define BrokenPL(x,a,b) ((x)<1.0?pow(x,a):pow(x,b))
 
+extern double factorial(int n);
+extern double log_factorial(int n);
 extern double smpintD(gsl_function *F, double lowerlim,double upperlim, double tol);
 extern int Dmax_of_vec(double *vec,int Len);//what if the max is not unique???????
 extern int Fmax_of_vec(float *vec,int Len);//what if the max is not unique?,return first max

@@ -1,7 +1,7 @@
-#define R_MIN 10.
-#define R_MAX 40
+#define R_MIN 0.
+#define R_MAX 1000
 
-#define Rhos0 10*2.187762e-3
+#define Rhos0 2.187762e-3
 #define Rs0 15.2
 #define M0 200.
 #define C0 15.
@@ -16,7 +16,8 @@ typedef struct
     double x[3];
     double v[3];
     double E; //K+psi
-    double T; //period
+    double T; //period=2*T
+    double vr; //radial vel
     double theta; //radial phase, t/T
     double rlim[2]; //peri and apo center distance (estimated)
   } Particle;

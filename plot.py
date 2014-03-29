@@ -3,21 +3,19 @@ from dynio import *
 os.environ['OMP_NUM_THREADS']='32'
 
 init()
-m=-0.1
+m=-0.
 freeze_energy(m,0.)
 
 from matplotlib.pyplot import *
 from numpy import *
 
-x=m+linspace(-2,2,100)
+x=m+linspace(-0.01,0.01,100)
 y=array([like2(a,0.) for a in x])
-print zip(x,y)
+#print zip(x,y)
 plot(x,y)
-#plot([m,m],ylim(),'r--')
-xlabel('log10(Rhos/Rhos0)')
-ylabel('ln(Like)')
-#title('Initial log10(Rhos/Rhos0)=-0.1')
-#savefig('Like_iterative_step.eps')
+xlabel(r'$\log(\rho_s/\rho_{s0})$')
+ylabel(r'$\ln$(Like)')
+#savefig('Like_iterative_step.eps') 
 show()
 
 """

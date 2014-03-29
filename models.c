@@ -122,6 +122,13 @@ void solve_radial_orbit(int pid)
   size_t neval;
   gsl_integration_cquad (&F, P[pid].rlim[0],P[pid].rlim[1], 0, MODEL_TOL_REL, //3, 
 			 GSL_workspaceC, &(P[pid].T), &error, &neval);
+#if ESTIMATOR==RADIAL_PHASE_ESTIMATOR
+  double t;
+  gsl_integration_cquad (&F, P[pid].rlim[0],P[pid].r, 0, MODEL_TOL_REL, //3, 
+			 GSL_workspaceC, &t, &error, &neval);
+  t=t/P[pid].T/2.;
+  P[pid].theta=P[pid].vr>=0?t:(1-t);//radial phase
+#endif  
   //   result=smpintD(&F,xlim[0],xlim[1],MODEL_TOL_REL); //too slow
 //   if(P[pid].T<=0) printf("Part %d (M=%g,c=%g): r=%g,K=%g, E=%g, L2=%g; T=%g (vt/v=%g)\n",pid, Halo.M, Halo.c, P[pid].r, P[pid].K, P[pid].E, P[pid].L2, P[pid].T, sqrt(P[pid].L2/P[pid].r/P[pid].r/2./P[pid].K));
 }
@@ -130,39 +137,59 @@ double likelihood(double pars[])
 {
   int i,j;
   double lnL=0.,p;
+  int bincount[NBIN_R]={0},bincount_all[NBIN_R]={0};
 //   decode_NFWprof(Z0,pow(10,pars[0])*M0,pow(10.,pars[1])*C0,VIR_C200,&Halo);  
   decode_NFWprof2(Z0,pow(10.,pars[0])*Rhos0,pow(10.,pars[1])*Rs0,VIR_C200,&Halo);
-  
-  #pragma omp parallel 
+
+  #pragma omp parallel firstprivate(bincount) 
   {
     #pragma omp for
     for(i=0;i<nP;i++)
-    {
       solve_radial_orbit(i);
-//       printf("T=%g\n",P[i].T);
-    }
-    #pragma omp for private(i,p,j) reduction(+:lnL)
+    
+ #if ESTIMATOR==RADIAL_PHASE_ESTIMATOR
+    #pragma omp for private(j)
     for(i=0;i<nP;i++)
+    {  
+      j=floor(NBIN_R*P[i].theta);
+      if(j<0) j=0;
+      if(j>=NBIN_R) j=NBIN_R-1;
+      bincount[j]++;
+    }
+    #pragma omp critical  //note this is not barriered by default!!
     {
-#if ESTIMATOR==MIXED_RADIAL_ESTIMATOR
+    for(j=0;j<NBIN_R;j++)
+      bincount_all[j]+=bincount[j];
+    }
+    #pragma omp barrier  //this is necessary since OMP_critical has no implicit barrier!
+// #pragma omp single private(j)
+// {for(j=0;j<NBIN_R;j++) printf("%d,", bincount_all[j]);
+// printf("\n");}
+    #pragma omp for reduction(+:lnL)
+    for(j=0;j<NBIN_R;j++)
+    {
+      lnL-=log_factorial(bincount_all[j]);
+    }
+#else
+    #pragma omp for private(i,p,j,bincount) reduction(+:lnL)
+    for(i=0;i<nP;i++)
+    {     
+  #if ESTIMATOR==MIXED_RADIAL_ESTIMATOR
       for(p=0,j=0;j<nP;j++)
       {
 	if(P[i].r<P[j].rlim[0]||P[i].r>P[j].rlim[1]) continue;
 	p+=vr_inv_part(P[i].r,j)/P[j].T;//contribution from j to i;
-// 	printf("%g,%g;", p, P[j].T);
       }
-//       if(p<=0)
-// 	printf("id=%d, p=%g\n",i, p);
       lnL+=log(p);
-#elif ESTIMATOR==ITERATIVE_ESTIMATOR
+  #elif ESTIMATOR==ITERATIVE_ESTIMATOR
       lnL+=log(vr_inv_part(P[i].r,i)/P[i].T); 
-#elif ESTIMATOR==ENTROPY_ESTIMATOR
-      lnL-=log(P[i].T);//maximum entropy estimator
-#endif
+  #elif ESTIMATOR==ENTROPY_ESTIMATOR
+      lnL-=log(P[i].T);//maximum entropy estimator    
+  #endif      
     }
+#endif    
   }
-//   printf("T1=%g\n",P[1].T);
-//   printf("M=%g,c=%g,lnL=%g\n",M,c,lnL);
+//   printf("%g,%g: %g\n", pars[0],pars[1],lnL);
   return lnL;
 }
 
@@ -186,6 +213,8 @@ int main(int argc, char **argv)
   double lnL=likelihood(pars);
   printf("Rhos=%g,Rs=%g,lnL=%g\n",pow(10.,pars[0]),pow(10.,pars[1]),lnL);
 
+//   pars[0]+=0.1;
+  freeze_and_like(pars);
   free_integration_space();
   
   return 0;

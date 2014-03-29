@@ -89,11 +89,13 @@ printf("loading %s...\n",datafile);
     }
 */    
     #define VecNorm(x) (x[0]*x[0]+x[1]*x[1]+x[2]*x[2])
+    #define VecProd(x,y) (x[0]*y[0]+x[1]*y[1]+x[2]*y[2])
     for(i=0;i<nP;i++)
     {
       P[i].r=sqrt(VecNorm(P[i].x));
       P[i].K=VecNorm(P[i].v)/2.;
       P[i].L2=cross_product_norm2(P[i].x,P[i].v);
+      P[i].vr=VecProd(P[i].x,P[i].v)/P[i].r; //radial vel
     }
 //     printf("%g,%g,%g\n",P[2].r,P[2].K,P[2].L2);
     //select particles....
