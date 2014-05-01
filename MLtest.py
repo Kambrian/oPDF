@@ -1,3 +1,5 @@
+#to do statistical test rather than max-like
+#differ in errordef and dof, ts, sigma etc.
 import sys,os
 from dynio import *
 os.environ['OMP_NUM_THREADS']='32'
@@ -24,10 +26,10 @@ for x in fixnames:
 #p['par'][6]=1
 defaults={'m':1,'c':1}
 defaults.update(fixdict)
-m=Minuit(neglike2,print_level=3,errordef=0.5, frontend=ConsoleFrontend(),**defaults)
+m=Minuit(neglike2,print_level=3,errordef=1.0, frontend=ConsoleFrontend(),**defaults)
 #m=Minuit(like,print_level=3,errordef=0.5,frontend=ConsoleFrontend(),limit_a=[8,11],limit_b=[10,13],limit_c=[-4,-1],limit_d=[-2,0],**defaults) #for HOD
 
-m.tol=1. #default convergence mdm<1e-4*tol*errordef, but we do not need that high accuracy
+m.tol=10. #default convergence mdm<1e-4*tol*errordef, but we do not need that high accuracy
 result=m.migrad()
 #m.print_param()
 m.print_matrix()
@@ -43,9 +45,9 @@ print "current Like: ", L
 print "Initial Like: ", L1
 print "TS %.1f"%(2*(L-L1))
 from scipy.stats import chi2,norm
-pval=chi2.sf(2*(L-L1),len(m.list_of_vary_param()))
+pval=chi2.sf(-L1,1)
 sigma=norm.ppf(1.0-pval/2)
-print "Pval= %g, Significance= %.1f-sigma, DoF=%d"%(pval,sigma,len(m.list_of_vary_param()))
+print "Pval= %g, Significance= %.1f-sigma, DoF=%d"%(pval,sigma,1)
 
 from matplotlib import *
 #use('agg')

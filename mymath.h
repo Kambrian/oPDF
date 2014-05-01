@@ -16,9 +16,11 @@
 typedef char Bool;
 #define myfopen(filepointer,filename,filemode) if(!((filepointer)=fopen(filename,filemode))){ fprintf(stderr,"Error opening file '%s'\n",filename);	fflush(stderr); exit(1);	}
 #define MIN(x,y) ((x)<(y)?(x):(y))
+#define MAX(x,y) ((x)>(y)?(x):(y))
 #define SATURATE(x,x0) ((x)>(x0)?1.0:(x)/(x0))
 #define BrokenPL(x,a,b) ((x)<1.0?pow(x,a):pow(x,b))
 
+extern int cmpDouble(const void *p1, const void *p2);
 extern double factorial(int n);
 extern double log_factorial(int n);
 extern double smpintD(gsl_function *F, double lowerlim,double upperlim, double tol);
@@ -48,6 +50,8 @@ extern void init_progress_monitor(int ini, int totstep, int nprint);
 extern void monitor_progress(int istep);
 //put this inside loop to monitor progress.
 extern int try_readfile(char * filename);
-
+extern double KSprob(int n,double d);
+extern float KSprobNR(int n, double d);
+extern float KuiperProb(int n, double d);
 #define MYMATH_HEADER_INCLUDED
 #endif

@@ -1,3 +1,7 @@
+/*ToDo:
+ * Same data for good estimators, directly compare their performance (likelihood curve, CI) (3.84/2 for log-like, -2.48 for roulette, at 95% CL)
+ * shift to new data
+ */
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -16,6 +20,7 @@ struct NFWParZ Halo;
 double halo_pot(double r)
 {
   double x=r/Halo.Rs;
+  if(x<1e-16) return Halo.Pots; //to avoid numerical nan at x=0;
   return Halo.Pots*log(1+x)/x; //the halo boundary is irrelevant in this problem, since only the potential difference affects the orbit
 }
 static int is_forbidden(double r, int pid)
@@ -80,7 +85,7 @@ void solve_radial_limits(int pid)
 double vr_inv_part(double r, int pid)
 {
   double vr2=2*(P[pid].E-P[pid].L2/2./r/r-halo_pot(r));
-  if(vr2<0) return 0.;
+  if(vr2<=0) return 0.;
   return 1./sqrt(vr2);
 }
 static double vr_inv_rfunc(double r, void *params)
@@ -126,28 +131,151 @@ void solve_radial_orbit(int pid)
   double t;
   gsl_integration_cquad (&F, P[pid].rlim[0],P[pid].r, 0, MODEL_TOL_REL, //3, 
 			 GSL_workspaceC, &t, &error, &neval);
+#if PHASE_PERIOD==HALF_ORBIT_PERIOD
+  P[pid].theta=t/P[pid].T; //AD test is sensitive to tails. this definition suits it best.
+#elif PHASE_PERIOD==FULL_ORBIT_PERIOD //circular definition
   t=t/P[pid].T/2.;
   P[pid].theta=P[pid].vr>=0?t:(1-t);//radial phase
+#endif
+//   if(P[pid].theta==INFINITY) 
+//   {printf("p=%d, r=%g, rlim=[%g,%g], t=%g, T=%g\n", pid, P[pid].r, P[pid].rlim[0], P[pid].rlim[1], t, P[pid].T*2);
+//     printf("1/v=%g, isforbiidden=%d\n", vr_inv_part(P[pid].rlim[0],pid), is_forbidden(P[pid].rlim[0],pid));};
 #endif  
   //   result=smpintD(&F,xlim[0],xlim[1],MODEL_TOL_REL); //too slow
 //   if(P[pid].T<=0) printf("Part %d (M=%g,c=%g): r=%g,K=%g, E=%g, L2=%g; T=%g (vt/v=%g)\n",pid, Halo.M, Halo.c, P[pid].r, P[pid].K, P[pid].E, P[pid].L2, P[pid].T, sqrt(P[pid].L2/P[pid].r/P[pid].r/2./P[pid].K));
 }
+double like_circular_moment()
+{//http://en.wikipedia.org/wiki/Circular_uniform_distribution
+  //this resultant is rotational invariant
+  int i,k=1;//k-th order moments, zoom in to examine the rotational symmetry on 2pi/k scale
+  double c=0.,s=0.;
+   #pragma omp parallel for reduction(+:c,s)
+    for(i=0;i<nP;i++)
+    {
+      c+=cos(P[i].theta*2*k*M_PI);
+      s+=sin(P[i].theta*2*k*M_PI);
+    }
+  return -2*k*(c*c+s*s)/nP;//chisquare(2) distributed; make negative to be comparable to likelihood
+}
+double like_linear_moment()
+{  
+  int i,k=1;//k-th order moments, zoom in to examine the rotational symmetry on 2pi/k scale
+  double c=0.;
+   #pragma omp parallel for reduction(+:c)
+    for(i=0;i<nP;i++)
+    {
+      c+=P[i].theta;
+    }
+    c/=nP;c-=0.5; 
+#ifdef RETURN_RAWMEAN
+    return c; //*sqrt(12*nP);//standard normal variable
+#else    
+    return -c*c*12*nP; //a standard chisquare variable
+#endif
+}
 
-double likelihood(double pars[])
-{
-  int i,j;
-  double lnL=0.,p;
-  int bincount[NBIN_R]={0},bincount_all[NBIN_R]={0};
-//   decode_NFWprof(Z0,pow(10,pars[0])*M0,pow(10.,pars[1])*C0,VIR_C200,&Halo);  
-  decode_NFWprof2(Z0,pow(10.,pars[0])*Rhos0,pow(10.,pars[1])*Rs0,VIR_C200,&Halo);
-
-  #pragma omp parallel firstprivate(bincount) 
+double KSTest(int FlagKuiper)
+{/*KS or Kuiper Test
+  *KS test: http://www.itl.nist.gov/div898/handbook/eda/section3/eda35g.htm
+  *FlagKuiper=0: KS test
+  *           1: Kuiper's test
+  * return the probability of extreme values (p-value, P(TS>TSobs))
+  */
+  
+  int i;
+  double TS=0.,DL=0.,DU=0.,DLall=0.,DUall=0.,*theta;
+  theta=malloc(sizeof(double)*nP);
+  #pragma omp parallel firstprivate(DL,DU)
   {
+    #pragma omp for 
+    for(i=0;i<nP;i++)
+      theta[i]=P[i].theta;
+    #pragma omp single
+    qsort(theta, nP, sizeof(double), cmpDouble);
     #pragma omp for
     for(i=0;i<nP;i++)
-      solve_radial_orbit(i);
-    
- #if ESTIMATOR==RADIAL_PHASE_ESTIMATOR
+    {
+      double a,b;
+      a=theta[i]-i/(double)nP;
+      b=(i+1.)/(double)nP-theta[i];
+      if(DU<a) DU=a;
+      if(DL<b) DL=b;
+    }
+    #pragma omp critical
+    {
+      if(DUall<DU) DUall=DU;
+      if(DLall<DL) DLall=DL;
+    }
+    #pragma omp barrier
+    #pragma omp single
+    {
+      if(FlagKuiper)
+	TS=DLall+DUall;
+      else
+	TS=MAX(DUall,DLall);
+    }
+  }
+  free(theta);
+//   printf("%g: %g,%g\n", TS, KSprob(nP,TS), KSprobNR(nP,TS));
+  if(FlagKuiper)
+    return KuiperProb(nP, TS);
+  else
+    // return  lnL*sqrt(nP);
+    return KSprob(nP, TS); //convert to something comparable to a log-likelihood
+}
+double AndersonDarlingTest_Old()
+{//Beloborodov&Levin 2004, apj, 613:224-237; deprecated. used the new function.
+  int i;
+  double lnL=0.,*theta;
+  theta=malloc(sizeof(double)*nP);
+  #pragma omp parallel
+  {
+   #pragma omp for 
+    for(i=0;i<nP;i++)
+      theta[i]=P[i].theta;
+    #pragma omp single
+      {
+      qsort(theta, nP, sizeof(double), cmpDouble);
+      lnL=-log((1-theta[0])*theta[nP-1])-theta[0]+theta[nP-1]-1; //head and tail partitions
+      }
+    #pragma omp for reduction(+:lnL)
+    for(i=1;i<nP;i++)
+      lnL+=log(theta[i]/theta[i-1])*i*i/nP/nP
+	  -log((1-theta[i])/(1-theta[i-1]))*(1.-(double)i/nP)*(1.-(double)i/nP)
+	  +theta[i-1]-theta[i];
+  }
+  free(theta);
+  lnL*=-nP; //differ by -1, to make it comparable to a loglike
+  return lnL;
+}
+double AndersonDarlingTest()
+{//Beloborodov&Levin 2004, apj, 613:224-237; simplified equation as in the note.
+  int i;
+  double lnL=0., *theta;
+  theta=malloc(sizeof(double)*nP);
+  #pragma omp parallel
+  {
+   #pragma omp for 
+    for(i=0;i<nP;i++)
+      theta[i]=P[i].theta;
+    #pragma omp single
+      qsort(theta, nP, sizeof(double), cmpDouble);
+    #pragma omp for reduction(+:lnL)
+    for(i=0;i<nP;i++)
+      lnL+=-(1.+2.*i)*log(theta[i])+(1+2.*(i-nP))*log(1-theta[i]);
+  }
+  free(theta);
+  lnL=lnL/nP-nP; 
+  return -lnL; //differ by -1, to make it comparable to a loglike
+}
+double like_phase_binned()
+{
+  int i,j;
+  double lnL=0.;
+  int bincount[NBIN_R]={0},bincount_all[NBIN_R]={0};
+  
+#pragma omp parallel firstprivate(bincount)
+  {
     #pragma omp for private(j)
     for(i=0;i<nP;i++)
     {  
@@ -163,58 +291,226 @@ double likelihood(double pars[])
     }
     #pragma omp barrier  //this is necessary since OMP_critical has no implicit barrier!
 // #pragma omp single private(j)
-// {for(j=0;j<NBIN_R;j++) printf("%d,", bincount_all[j]);
-// printf("\n");}
+// {for(j=0;j<NBIN_R;j++) printf("%d,", bincount_all[j]); printf("\n");}
     #pragma omp for reduction(+:lnL)
     for(j=0;j<NBIN_R;j++)
     {
       lnL-=log_factorial(bincount_all[j]);
     }
-#else
-    #pragma omp for private(i,p,j,bincount) reduction(+:lnL)
+  }
+  return lnL;
+}
+double like_phase_partition()
+{
+  int i;
+  double lnL=0.,*theta;
+  theta=malloc(sizeof(double)*nP);
+  #pragma omp parallel
+  {
+   #pragma omp for 
+    for(i=0;i<nP;i++)
+      theta[i]=P[i].theta;
+    #pragma omp single
+      {
+      qsort(theta, nP, sizeof(double), cmpDouble);
+      lnL=log(theta[0]+1.-theta[nP-1]); //last partition
+      }
+    #pragma omp for reduction(+:lnL)
+    for(i=1;i<nP;i++)
+    {
+      lnL+=log(theta[i]-theta[i-1]);
+//       if(theta[i]==theta[i-1])
+// 	printf("%d: %g,%g\n", i, theta[i], theta[i-1]);
+    }
+  }
+  free(theta);
+  return lnL;
+}
+double like_phase_process()
+{//junk
+  int i;
+  double lnL=0.;
+#pragma omp parallel for reduction(+:lnL)
+  for(i=0;i<nP;i++)
+    lnL-=log(1-exp(nP*(P[i].theta-1)));
+  
+  return lnL;
+}
+
+static int RadialCountAll[NBIN_R]={0};
+void fill_radial_bin()
+{//count inside linear radial bins
+  int i,j;
+  double dr=(R_MAX-R_MIN)/NBIN_R;
+  int bincount[NBIN_R]={0};
+  
+  for(i=0;i<NBIN_R;i++)  RadialCountAll[i]=0; 
+#pragma omp parallel firstprivate(bincount)
+  {
+    #pragma omp for private(j)
+    for(i=0;i<nP;i++)
+    {  
+      j=floor((P[i].r-R_MIN)/dr);
+      if(j<0) j=0;
+      if(j>=NBIN_R) j=NBIN_R-1;
+      bincount[j]++;
+    }
+    #pragma omp critical  //note this is not barriered by default!!
+    {
+    for(j=0;j<NBIN_R;j++)
+      RadialCountAll[j]+=bincount[j];
+    }
+  }
+}
+double like_radial_bin()
+{
+  int i,j;
+  double lnL=0., dr=(R_MAX-R_MIN)/NBIN_R;
+  
+    #pragma omp parallel for private(j) reduction(+:lnL)
+    for(i=0;i<NBIN_R;i++)
+    { 
+      if(0==RadialCountAll[i]) continue; //definitely skip empty bins (they have no contribution, but may produce NaNs)
+      double p;
+      //midpoint approximation
+//       double r=dr*(i+0.5)+R_MIN;
+//       for(p=0.,j=0;j<nP;j++)
+//       {
+// 	if(r<P[j].rlim[0]||r>P[j].rlim[1]) continue;
+// 	p+=vr_inv_part(r,j)/P[j].T;//contribution from j to i;
+//       }
+//       p*=dr;
+      //more proper way is to integrate inside bin
+      double rbin[2]; rbin[0]=R_MIN+dr*i;rbin[1]=rbin[0]+dr;
+      gsl_function F; F.function = &vr_inv_rfunc; F.params = &j;
+      double error,t; size_t neval;
+      for(p=0.,j=0;j<nP;j++)
+      {
+	if(P[j].rlim[0]>=rbin[1]|P[j].rlim[1]<=rbin[0]) continue;
+	gsl_integration_cquad (&F, MAX(rbin[0],P[j].rlim[0]), MIN(rbin[1],P[j].rlim[1]), 0, MODEL_TOL_REL, //3, 
+			       GSL_workspaceC, &t, &error, &neval);
+	p+=t/P[j].T;
+      }
+      lnL+=RadialCountAll[i]*log(p);
+    }
+    
+    return lnL;
+}
+double like_mixed_radial()
+{
+  int i,j;
+  double lnL=0.,p;
+    #pragma omp parallel for private(p,j) reduction(+:lnL)
     for(i=0;i<nP;i++)
     {     
-  #if ESTIMATOR==MIXED_RADIAL_ESTIMATOR
       for(p=0,j=0;j<nP;j++)
       {
 	if(P[i].r<P[j].rlim[0]||P[i].r>P[j].rlim[1]) continue;
 	p+=vr_inv_part(P[i].r,j)/P[j].T;//contribution from j to i;
       }
       lnL+=log(p);
-  #elif ESTIMATOR==ITERATIVE_ESTIMATOR
-      lnL+=log(vr_inv_part(P[i].r,i)/P[i].T); 
-  #elif ESTIMATOR==ENTROPY_ESTIMATOR
-      lnL-=log(P[i].T);//maximum entropy estimator    
-  #endif      
     }
-#endif    
-  }
+    return lnL;
+}
+double like_entropy()
+{
+    int i;
+    double lnL=0.;
+    #pragma omp parallel for reduction(+:lnL)
+    for(i=0;i<nP;i++)
+      lnL-=log(P[i].T);//maximum entropy estimator    
+    return lnL;
+}
+double like_iterative_radial()
+{
+    int i;
+    double lnL=0.;
+   #pragma omp parallel for reduction(+:lnL)
+    for(i=0;i<nP;i++)
+      lnL+=log(vr_inv_part(P[i].r,i)/P[i].T); 
+    return lnL;
+}
+
+double likelihood(double pars[])
+{
+  int i;
+  double lnL;
+//   decode_NFWprof(Z0,pars[0]*M0,pars[1]*C0,VIR_C200,&Halo);  
+  decode_NFWprof2(Z0,pars[0]*Rhos0,pars[1]*Rs0,VIR_C200,&Halo);
+
+  #pragma omp parallel for
+    for(i=0;i<nP;i++)
+      solve_radial_orbit(i);
+    
+  #if ESTIMATOR==RADIAL_PHASE_BINNED
+    lnL=like_phase_binned();
+  #elif ESTIMATOR==RADIAL_PHASE_PARTITION
+    lnL=like_phase_partition();
+  #elif ESTIMATOR==RADIAL_PHASE_PROCESS
+    lnL=like_phase_process();
+  #elif ESTIMATOR==MIXED_RADIAL_ESTIMATOR
+    lnL=like_mixed_radial();
+  #elif ESTIMATOR==RADIAL_BIN_ESTIMATOR
+    lnL=like_radial_bin();    
+  #elif ESTIMATOR==ITERATIVE_ESTIMATOR
+    lnL=like_iterative_radial();
+  #elif ESTIMATOR==ENTROPY_ESTIMATOR
+    lnL=like_entropy();
+  #elif ESTIMATOR==RADIAL_PHASE_ROULETTE
+    lnL=AndersonDarlingTest();
+  #elif ESTIMATOR==RADIAL_PHASE_CMOMENT
+    lnL=like_circular_moment();
+  #elif ESTIMATOR==RADIAL_PHASE_LMOMENT
+    lnL=like_linear_moment();
+  #elif ESTIMATOR==RADIAL_PHASE_KS
+    lnL=KSTest(0);  
+  #elif ESTIMATOR==RADIAL_PHASE_KUIPER
+    lnL=KSTest(1);      
+  #endif         
+    
 //   printf("%g,%g: %g\n", pars[0],pars[1],lnL);
   return lnL;
 }
 
 int main(int argc, char **argv)
 {
-  double pars[NUM_PAR_MAX]={0.,0.};
-  if(argc==3)
+  double pars[NUM_PAR_MAX]={1.,1.};
+  int subsample_id=0,i;
+  if(argc>=3)
   {
     pars[0]=atof(argv[1]);
     pars[1]=atof(argv[2]);
   }
+  if(argc>3)
+    subsample_id=atoi(argv[3]);
+  
+//   decode_NFWprof(0,pars[0],pars[1],VIR_C200,&Halo);
+//   printf("Rhos=%g,Rs=%g,Rv=%g\n",Halo.Rhos,Halo.Rs,Halo.Rv);
+//   return 0;
   
   init();
-  freeze_energy(pars);
-//  double x;
-//  for(x=-1;x<1;x+=0.1)
+  for(i=0;i<800;i++)
+  {
+    select_particles(i);
+    printf("%g,", freeze_and_like(pars));
+  }
+  printf("\n");
+//   printf("%g\n", freeze_and_like(pars));
+//   freeze_and_like(pars);
+//   return 0;
+//   double x;
+//  for(x=0.5;x<1.5;x+=0.005)
 //  {
 //    pars[0]=x;
-//    printf("%g,%g\n",pow(10.,x), likelihood(pars));
+//    printf("%g,%g;", x, freeze_and_like(pars));
 //  }
-  double lnL=likelihood(pars);
-  printf("Rhos=%g,Rs=%g,lnL=%g\n",pow(10.,pars[0]),pow(10.,pars[1]),lnL);
+//  printf("\n");
+ //   freeze_energy(pars);
+//   double lnL=likelihood(pars);
+//   printf("Rhos=%g,Rs=%g,lnL=%g\n",pow(10.,pars[0]),pow(10.,pars[1]),lnL);
 
 //   pars[0]+=0.1;
-  freeze_and_like(pars);
+//   freeze_and_like(pars);
   free_integration_space();
   
   return 0;
@@ -222,15 +518,23 @@ int main(int argc, char **argv)
 
 void init()
 {
-  char datafile[1024]=ROOTDIR"/data/mockhalo.hdf5";
+  char datafile[1024]=ROOTDIR"/data/mcmock_chain.hdf5";
   
   load_data(datafile);
   alloc_integration_space();
 }
+void select_particles(int subsample_id)
+{
+  sample_data(subsample_id);
+  #if ESTIMATOR==RADIAL_BIN_ESTIMATOR
+  fill_radial_bin();
+  #endif
+}
 void freeze_energy(double pars[])
 {//fix the energy parameter according to initial potential
   int i;
-  decode_NFWprof2(Z0,pow(10.,pars[0])*Rhos0,pow(10.,pars[1])*Rs0,VIR_C200,&Halo);
+//   decode_NFWprof(Z0,pars[0]*M0,pars[1]*C0,VIR_C200,&Halo);  
+  decode_NFWprof2(Z0,pars[0]*Rhos0,pars[1]*Rs0,VIR_C200,&Halo);
   #pragma omp parallel for
   for(i=0;i<nP;i++)
       P[i].E=P[i].K+halo_pot(P[i].r);

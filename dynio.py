@@ -10,13 +10,20 @@ likefunc=prototype(("likelihood",lib))#,paramflags)
 likefunc2=prototype(("freeze_and_like",lib))
 prototype=CFUNCTYPE(None, PARTYPE)
 freezefunc=prototype(("freeze_energy",lib))
+prototype=CFUNCTYPE(c_double, c_double, c_double, c_double)
+dataprob=prototype(("dataprob",lib))
+PARTYPEXV=c_double*6
+prototype=CFUNCTYPE(c_double, PARTYPEXV)
+dataprob6d=prototype(("dataprob6d",lib))
 init=lib.init
-#GAMA_init.argtypes=[c_char_p]
+select_particles=lib.select_particles
+select_particles.argtypes=[c_int]
 
 neglike=lambda m,c: -likefunc(PARTYPE(m,c))
 like=lambda m,c: likefunc(PARTYPE(m,c))
 freeze_energy=lambda m,c: freezefunc(PARTYPE(m,c))
 like2=lambda m,c: likefunc2(PARTYPE(m,c)) #freeze_and_like()
+neglike2=lambda m,c: -likefunc2(PARTYPE(m,c))
 
 def gen_par(p):
   "convert parameter array p into PARTYPE() array"

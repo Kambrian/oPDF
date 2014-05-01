@@ -14,6 +14,7 @@ ifeq ($(Platform), COSMA)
 	HDFLIB= -lhdf5_hl -lhdf5
 	GSLLIB=-lgsl -lgslcblas
 	CC = icc
+	FC = ifort
 	#CC=h5cc
 	MPICC=mpicc 	
 	ROOTDIR='"/cosma/home/jvbq85/data/DynDistr"'
@@ -26,6 +27,7 @@ ifeq ($(Platform), Bright)
 	GSLINC=-I/data/raid3/jxhan/opt/include #shao
 	GSLLIB=-L/data/raid3/jxhan/opt/lib -lgsl -lgslcblas #shao
 	CC = icc
+	FC = ifort
 	MPICC:=mpicc -cc=$(CC)
 	ROOTDIR='"/data/raid3/jxhan/Lensing"'
 endif
@@ -35,6 +37,7 @@ ifeq ($(Platform), Medivh)
 	HDFINC= -I/usr/include/mpi
 	GSLLIB=-lgsl -lgslcblas
 	CC = icc
+	FC = ifort
 	#CC=h5cc
 	MPICC=icc -lmpi
 # 	LAPACKLIB=-mkl
@@ -75,8 +78,8 @@ OBJS_MAIN=$(addsuffix .o, $(EXEC))
 SRC_COMM = io.c hdf_util.c cosmology.c mymath.c 
 OBJS_COMM = $(SRC_COMM:%.c=%.o)
 #any additional OBJS below:
-#SRC = 
-#OBJS= $(SRC:%.c=%.o)
+SRC = wenting.c wenting.f90
+OBJS= $(patsubst %.f90,%.f.o,$(SRC:%.c=%.o))
 
 #-----targets and common rules--------------------------------
 default: models
@@ -88,6 +91,9 @@ all: $(EXEC)
 %.o : %.c
 	$(CC) $< $(CFLAGS) -c -o $@
 
+%.f.o : %.f90
+	$(FC) $< $(FFLAGS) -c -o $@
+	
 #Additional Dependencies
 
 #Additional Flags
@@ -100,10 +106,12 @@ models lib: LDFLAGS+=$(OMPLIB)
 #shear.o: FORCE
 
 lib: CFLAGS+=-fPIC
+lib: FFLAGS+=-fPIC
 lib: libdyn.so
 
-libdyn.so:models.o $(OBJS_COMM)
-	$(CC) -shared -Wl,-soname,libdyn.so -o libdyn.so $^ $(LDFLAGS)
+libdyn.so:models.o $(OBJS_COMM) wenting.f.o wenting.o
+	$(CC) -shared -Wl,-soname,libdyn.so -o libdyn.so $^ $(LDFLAGS) -lifport -lifcore
+
 	
 #-----Other stuff----------------------------
 .PHONY : clean depend distclean FORCE

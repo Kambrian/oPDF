@@ -1,11 +1,30 @@
-#define R_MIN 0.
-#define R_MAX 1000
+#define R_MIN 0.1
+#define R_MAX 500.
+// #define FILTER_FLAG
+// #define FILTER_RAND_SIZE 10000 //select a random sample of the given size
 
+#define SUBSAMPLE_SIZE 500 //only load a subsample of this size 
+
+/* mockhalo--*/
 #define Rhos0 2.187762e-3
 #define Rs0 15.2
 #define M0 200.
 #define C0 15.
+// */
 #define Z0 0.
+
+/*A4--
+#define Rhos0 0.00220633
+#define Rs0 15.1576
+#define M0 183.8
+#define C0 16.21
+// */
+/*B4--*
+#define Rhos0 0.000515264
+#define Rs0 20.9363
+#define M0 83.45
+#define C0 9.02
+// */
 
 typedef struct
   {
@@ -26,3 +45,4 @@ extern Particle *P;
 extern int nP;
 
 extern void load_data(char *datafile);
+extern void sample_data(int subsample_id);

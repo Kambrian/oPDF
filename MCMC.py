@@ -3,6 +3,7 @@ from dynio import *
 os.environ['OMP_NUM_THREADS']='32'
 
 init()
+select_particles(0)
 
 loglike=lambda par: likefunc2(PARTYPE(par[0],par[1]))
 

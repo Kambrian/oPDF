@@ -6,6 +6,16 @@
 
 #include "mymath.h"
 
+int cmpDouble(const void *p1, const void *p2)
+{ //in ascending order
+  if((*(double *)p1) > (*(double *)p2) ) 
+    return 1;
+  
+  if((*(double *)p1) < (*(double *)p2) ) 
+    return -1;
+  
+  return 0;
+}
 double factorial(int n)
 {
   double result=1.;
@@ -263,4 +273,88 @@ int skip_comment(FILE *fp,char c)
 	}
 	fseek(fp,-sizeof(char),SEEK_CUR);
 	return 1;
+}
+
+//KS test code from http://www.jstatsoft.org/v08/i18/paper
+static void mMultiply(double *A,double *B,double *C,int m)
+{int i,j,k; double s;
+for(i=0;i<m;i++) for(j=0; j<m; j++)
+{s=0.; for(k=0;k<m;k++) s+=A[i*m+k]*B[k*m+j]; C[i*m+j]=s;}
+}
+static void mPower(double *A,int eA,double *V,int *eV,int m,int n)
+{ double *B;int eB,i;
+if(n==1) {for(i=0;i<m*m;i++) V[i]=A[i];*eV=eA; return;}
+mPower(A,eA,V,eV,m,n/2);
+B=(double*)malloc((m*m)*sizeof(double));
+mMultiply(V,V,B,m);
+eB=2*(*eV);
+if(n%2==0){for(i=0;i<m*m;i++) V[i]=B[i]; *eV=eB;}
+else {mMultiply(A,B,V,m);
+*eV=eA+eB;}
+if(V[(m/2)*m+(m/2)]>1e140) {for(i=0;i<m*m;i++) V[i]=V[i]*1e-140;*eV+=140;}
+free(B);
+}
+double KSprob(int n,double d)
+{ //return K(n, d) = Pr(Dn >= d), probability of compatibility
+  int k,m,i,j,g,eH,eQ;
+double h,s,*H,*Q;
+//OMIT NEXT LINE IF YOU REQUIRE >7 DIGIT ACCURACY IN THE RIGHT TAIL
+s=d*d*n; if(s>7.24||(s>3.76&&n>99)) return 2.*exp(-(2.000071+.331/sqrt(n)+1.409/n)*s);
+k=(int)(n*d)+1; m=2*k-1; h=k-n*d;
+H=(double*)malloc((m*m)*sizeof(double));
+Q=(double*)malloc((m*m)*sizeof(double));
+for(i=0;i<m;i++) for(j=0;j<m;j++)
+if(i-j+1<0) H[i*m+j]=0; else H[i*m+j]=1;
+for(i=0;i<m;i++) {H[i*m]-=pow(h,i+1); H[(m-1)*m+i]-=pow(h,(m-i));}
+H[(m-1)*m]+=(2*h-1>0?pow(2*h-1,m):0);
+for(i=0;i<m;i++) for(j=0;j<m;j++)
+if(i-j+1>0) for(g=1;g<=i-j+1;g++) H[i*m+j]/=g;
+eH=0; mPower(H,eH,Q,&eQ,m,n);
+s=Q[(k-1)*m+k-1];
+for(i=1;i<=n;i++) {s=s*i/n; if(s<1e-140) {s*=1e140; eQ-=140;}}
+s*=pow(10.,eQ); free(H); free(Q); return 1.-s;
+}
+
+#define EPS_ITER 1e-3
+#define EPS_TOT 1.0e-8
+float KSprobNR(int n, double d)
+{//from numerical recipes, P(D>Dobs), tail probability
+  float en=sqrt(n);
+  float lambda2=d*(en+0.12+0.11/en);
+  lambda2*=-2.*lambda2;
+  int j;
+  float fac=2.0,sum=0.0,term,termbf=0.0;
+  
+  for (j=1;j<=100;j++) 
+  {
+    term=fac*exp(lambda2*j*j);
+    sum += term;
+    term=fabs(term);
+    if (term <= EPS_ITER*termbf || term <= EPS_TOT*sum) return sum;
+    fac = -fac;// Alternating signs in sum.
+    termbf=term;
+  }
+  return 1.0; //Get here only by failing to converge.
+}
+
+float KuiperProb(int n, double d)
+{//ref: numerical recipes
+  float en=sqrt(n);
+  float lambda2=(en+0.155+0.24/en)*d;
+  if(lambda2<0.4) return 1.0;
+  
+  lambda2*=lambda2*2;
+  int j;
+  float xj,sum=0.0,term,termbf=0.0;
+  
+  for (j=1;j<=100;j++) 
+  {
+    xj=lambda2*j*j;
+    term=2.*(2.*xj-1.)*exp(-xj);
+    sum += term;
+    term=fabs(term);
+    if (term <= EPS_ITER*termbf || term <= EPS_TOT*sum) return sum;
+    termbf=term;
+  }
+  return 1.0;
 }

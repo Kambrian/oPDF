@@ -7,6 +7,8 @@
 #include "hdf_util.h"
 #include "io.h"
   
+static Particle *Pall;
+static int nPall;
 Particle *P;
 int nP;
 
@@ -26,90 +28,118 @@ void load_data(char *datafile)
     FloatMat A;
     GenericMat B;
        
-printf("loading %s...\n",datafile);
-    sprintf(A.name,"/PartType0/Coordinates");
+    printf("loading %s...\n",datafile);
+    sprintf(A.name,"/x");
     load_hdfmatrixF(datafile,&A,1);
     if(A.size[1]!=3)
     {
       printf("Error, unexpected matrix size %d,%d\n",(int)A.size[0],(int)A.size[1]);
       exit(1);
     }
-    nP=A.size[0];
-    P=malloc(sizeof(Particle)*nP);
-    for(i=0;i<nP;i++)
+    nPall=A.size[0];
+    Pall=malloc(sizeof(Particle)*nPall);
+    for(i=0;i<nPall;i++)
     {
       for(j=0;j<3;j++)
-      P[i].x[j]=A.x[i*3+j];
+      Pall[i].x[j]=A.x[i*3+j];
     }
     free(A.x);
     
-    sprintf(A.name,"/PartType0/Velocities");
+    sprintf(A.name,"/v");
     load_hdfmatrixF(datafile,&A,1);
-    if(A.size[1]!=3||A.size[0]!=nP)
+    if(A.size[1]!=3||A.size[0]!=nPall)
     {
-      printf("Error, unexpected matrix size %zd,%zd (expecting %d,3)\n",A.size[0],A.size[1],nP);
+      printf("Error, unexpected matrix size %zd,%zd (expecting %d,3)\n",A.size[0],A.size[1],nPall);
       exit(1);
     }
-    for(i=0;i<nP;i++)
+    for(i=0;i<nPall;i++)
     {
       for(j=0;j<3;j++)
-      P[i].v[j]=A.x[i*3+j];
+      Pall[i].v[j]=A.x[i*3+j];
     }
     free(A.x);
     
-    sprintf(B.name,"/PartType0/Flag");
-    load_hdfmatrix(datafile,&B,1,H5T_NATIVE_INT);
-    int *p=B.x;
-    for(i=0;i<nP;i++)
-      P[i].flag=p[i];
     
-//     printf("%g,%g,%g;%g,%g,%g\n", P[5].x[0],P[5].x[1],P[5].x[2], P[10].v[0],P[10].v[1],P[10].v[2]);
-/*    
+    sprintf(B.name,"/flag");
+    size_t nload;
+    nload=load_hdfmatrix(datafile,&B,1,H5T_NATIVE_INT);
+    if(nload==0) printf("Assuming flag=1 for every particle\n");
+    int *p=B.x;
+    for(i=0;i<nPall;i++)
+      if(nload>0)
+	Pall[i].flag=p[i];
+      else
+	Pall[i].flag=1;
+      
+      /*    
     double x0[3]={0.},v0[3]={0.};
-    for(i=0;i<nP;i++)
+    for(i=0;i<nPall;i++)
     {
       for(j=0;j<3;j++)
       {
-	x0[j]+=P[i].x[j];
-	v0[j]+=P[i].v[j];
+	x0[j]+=Pall[i].x[j];
+	v0[j]+=Pall[i].v[j];
       }
     }
     for(j=0;j<3;j++)
     {
-      x0[j]/=nP;
-      v0[j]/=nP;
+      x0[j]/=nPall;
+      v0[j]/=nPall;
     }
-    for(i=0;i<nP;i++)//shift to center
+    for(i=0;i<nPall;i++)//shift to center
     {
       for(j=0;j<3;j++)
       {
-	P[i].x[j]-=x0[j];
-	P[i].v[j]-=v0[j];
+	Pall[i].x[j]-=x0[j];
+	Pall[i].v[j]-=v0[j];
       }
     }
 */    
     #define VecNorm(x) (x[0]*x[0]+x[1]*x[1]+x[2]*x[2])
     #define VecProd(x,y) (x[0]*y[0]+x[1]*y[1]+x[2]*y[2])
-    for(i=0;i<nP;i++)
+    for(i=0;i<nPall;i++)
     {
-      P[i].r=sqrt(VecNorm(P[i].x));
-      P[i].K=VecNorm(P[i].v)/2.;
-      P[i].L2=cross_product_norm2(P[i].x,P[i].v);
-      P[i].vr=VecProd(P[i].x,P[i].v)/P[i].r; //radial vel
+      Pall[i].r=sqrt(VecNorm(Pall[i].x));
+      Pall[i].K=VecNorm(Pall[i].v)/2.;
+      Pall[i].L2=cross_product_norm2(Pall[i].x,Pall[i].v);
+      Pall[i].vr=VecProd(Pall[i].x,Pall[i].v)/Pall[i].r; //radial vel
     }
-//     printf("%g,%g,%g\n",P[2].r,P[2].K,P[2].L2);
-    //select particles....
-    for(i=0,j=0;i<nP;i++)
-    {
-      if(P[i].r>R_MIN&&P[i].r<R_MAX&&P[i].flag)
-      {
-	if(i>j)	memmove(P+j,P+i,sizeof(Particle));
-	j++;
-      }
-    }
-    nP=j;
-    P=realloc(P,sizeof(Particle)*nP);
     //sort
-   // qsort(P, nP, sizeof(Particle), cmpPartR); //sort according to r
-    printf("%d particles loaded\n",nP);
-} 
+  // qsort(Pall, nPall, sizeof(Particle), cmpPartR); //sort according to r
+    printf("%d particles loaded\n",nPall);
+}
+
+void sample_data(int subsample_id)
+{//to be done: bootstrap when subsample_id<0
+#ifdef SUBSAMPLE_SIZE
+  nP=SUBSAMPLE_SIZE;
+#else
+  nP=nPall;
+#endif
+  P=malloc(sizeof(Particle)*nP);
+  
+  int i,j,imin,imax;
+  imin=subsample_id*SUBSAMPLE_SIZE;
+  imax=imin+SUBSAMPLE_SIZE;
+  if(imin>=nPall) {printf("error: subsample id overflow; sampleid=%d,imin=%d,nP=%d\n", subsample_id, imin, nPall); exit(1);}
+  if(imax>nPall) {printf("Warning: subsample truncated to tail of data; sampleid=%d, imax=%d, nP=%d\n", subsample_id, imax, nPall); imax=nPall;}
+  for(i=imin,j=0;i<imax;i++)
+  {
+    if(Pall[i].r>R_MIN&&Pall[i].r<R_MAX
+      #if defined(FILTER_FLAG)|defined(FILTER_RAND_SIZE)
+      &&Pall[i].flag
+      #endif
+    )
+    {
+      P[j]=Pall[i];
+      j++;
+    }
+  }
+  nP=j;
+  P=realloc(P,sizeof(Particle)*nP);
+//   srand48(nP);
+//   #ifdef FILTER_RAND_SIZE
+//   for(i=0;i<nP;i++)
+//     P[i].flag=(drand48()*nP<FILTER_RAND_SIZE);
+//   #endif
+}
