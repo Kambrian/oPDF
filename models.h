@@ -1,5 +1,9 @@
 #include "cosmology.h"
 
+#define PAR_TYPE_M_C 0
+#define PAR_TYPE_RHOS_RS 1
+#define FIT_PAR_TYPE 0
+
 #define HALF_ORBIT_PERIOD 1
 #define FULL_ORBIT_PERIOD 2
 
@@ -17,20 +21,22 @@
 #define RADIAL_PHASE_LMOMENT 10 //linear moment, under roulette phase definition
 #define RADIAL_PHASE_KS 11 //ks-test
 #define RADIAL_PHASE_KUIPER 12 //kuiper's test
+#define RADIAL_PHASE_COSMEAN 13 //<cos(theta)>
 
 #ifndef NBIN_R
 #define NBIN_R 30
 #endif
 
-#define ESTIMATOR 10
-#define RETURN_RAWMEAN 
+//#define ESTIMATOR 10  //this has been moved to makefile
+//#define RETURN_RAWMEAN 
+#define RETURN_PROB //for KS and Kuiper
 
 #if ESTIMATOR >= RADIAL_PHASE_BINNED
 #define RADIAL_PHASE_ESTIMATOR  ESTIMATOR //to enable calculation for radial phase
 #endif
 
 #ifndef PHASE_PERIOD
-  #if ESTIMATOR==RADIAL_PHASE_KUIPER||ESTIMATOR==RADIAL_PHASE_CMOMENT //these two seems to be biased a bit when used with the half-period-phase
+  #if ESTIMATOR==RADIAL_PHASE_KUIPER||ESTIMATOR==RADIAL_PHASE_CMOMENT||ESTIMATOR==RADIAL_PHASE_COSMEAN //these two seems to be biased a bit when used with the half-period-phase
     #define PHASE_PERIOD FULL_ORBIT_PERIOD
   #else //below can be biased if used with the full-period-phase
     #define PHASE_PERIOD HALF_ORBIT_PERIOD 
@@ -54,7 +60,7 @@ extern void solve_radial_orbit(int pid);
 extern void fill_radial_bin();
 extern double likelihood(double pars[]);
 
-extern void init();
+extern int init(int dataid);
 extern void freeze_energy(double pars[]);
 extern double freeze_and_like(double pars[]);
 extern void select_particles(int subsample_id);

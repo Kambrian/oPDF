@@ -5,7 +5,7 @@
         real(kind=8),external::func2,midsql,midsqu,midinf
 	integer istat
 	
-	if(r<0.1 .or. r>500)then
+	if(r<1 .or. r>500)then
 	  func=0.
 	  return
 	end if

@@ -114,7 +114,7 @@ lib: FFLAGS+=-fPIC
 lib: libdyn.so
 
 libdyn.so:models.o $(OBJS_COMM) wenting.f.o wenting.o
-	$(CC) -shared -Wl,-soname,libdyn.so -o libdyn.so $^ $(LDFLAGS) -lifport -lifcore -lirc
+	$(CC) -shared -Wl,-soname,libdyn.so -o libdyn.so $^ $(LDFLAGS) -lifport -lifcore
 
 	
 #-----Other stuff----------------------------

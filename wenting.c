@@ -16,5 +16,6 @@ double dataprob6d(double xv[6])
   double r=sqrt(VecNorm(x));
   double vr=VecProd(x,v)/r;
   double vt=sqrt(VecNorm(v)-vr*vr);
+//   printf("%g\n", log(0.));
   return log(func_(&r,&vr,&vt));
 }

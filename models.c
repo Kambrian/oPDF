@@ -153,7 +153,9 @@ double like_circular_moment()
     for(i=0;i<nP;i++)
     {
       c+=cos(P[i].theta*2*k*M_PI);
+#if ESTIMATOR!=RADIAL_PHASE_COSMEAN      
       s+=sin(P[i].theta*2*k*M_PI);
+#endif      
     }
   return -2*k*(c*c+s*s)/nP;//chisquare(2) distributed; make negative to be comparable to likelihood
 }
@@ -168,7 +170,7 @@ double like_linear_moment()
     }
     c/=nP;c-=0.5; 
 #ifdef RETURN_RAWMEAN
-    return c; //*sqrt(12*nP);//standard normal variable
+    return c*sqrt(12.*nP);//standard normal variable
 #else    
     return -c*c*12*nP; //a standard chisquare variable
 #endif
@@ -218,10 +220,18 @@ double KSTest(int FlagKuiper)
   free(theta);
 //   printf("%g: %g,%g\n", TS, KSprob(nP,TS), KSprobNR(nP,TS));
   if(FlagKuiper)
+#ifdef RETURN_PROB
     return KuiperProb(nP, TS);
+#else
+    return log(KuiperProb(nP, TS));
+#endif
   else
+    #ifdef RETURN_PROB
     // return  lnL*sqrt(nP);
     return KSprob(nP, TS); //convert to something comparable to a log-likelihood
+#else
+    return log(KSprob(nP, TS)); //convert to something comparable to a log-likelihood
+#endif
 }
 double AndersonDarlingTest_Old()
 {//Beloborodov&Levin 2004, apj, 613:224-237; deprecated. used the new function.
@@ -386,7 +396,7 @@ double like_radial_bin()
       double error,t; size_t neval;
       for(p=0.,j=0;j<nP;j++)
       {
-	if(P[j].rlim[0]>=rbin[1]|P[j].rlim[1]<=rbin[0]) continue;
+	if(P[j].rlim[0]>=rbin[1]||P[j].rlim[1]<=rbin[0]) continue;
 	gsl_integration_cquad (&F, MAX(rbin[0],P[j].rlim[0]), MIN(rbin[1],P[j].rlim[1]), 0, MODEL_TOL_REL, //3, 
 			       GSL_workspaceC, &t, &error, &neval);
 	p+=t/P[j].T;
@@ -435,8 +445,11 @@ double likelihood(double pars[])
 {
   int i;
   double lnL;
-//   decode_NFWprof(Z0,pars[0]*M0,pars[1]*C0,VIR_C200,&Halo);  
+#if FIT_PAR_TYPE==PAR_TYPE_M_C
+  decode_NFWprof(Z0,pars[0]*M0,pars[1]*C0,VIR_C200,&Halo);  
+#elif  FIT_PAR_TYPE==PAR_TYPE_RHOS_RS
   decode_NFWprof2(Z0,pars[0]*Rhos0,pars[1]*Rs0,VIR_C200,&Halo);
+#endif
 
   #pragma omp parallel for
     for(i=0;i<nP;i++)
@@ -460,6 +473,8 @@ double likelihood(double pars[])
     lnL=AndersonDarlingTest();
   #elif ESTIMATOR==RADIAL_PHASE_CMOMENT
     lnL=like_circular_moment();
+  #elif ESTIMATOR==RADIAL_PHASE_COSMEAN
+    lnL=like_circular_moment();    
   #elif ESTIMATOR==RADIAL_PHASE_LMOMENT
     lnL=like_linear_moment();
   #elif ESTIMATOR==RADIAL_PHASE_KS
@@ -484,12 +499,12 @@ int main(int argc, char **argv)
   if(argc>3)
     subsample_id=atoi(argv[3]);
   
-//   decode_NFWprof(0,pars[0],pars[1],VIR_C200,&Halo);
+//   decode_NFWprof(0,pars[0]*M0,pars[1]*C0,VIR_C200,&Halo);
 //   printf("Rhos=%g,Rs=%g,Rv=%g\n",Halo.Rhos,Halo.Rs,Halo.Rv);
 //   return 0;
-  
-  init();
-  for(i=0;i<800;i++)
+//   
+  init(-1);
+  for(i=0;i<400;i++)
   {
     select_particles(i);
     printf("%g,", freeze_and_like(pars));
@@ -516,12 +531,13 @@ int main(int argc, char **argv)
   return 0;
 }
 
-void init()
+int init(int dataid)
 {
-  char datafile[1024]=ROOTDIR"/data/mcmock_chain.hdf5";
+  char datafile[1024]=ROOTDIR"/data/"DATAFILE;
   
-  load_data(datafile);
+  load_data(datafile, dataid);
   alloc_integration_space();
+  return ESTIMATOR; 
 }
 void select_particles(int subsample_id)
 {
@@ -533,8 +549,11 @@ void select_particles(int subsample_id)
 void freeze_energy(double pars[])
 {//fix the energy parameter according to initial potential
   int i;
-//   decode_NFWprof(Z0,pars[0]*M0,pars[1]*C0,VIR_C200,&Halo);  
+#if FIT_PAR_TYPE==PAR_TYPE_M_C
+  decode_NFWprof(Z0,pars[0]*M0,pars[1]*C0,VIR_C200,&Halo);  
+#elif  FIT_PAR_TYPE==PAR_TYPE_RHOS_RS
   decode_NFWprof2(Z0,pars[0]*Rhos0,pars[1]*Rs0,VIR_C200,&Halo);
+#endif
   #pragma omp parallel for
   for(i=0;i<nP;i++)
       P[i].E=P[i].K+halo_pot(P[i].r);

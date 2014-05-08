@@ -22,14 +22,19 @@ int nP;
    
    return 0;
  }
-void load_data(char *datafile)
+void load_data(char *datafile, int dataid)
 {
     int i,j;
     FloatMat A;
     GenericMat B;
-       
+    char grpname[32];
+    if(dataid<0)
+      sprintf(grpname,"/");
+    else
+      sprintf(grpname,"/sample%d/",dataid);
+    
     printf("loading %s...\n",datafile);
-    sprintf(A.name,"/x");
+    sprintf(A.name,"%sx",grpname);
     load_hdfmatrixF(datafile,&A,1);
     if(A.size[1]!=3)
     {
@@ -45,7 +50,7 @@ void load_data(char *datafile)
     }
     free(A.x);
     
-    sprintf(A.name,"/v");
+    sprintf(A.name,"%sv",grpname);
     load_hdfmatrixF(datafile,&A,1);
     if(A.size[1]!=3||A.size[0]!=nPall)
     {
@@ -60,7 +65,7 @@ void load_data(char *datafile)
     free(A.x);
     
     
-    sprintf(B.name,"/flag");
+    sprintf(B.name,"%sflag",grpname);
     size_t nload;
     nload=load_hdfmatrix(datafile,&B,1,H5T_NATIVE_INT);
     if(nload==0) printf("Assuming flag=1 for every particle\n");
@@ -107,6 +112,7 @@ void load_data(char *datafile)
     //sort
   // qsort(Pall, nPall, sizeof(Particle), cmpPartR); //sort according to r
     printf("%d particles loaded\n",nPall);
+    P=NULL; //to initialize P
 }
 
 void sample_data(int subsample_id)
@@ -116,6 +122,7 @@ void sample_data(int subsample_id)
 #else
   nP=nPall;
 #endif
+  if(P!=NULL) free(P);
   P=malloc(sizeof(Particle)*nP);
   
   int i,j,imin,imax;
@@ -126,7 +133,7 @@ void sample_data(int subsample_id)
   for(i=imin,j=0;i<imax;i++)
   {
     if(Pall[i].r>R_MIN&&Pall[i].r<R_MAX
-      #if defined(FILTER_FLAG)|defined(FILTER_RAND_SIZE)
+      #if defined(FILTER_FLAG)||defined(FILTER_RAND_SIZE)
       &&Pall[i].flag
       #endif
     )

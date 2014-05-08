@@ -11,7 +11,7 @@ if len(sys.argv)>1:
 else:
   freepars=fullpars
 
-init()
+init(-1)
 select_particles(0)
 
 from iminuit import Minuit

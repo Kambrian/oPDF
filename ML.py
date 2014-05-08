@@ -9,7 +9,7 @@ if len(sys.argv)>1:
 else:
   freepars=fullpars
 
-init()
+init(-1)
 select_particles(0)
 
 from iminuit import Minuit
@@ -24,7 +24,7 @@ for x in fixnames:
 #p['par'][6]=1
 defaults={'m':1,'c':1}
 defaults.update(fixdict)
-m=Minuit(neglike2,print_level=3,errordef=0.5, frontend=ConsoleFrontend(),**defaults)
+m=Minuit(neglike2,print_level=3,errordef=0.5,limit_m=[0.1,10],limit_c=[0.1,10],frontend=ConsoleFrontend(),**defaults)
 #m=Minuit(like,print_level=3,errordef=0.5,frontend=ConsoleFrontend(),limit_a=[8,11],limit_b=[10,13],limit_c=[-4,-1],limit_d=[-2,0],**defaults) #for HOD
 
 m.tol=1. #default convergence mdm<1e-4*tol*errordef, but we do not need that high accuracy

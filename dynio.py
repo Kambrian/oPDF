@@ -16,6 +16,8 @@ PARTYPEXV=c_double*6
 prototype=CFUNCTYPE(c_double, PARTYPEXV)
 dataprob6d=prototype(("dataprob6d",lib))
 init=lib.init
+init.argtypes=[c_int]
+init.restype=c_int
 select_particles=lib.select_particles
 select_particles.argtypes=[c_int]
 

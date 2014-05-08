@@ -1,15 +1,17 @@
-#define R_MIN 0.1
-#define R_MAX 500.
+#define DATAFILE "mockhalo_wenting.hdf5"
+
+#define R_MIN 1
+#define R_MAX 1000.
 // #define FILTER_FLAG
 // #define FILTER_RAND_SIZE 10000 //select a random sample of the given size
 
-#define SUBSAMPLE_SIZE 500 //only load a subsample of this size 
+#define SUBSAMPLE_SIZE 1000 //only load a subsample of this size 
 
 /* mockhalo--*/
 #define Rhos0 2.187762e-3
 #define Rs0 15.2
-#define M0 200.
-#define C0 15.
+#define M0  183.5017
+#define C0 16.1560
 // */
 #define Z0 0.
 
@@ -44,5 +46,5 @@ typedef struct
 extern Particle *P;
 extern int nP;
 
-extern void load_data(char *datafile);
+extern void load_data(char *datafile, int dataid);
 extern void sample_data(int subsample_id);
