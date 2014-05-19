@@ -12,6 +12,12 @@ else:
 init(-1)
 select_particles(0)
 
+from scipy.optimize import *
+like= lambda x:-likefunc2(PARTYPE(x[0],x[1]))
+x=fmin(like, [2,1.5])
+print x
+#numpy.gradient(f, *varargs)[source]
+ 
 from iminuit import Minuit
 from iminuit.ConsoleFrontend import ConsoleFrontend
 
@@ -22,12 +28,13 @@ fixdict={} #gen a dict for fixed pars
 for x in fixnames: 
   fixdict['fix_'+x]=True
 #p['par'][6]=1
-defaults={'m':1,'c':1}
+defaults={'m':2,'c':1.5}
 defaults.update(fixdict)
 m=Minuit(neglike2,print_level=3,errordef=0.5,limit_m=[0.1,10],limit_c=[0.1,10],frontend=ConsoleFrontend(),**defaults)
 #m=Minuit(like,print_level=3,errordef=0.5,frontend=ConsoleFrontend(),limit_a=[8,11],limit_b=[10,13],limit_c=[-4,-1],limit_d=[-2,0],**defaults) #for HOD
 
-m.tol=1. #default convergence mdm<1e-4*tol*errordef, but we do not need that high accuracy
+m.set_strategy(2);
+m.tol=1e-3 #default convergence edm<1e-4*tol*errordef, but we do not need that high accuracy
 result=m.migrad()
 #m.print_param()
 m.print_matrix()

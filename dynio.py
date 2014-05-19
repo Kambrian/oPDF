@@ -1,5 +1,6 @@
 from ctypes import *
 from math import *
+import numpy as np
 
 #load the library
 lib=CDLL("./libdyn.so")
@@ -40,3 +41,41 @@ def pack_to_dict(p):
   for i,pp in enumerate(p):
     d[parname_repo[i]]=pp
   return d
+
+class Particle(Structure):
+  _fields_=[('flag', c_int),
+	    ('r', c_double),
+	    ('K', c_double),
+	    ('L2', c_double),
+	    ('x', c_double*3),
+	    ('v', c_double*3),
+	    ('E', c_double),
+	    ('T', c_double),
+	    ('vr', c_double),
+	    ('theta', c_double),
+	    ('rlim', c_double*2)
+	    ]  
+
+class ParticleData:
+  def __init__(self):
+    self.nP=c_int.in_dll(lib,'nP')
+    #self.StructP=(Particle*self.nP.value).in_dll(lib,'P')
+    self.P2P=POINTER(Particle).in_dll(lib,'P')
+    self.StructP=(Particle*self.nP.value).from_address(addressof(self.P2P.contents))
+    self.P=np.frombuffer(self.StructP,np.dtype(self.StructP))[0]
+    #P=from_buffer(cast(P2P, POINTER(Particle*nP.value)).contents)
+  def print_data(self):
+    print self.nP.value, '%0x'%addressof(self.P2P.contents)
+    print self.P2P[0].x[0], self.P2P[0].r
+    print self.P2P[1].x[0], self.P2P[1].r
+    print '-----------'
+    lib.print_data()
+    print '============='
+
+if __name__=="__main__":
+  init(-1)
+  select_particles(0)
+  P=ParticleData()
+  P.print_data()
+  P.P[1]['r']=2
+  P.print_data()

@@ -76,17 +76,17 @@ LDFLAGS+= -g
 endif
 
 #-----File Dependencies----------------------
-SRC_MAIN=models.c
+SRC_MAIN=scan.c
 EXEC=$(basename $(SRC_MAIN))
 OBJS_MAIN=$(addsuffix .o, $(EXEC))
-SRC_COMM = io.c hdf_util.c cosmology.c mymath.c 
+SRC_COMM = io.c hdf_util.c cosmology.c mymath.c models.c
 OBJS_COMM = $(SRC_COMM:%.c=%.o)
 #any additional OBJS below:
 SRC = wenting.c wenting.f90
 OBJS= $(patsubst %.f90,%.f.o,$(SRC:%.c=%.o))
 
 #-----targets and common rules--------------------------------
-default: models
+default: scan
 all: $(EXEC)
 
 % : %.o $(OBJS_COMM)
@@ -101,8 +101,8 @@ all: $(EXEC)
 #Additional Dependencies
 
 #Additional Flags
-models lib: CFLAGS+=$(OMPLIB)	
-models lib: LDFLAGS+=$(OMPLIB)
+models scan lib: CFLAGS+=$(OMPLIB)	
+models scan lib: LDFLAGS+=$(OMPLIB)
 #mpi flags
 #gama_WL_rand: CC:=$(MPICC)
 
@@ -115,7 +115,15 @@ lib: libdyn.so
 
 libdyn.so:models.o $(OBJS_COMM) wenting.f.o wenting.o
 	$(CC) -shared -Wl,-soname,libdyn.so -o libdyn.so $^ $(LDFLAGS) -lifport -lifcore -lirc
-
+#----------------------
+submit: tmpdir=exe/mockfitFmin_mc$(ESTIMATOR)
+submit: FORCE
+	mkdir -p $(tmpdir)
+	@$(MAKE) lib -B
+	cp dynio.py libdyn.so mockFmin.py job.bsub $(tmpdir)
+	cd $(tmpdir);\
+	bsub <job.bsub #do something immediately after the previous command; keep in same line so that the same subshell is used.
+# 	@$(MAKE) -C $(tmpdir) job #to use this, a makefile has to be in the subdir first.
 	
 #-----Other stuff----------------------------
 .PHONY : clean depend distclean FORCE
@@ -154,3 +162,5 @@ hdf_util.o: hdf_util.h mymath.h
 cosmology.o: mymath.h cosmology.h
 mymath.o: mymath.h
 models.o: mymath.h cosmology.h io.h models.h
+models.o: mymath.h cosmology.h io.h models.h
+scan.o: mymath.h cosmology.h io.h models.h

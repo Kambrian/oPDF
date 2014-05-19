@@ -219,18 +219,19 @@ double KSTest(int FlagKuiper)
   }
   free(theta);
 //   printf("%g: %g,%g\n", TS, KSprob(nP,TS), KSprobNR(nP,TS));
+  double en=sqrt(nP);
   if(FlagKuiper)
 #ifdef RETURN_PROB
     return KuiperProb(nP, TS);
 #else
-    return log(KuiperProb(nP, TS));
+    return -(en+0.155+0.24/en)*TS;
 #endif
   else
     #ifdef RETURN_PROB
     // return  lnL*sqrt(nP);
     return KSprob(nP, TS); //convert to something comparable to a log-likelihood
 #else
-    return log(KSprob(nP, TS)); //convert to something comparable to a log-likelihood
+    return -(en+0.12+0.11/en)*TS;
 #endif
 }
 double AndersonDarlingTest_Old()
@@ -445,6 +446,7 @@ double likelihood(double pars[])
 {
   int i;
   double lnL;
+  if(pars[0]<0||pars[1]<0) return -INFINITY;
 #if FIT_PAR_TYPE==PAR_TYPE_M_C
   decode_NFWprof(Z0,pars[0]*M0,pars[1]*C0,VIR_C200,&Halo);  
 #elif  FIT_PAR_TYPE==PAR_TYPE_RHOS_RS
@@ -485,50 +487,6 @@ double likelihood(double pars[])
     
 //   printf("%g,%g: %g\n", pars[0],pars[1],lnL);
   return lnL;
-}
-
-int main(int argc, char **argv)
-{
-  double pars[NUM_PAR_MAX]={1.,1.};
-  int subsample_id=0,i;
-  if(argc>=3)
-  {
-    pars[0]=atof(argv[1]);
-    pars[1]=atof(argv[2]);
-  }
-  if(argc>3)
-    subsample_id=atoi(argv[3]);
-  
-//   decode_NFWprof(0,pars[0]*M0,pars[1]*C0,VIR_C200,&Halo);
-//   printf("Rhos=%g,Rs=%g,Rv=%g\n",Halo.Rhos,Halo.Rs,Halo.Rv);
-//   return 0;
-//   
-  init(-1);
-  for(i=0;i<400;i++)
-  {
-    select_particles(i);
-    printf("%g,", freeze_and_like(pars));
-  }
-  printf("\n");
-//   printf("%g\n", freeze_and_like(pars));
-//   freeze_and_like(pars);
-//   return 0;
-//   double x;
-//  for(x=0.5;x<1.5;x+=0.005)
-//  {
-//    pars[0]=x;
-//    printf("%g,%g;", x, freeze_and_like(pars));
-//  }
-//  printf("\n");
- //   freeze_energy(pars);
-//   double lnL=likelihood(pars);
-//   printf("Rhos=%g,Rs=%g,lnL=%g\n",pow(10.,pars[0]),pow(10.,pars[1]),lnL);
-
-//   pars[0]+=0.1;
-//   freeze_and_like(pars);
-  free_integration_space();
-  
-  return 0;
 }
 
 int init(int dataid)

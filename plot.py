@@ -18,10 +18,12 @@ def show_legend():
   
 class EnsembleFile:
   """ file of the fitted parameters for an ensemble of realizations """
-  NameList={4:'RBin',8:'AD',9:'Resultant',10:'Mean',11:'KS',12:'Kuiper',13:'CosMean'}
-  ColorList={4:'r',8:'g',9:'b',10:'c',11:'m',12:'y',13:'k'} 
+  #below are class-specific variable, static class-scope variable, that are shared by all the instances
+  NameList={0:'f(E,L)',4:'RBin',8:'AD',9:'Resultant',10:'Mean',11:'KS',12:'Kuiper',13:'CosMean'}
+  ColorList={0:'k',4:'r',8:'g',9:'b',10:'c',11:'m',12:'y',13:'k'} 
   def __init__(self,infile):
     """infile: the file to be examined """
+    #variables here are instance-specific, different for different instances
     self.file=infile
     self.rawdata=loadtxt(infile)
     self.pars=self.rawdata[self.rawdata[:,-1]>0,0:2]
@@ -35,30 +37,23 @@ class EnsembleFile:
     self.mean=self.pars.mean(axis=0)
     self.std=self.pars.std(axis=0)
     self.cov=cov(self.pars.T)
-    self.corrcoef=corrcoef(self.pars.T)
+    self.corrcoef=corrcoef(self.pars.T)[0,1]
     self.mean_log=log10(self.pars).mean(axis=0)
     self.std_log=log10(self.pars).std(axis=0)
     self.cov_log=cov(log10(self.pars.T))
-    self.corrcoef_log=corrcoef(log10(self.pars.T))
+    self.corrcoef_log=corrcoef(log10(self.pars.T))[0,1]
     print "Model %d: "%self.id+self.estimator
     print "%d out of %d good fits"%(self.pars.shape[0], self.rawdata.shape[0])
-    print "Median:"
-    print self.median
-    print "-----------"
-    print "Mean:"
-    print self.mean
-    print "Std:"
-    print self.std
-    print "Corr:"
-    print self.corrcoef
-    print "------------"
-    print "Mean(log):"
-    print self.mean_log
-    print "Std(log):"
-    print self.std_log
-    print "Corr(log):"
-    print self.corrcoef_log
-    print "***************************"
+    print "Median=", self.median
+    print "-----------------------"
+    print "m = %.3f +- %.3f"%(self.mean[0],self.std[0])
+    print "c = %.3f +- %.3f"%(self.mean[1],self.std[1])
+    print "corr= %.3f"%self.corrcoef
+    print "-----------------------"
+    print "log(m) = %.3f +- %.3f"%(self.mean_log[0],self.std_log[0])
+    print "log(c) = %.3f +- %.3f"%(self.mean_log[1],self.std_log[1])
+    print "corr(log)= %.3f"%self.corrcoef_log
+    print "********************************************"
           
   def plot_corner(self):    
     #labels=[r"$\log (\rho_s/\rho_{s0})$",r"$\log (r_s/r_{s0})$"]
@@ -80,8 +75,8 @@ class EnsembleFile:
   def plot_contour(self,nbin=100, percents=0.683, logscale=True, **kwargs):
     """percents can be a list, specify the contour percentile levels"""
     h,h0=percentile_contour(self.pars.T, nbin=nbin, percents=percents, color=self.color, logscale=logscale, **kwargs)
-    h.set_label(self.estimator)
-    plot(self.median[0],self.median[1],'o',markersize=10,color=self.color)
+    h.set_label(self.estimator+' %d/%d'%(self.pars.shape[0],self.rawdata.shape[0]))
+    #plot(self.median[0],self.median[1],'o',markersize=10,color=self.color)
     return h
 
 def plot_dir_cov(dir='/gpfs/data/jvbq85/DynDistr/data/mockfit_mc/',logscale=True):
@@ -101,14 +96,16 @@ def plot_dir_cov(dir='/gpfs/data/jvbq85/DynDistr/data/mockfit_mc/',logscale=True
       axis([0,2,0,2])
       
 
-def plot_dir_contour(dir='/gpfs/data/jvbq85/DynDistr/data/mockfit_mc/',logscale=True):
+def plot_dir_contour(name='HighPrecRand',logscale=True):
+      #dir='/gpfs/data/jvbq85/DynDistr/data/mockfit'+name+'_mc/'
+      dir='/mnt/charon/DynDistr/data/mockfit'+name+'_mc/'
       hall=[]
       for f in glob.glob(dir+'/fit*.dat'):
 	ff=EnsembleFile(f)
-	hall.append(ff.plot_contour(logscale=logscale))
+	hall.append(ff.plot_contour(percents=[0.683],logscale=logscale))
       legend(hall,[getp(x,'label') for x in hall],loc=1)
       plot([0.1,10],[1,1],'k:',[1,1],[0.1,10],'k:')
-      axis([0.5,2,0.5,2])
+      axis([0.3,3,0.3,3])
       if logscale:
 	xtickloc=list(arange(xlim()[0],1,0.1))
 	xtickloc.extend(arange(1,xlim()[1]+0.1,0.2))
@@ -116,6 +113,31 @@ def plot_dir_contour(dir='/gpfs/data/jvbq85/DynDistr/data/mockfit_mc/',logscale=
 	ytickloc=list(arange(xlim()[0],1,0.1))
 	ytickloc.extend(arange(1,xlim()[1]+0.1,0.2))
 	yticks(ytickloc, map(str, ytickloc))
+	
+def plot_high_prec(T=1,fit='Fmin'):
+  """or fit='Fmin' """
+  basedir='/mnt/charon/DynDistr/data/'
+  dirlist=['mockfit'+fit+'Rand_mc','mockfit'+fit+'SwapT_mc']
+  #tlist={0:0,4:0,8:0,9:1,10:0,11:0,12:1,13:0}
+  tlist={0:0,4:0,8:0,9:1,10:0,11:0,12:1}
+  hall=[]
+  for m,t in tlist.items():
+    if T==2:
+      t=int(not t)
+    f=basedir+dirlist[t]+'/fit%d_mc.dat'%m
+    ff=EnsembleFile(f)
+    hall.append(ff.plot_contour(percents=0.68,logscale=True))
+  legend(hall,[getp(x,'label') for x in hall],loc=1)
+  plot([0.1,10],[1,1],'k:',[1,1],[0.1,10],'k:')
+  #axis([0.5,2,0.5,2])
+  #xtickloc=[0.5,0.6,0.7,0.8,0.9,1,1.2,1.4,1.6,1.8,2.0]
+  axis([0.3,3,0.3,3])
+  xtickloc=[0.3,0.5,1.0,1.5,2.0,2.5,3.0]
+  xticks(xtickloc, map(str, xtickloc))
+  yticks(xtickloc, map(str, xtickloc))
+  xlabel(r'$M/M_0$')
+  ylabel(r'$c/c_0$')
+  savefig('/work/Projects/DynDistr/plots/Ensemble%s_T%d.eps'%(fit,T))
 
 def chi2sig(ts,dof=1):
   '''convert a chi2 TS to sigma'''
@@ -133,7 +155,7 @@ def plot_sigma_prof(id=0,dim=0,x=x0):
     y=array([like2(a,1.) for a in x])
   else:
     y=array([like2(1.,a) for a in x])
-  y,py=chi2sig(-y,1)
+  #y,py=chi2sig(-y,1)
   #print zip(x,y)
   plot(x,y)
   if dim==0:

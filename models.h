@@ -7,7 +7,8 @@
 #define HALF_ORBIT_PERIOD 1
 #define FULL_ORBIT_PERIOD 2
 
-// #define PHASE_PERIOD 1
+#define PHASE_PERIOD 1
+// #define SWAP_T
 
 #define ENTROPY_ESTIMATOR 1 //conditional like; junk
 #define ITERATIVE_ESTIMATOR 2 //iterative entropy; still junk
@@ -29,7 +30,7 @@
 
 //#define ESTIMATOR 10  //this has been moved to makefile
 //#define RETURN_RAWMEAN 
-#define RETURN_PROB //for KS and Kuiper
+// #define RETURN_PROB //for KS and Kuiper
 
 #if ESTIMATOR >= RADIAL_PHASE_BINNED
 #define RADIAL_PHASE_ESTIMATOR  ESTIMATOR //to enable calculation for radial phase
@@ -37,16 +38,25 @@
 
 #ifndef PHASE_PERIOD
   #if ESTIMATOR==RADIAL_PHASE_KUIPER||ESTIMATOR==RADIAL_PHASE_CMOMENT||ESTIMATOR==RADIAL_PHASE_COSMEAN //these two seems to be biased a bit when used with the half-period-phase
-    #define PHASE_PERIOD FULL_ORBIT_PERIOD
+    #ifndef SWAP_T 
+      #define PHASE_PERIOD FULL_ORBIT_PERIOD
+    #else //alternative period def
+      #define PHASE_PERIOD HALF_ORBIT_PERIOD
+    #endif
   #else //below can be biased if used with the full-period-phase
-    #define PHASE_PERIOD HALF_ORBIT_PERIOD 
+    #ifndef SWAP_T
+      #define PHASE_PERIOD HALF_ORBIT_PERIOD 
+    #else
+      #define PHASE_PERIOD FULL_ORBIT_PERIOD 
+    #endif
   #endif
 #endif
 
+
 #define NUM_PAR_MAX 10
 
-#define MODEL_TOL_BIN 1e-5 //bin size relative error
-#define MODEL_TOL_REL 1e-7 //relative tolerance for PERIOD integral
+#define MODEL_TOL_BIN 1e-6 //bin size relative error
+#define MODEL_TOL_REL 1e-8 //relative tolerance for PERIOD integral
 #define MODEL_MAX_INTVAL 1000
 
 extern struct NFWParZ Halo;

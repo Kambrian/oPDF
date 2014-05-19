@@ -117,12 +117,18 @@ void load_data(char *datafile, int dataid)
 
 void sample_data(int subsample_id)
 {//to be done: bootstrap when subsample_id<0
+  if(subsample_id<0) //do not select
+  {
+    nP=nPall;
+    P=Pall;
+    return;
+  }
 #ifdef SUBSAMPLE_SIZE
   nP=SUBSAMPLE_SIZE;
 #else
   nP=nPall;
 #endif
-  if(P!=NULL) free(P);
+  if(P!=NULL&&P!=Pall) free(P);
   P=malloc(sizeof(Particle)*nP);
   
   int i,j,imin,imax;
@@ -149,4 +155,12 @@ void sample_data(int subsample_id)
 //   for(i=0;i<nP;i++)
 //     P[i].flag=(drand48()*nP<FILTER_RAND_SIZE);
 //   #endif
+}
+
+void print_data()
+{
+  printf("%d, %p\n", nP, P);
+  printf("%g, %g\n", P[0].x[0], P[0].r);
+  printf("%g, %g\n", P[1].x[0], P[1].r);
+  printf("%d, %p\n", nPall, Pall);
 }
