@@ -76,7 +76,7 @@ LDFLAGS+= -g
 endif
 
 #-----File Dependencies----------------------
-SRC_MAIN=models.c scan.c
+SRC_MAIN=scan.c
 EXEC=$(basename $(SRC_MAIN))
 OBJS_MAIN=$(addsuffix .o, $(EXEC))
 SRC_COMM = io.c hdf_util.c cosmology.c mymath.c models.c
@@ -86,7 +86,7 @@ SRC = wenting.c wenting.f90
 OBJS= $(patsubst %.f90,%.f.o,$(SRC:%.c=%.o))
 
 #-----targets and common rules--------------------------------
-default: models
+default: scan
 all: $(EXEC)
 
 % : %.o $(OBJS_COMM)
@@ -162,3 +162,5 @@ hdf_util.o: hdf_util.h mymath.h
 cosmology.o: mymath.h cosmology.h
 mymath.o: mymath.h
 models.o: mymath.h cosmology.h io.h models.h
+models.o: mymath.h cosmology.h io.h models.h
+scan.o: mymath.h cosmology.h io.h models.h

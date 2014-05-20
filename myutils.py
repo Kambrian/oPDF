@@ -3,10 +3,21 @@
 
 import sys
 import numpy as np
-from scipy.stats import gaussian_kde
+from scipy.stats import gaussian_kde,norm
 from matplotlib.pyplot import *
 from matplotlib.patches import Ellipse
 
+def ADSurvFunc(AD):
+  return 1-norm.cdf(np.log(AD),loc=-0.22,scale=0.66);
+
+def P2Sig(pval):
+  """convert pval to sigma"""
+  return norm.ppf(1.0-pval/2)
+
+def AD2Sig(AD):
+  """convert AndersonDarling TS to sigma"""
+  return P2Sig(ADSurvFunc(AD))
+  
 class ProgressMonitor:
 	"""monitor progress of your loops"""
 	def __init__(self,total_steps, total_show=100, init_show=0):

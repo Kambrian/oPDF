@@ -2,11 +2,14 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 
 #include "mymath.h"
 #include "hdf_util.h"
 #include "io.h"
-  
+
+double R_MIN, R_MAX;
 static Particle *Pall;
 static int nPall;
 Particle *P;
@@ -22,12 +25,13 @@ int nP;
    
    return 0;
  }
-void load_data(char *datafile, int dataid)
+void load_data(char *datafile)
 {
     int i,j;
     FloatMat A;
     GenericMat B;
     char grpname[32];
+    int dataid=-1;
     if(dataid<0)
       sprintf(grpname,"/");
     else
@@ -115,6 +119,24 @@ void load_data(char *datafile, int dataid)
     P=NULL; //to initialize P
 }
 
+void shuffle_data(unsigned long int seed)
+{
+    const gsl_rng_type * T;
+    gsl_rng * r;
+    int sky,i,*galidlist;
+    void *p;
+
+    /* create a generator chosen by the
+       environment variable GSL_RNG_TYPE */
+    gsl_rng_env_setup();
+    T = gsl_rng_default;
+    r = gsl_rng_alloc (T);
+    gsl_rng_set(r,seed+3);
+    
+    gsl_ran_shuffle(r, Pall, nPall, sizeof(Particle));
+    
+    gsl_rng_free (r);
+}
 void sample_data(int subsample_id)
 {//to be done: bootstrap when subsample_id<0
   if(subsample_id<0) //do not select
@@ -157,10 +179,41 @@ void sample_data(int subsample_id)
 //   #endif
 }
 
+int squeeze_data()
+{//remove flag=0 particles from P
+  int i,j;
+  
+  for(i=0,j=0;i<nP;i++)
+  {
+    if(P[i].flag)
+    {
+      if(i>j) P[j]=P[i];
+      j++;
+    }
+  }
+  nP=j;
+  P=realloc(P,sizeof(Particle)*nP);
+  return nP;
+}
+
+void free_data()
+{
+  if(nP)
+  {
+  free(P);
+  nP=0;
+  }
+  if(nPall)
+  {
+  free(Pall);
+  nPall=0;
+  }
+}
 void print_data()
 {
   printf("%d, %p\n", nP, P);
   printf("%g, %g\n", P[0].x[0], P[0].r);
   printf("%g, %g\n", P[1].x[0], P[1].r);
   printf("%d, %p\n", nPall, Pall);
+  printf("%g-%g\n", R_MIN, R_MAX);
 }

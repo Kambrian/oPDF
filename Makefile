@@ -162,5 +162,4 @@ hdf_util.o: hdf_util.h mymath.h
 cosmology.o: mymath.h cosmology.h
 mymath.o: mymath.h
 models.o: mymath.h cosmology.h io.h models.h
-models.o: mymath.h cosmology.h io.h models.h
 scan.o: mymath.h cosmology.h io.h models.h

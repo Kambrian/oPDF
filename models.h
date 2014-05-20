@@ -32,9 +32,7 @@
 //#define RETURN_RAWMEAN 
 // #define RETURN_PROB //for KS and Kuiper
 
-#if ESTIMATOR >= RADIAL_PHASE_BINNED
-#define RADIAL_PHASE_ESTIMATOR  ESTIMATOR //to enable calculation for radial phase
-#endif
+#define IS_PHASE_ESTIMATOR(x) ((x)>=RADIAL_PHASE_BINNED)
 
 #ifndef PHASE_PERIOD
   #if ESTIMATOR==RADIAL_PHASE_KUIPER||ESTIMATOR==RADIAL_PHASE_CMOMENT||ESTIMATOR==RADIAL_PHASE_COSMEAN //these two seems to be biased a bit when used with the half-period-phase
@@ -59,6 +57,7 @@
 #define MODEL_TOL_REL 1e-8 //relative tolerance for PERIOD integral
 #define MODEL_MAX_INTVAL 1000
 
+extern double M0,C0,Rhos0,Rs0;
 extern struct NFWParZ Halo;
 
 extern void alloc_integration_space();
@@ -66,11 +65,12 @@ extern void free_integration_space();
 extern double halo_pot(double r);
 extern void solve_radial_limits(int pid);
 extern double vr_inv_part(double r, int pid);
-extern void solve_radial_orbit(int pid);
+extern void solve_radial_orbit(int pid, int estimator);
 extern void fill_radial_bin();
-extern double likelihood(double pars[]);
+extern double likelihood(double pars[], int estimator);
 
-extern int init(int dataid);
+extern void define_halo(double pars[]);
+extern void init();
 extern void freeze_energy(double pars[]);
-extern double freeze_and_like(double pars[]);
+extern double freeze_and_like(double pars[], int estimator);
 extern void select_particles(int subsample_id);

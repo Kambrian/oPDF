@@ -9,12 +9,16 @@
 #include <gsl/gsl_integration.h>
 #include <time.h>
 #include <sys/times.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include "mymath.h"
 #include "cosmology.h"
 #include "io.h"
 #include "models.h"
 
+#define Z0 0. 
+double M0,C0,Rhos0,Rs0;
 struct NFWParZ Halo;
 
 double halo_pot(double r)
@@ -108,7 +112,7 @@ void free_integration_space()
   {//gsl_integration_workspace_free (GSL_workspace);
     gsl_integration_cquad_workspace_free (GSL_workspaceC);}
 }
-void solve_radial_orbit(int pid)
+void solve_radial_orbit(int pid, int estimator)
 {//find peri(apo)-centers and integrate the period 
   solve_radial_limits(pid); //according to current potential and E,L,r; E must be initialized with a initial potential
   if(is_forbidden(P[pid].r,pid))
@@ -127,7 +131,8 @@ void solve_radial_orbit(int pid)
   size_t neval;
   gsl_integration_cquad (&F, P[pid].rlim[0],P[pid].rlim[1], 0, MODEL_TOL_REL, //3, 
 			 GSL_workspaceC, &(P[pid].T), &error, &neval);
-#if ESTIMATOR==RADIAL_PHASE_ESTIMATOR
+  if(IS_PHASE_ESTIMATOR(estimator))
+  {
   double t;
   gsl_integration_cquad (&F, P[pid].rlim[0],P[pid].r, 0, MODEL_TOL_REL, //3, 
 			 GSL_workspaceC, &t, &error, &neval);
@@ -140,7 +145,7 @@ void solve_radial_orbit(int pid)
 //   if(P[pid].theta==INFINITY) 
 //   {printf("p=%d, r=%g, rlim=[%g,%g], t=%g, T=%g\n", pid, P[pid].r, P[pid].rlim[0], P[pid].rlim[1], t, P[pid].T*2);
 //     printf("1/v=%g, isforbiidden=%d\n", vr_inv_part(P[pid].rlim[0],pid), is_forbidden(P[pid].rlim[0],pid));};
-#endif  
+  }  
   //   result=smpintD(&F,xlim[0],xlim[1],MODEL_TOL_REL); //too slow
 //   if(P[pid].T<=0) printf("Part %d (M=%g,c=%g): r=%g,K=%g, E=%g, L2=%g; T=%g (vt/v=%g)\n",pid, Halo.M, Halo.c, P[pid].r, P[pid].K, P[pid].E, P[pid].L2, P[pid].T, sqrt(P[pid].L2/P[pid].r/P[pid].r/2./P[pid].K));
 }
@@ -153,11 +158,19 @@ double like_circular_moment()
     for(i=0;i<nP;i++)
     {
       c+=cos(P[i].theta*2*k*M_PI);
-#if ESTIMATOR!=RADIAL_PHASE_COSMEAN      
       s+=sin(P[i].theta*2*k*M_PI);
-#endif      
     }
   return -2*k*(c*c+s*s)/nP;//chisquare(2) distributed; make negative to be comparable to likelihood
+}
+double like_cos_mean()
+{//http://en.wikipedia.org/wiki/Circular_uniform_distribution
+  //this resultant is rotational invariant
+  int i,k=1;//k-th order moments, zoom in to examine the rotational symmetry on 2pi/k scale
+  double c=0.;
+   #pragma omp parallel for reduction(+:c)
+    for(i=0;i<nP;i++)
+      c+=cos(P[i].theta*2*k*M_PI);
+  return -2*k*(c*c)/nP;//chisquare(2) distributed; make negative to be comparable to likelihood
 }
 double like_linear_moment()
 {  
@@ -442,82 +455,119 @@ double like_iterative_radial()
     return lnL;
 }
 
-double likelihood(double pars[])
+double likelihood(double pars[], int estimator)
 {
   int i;
   double lnL;
   if(pars[0]<0||pars[1]<0) return -INFINITY;
-#if FIT_PAR_TYPE==PAR_TYPE_M_C
-  decode_NFWprof(Z0,pars[0]*M0,pars[1]*C0,VIR_C200,&Halo);  
-#elif  FIT_PAR_TYPE==PAR_TYPE_RHOS_RS
-  decode_NFWprof2(Z0,pars[0]*Rhos0,pars[1]*Rs0,VIR_C200,&Halo);
-#endif
-
+  define_halo(pars);
+  
   #pragma omp parallel for
-    for(i=0;i<nP;i++)
-      solve_radial_orbit(i);
-    
-  #if ESTIMATOR==RADIAL_PHASE_BINNED
-    lnL=like_phase_binned();
-  #elif ESTIMATOR==RADIAL_PHASE_PARTITION
-    lnL=like_phase_partition();
-  #elif ESTIMATOR==RADIAL_PHASE_PROCESS
-    lnL=like_phase_process();
-  #elif ESTIMATOR==MIXED_RADIAL_ESTIMATOR
-    lnL=like_mixed_radial();
-  #elif ESTIMATOR==RADIAL_BIN_ESTIMATOR
-    lnL=like_radial_bin();    
-  #elif ESTIMATOR==ITERATIVE_ESTIMATOR
-    lnL=like_iterative_radial();
-  #elif ESTIMATOR==ENTROPY_ESTIMATOR
-    lnL=like_entropy();
-  #elif ESTIMATOR==RADIAL_PHASE_ROULETTE
-    lnL=AndersonDarlingTest();
-  #elif ESTIMATOR==RADIAL_PHASE_CMOMENT
-    lnL=like_circular_moment();
-  #elif ESTIMATOR==RADIAL_PHASE_COSMEAN
-    lnL=like_circular_moment();    
-  #elif ESTIMATOR==RADIAL_PHASE_LMOMENT
-    lnL=like_linear_moment();
-  #elif ESTIMATOR==RADIAL_PHASE_KS
-    lnL=KSTest(0);  
-  #elif ESTIMATOR==RADIAL_PHASE_KUIPER
-    lnL=KSTest(1);      
-  #endif         
-    
-//   printf("%g,%g: %g\n", pars[0],pars[1],lnL);
+  for(i=0;i<nP;i++)
+    solve_radial_orbit(i,estimator);
+  
+  switch(estimator)
+  {
+    case RADIAL_PHASE_BINNED:
+      lnL=like_phase_binned();
+      break;
+    case RADIAL_PHASE_PARTITION:
+      lnL=like_phase_partition();
+      break;
+    case RADIAL_PHASE_PROCESS:
+      lnL=like_phase_process();
+      break;
+    case MIXED_RADIAL_ESTIMATOR:
+      like_mixed_radial();
+      break;
+    case RADIAL_BIN_ESTIMATOR:
+      lnL=like_radial_bin();
+      break;    
+    case ITERATIVE_ESTIMATOR:
+      lnL=like_iterative_radial();
+      break;
+    case ENTROPY_ESTIMATOR:
+      lnL=like_entropy();
+      break;
+    case RADIAL_PHASE_ROULETTE:
+      lnL=AndersonDarlingTest();
+      break;
+    case RADIAL_PHASE_CMOMENT:
+      lnL=like_circular_moment();
+      break;
+    case RADIAL_PHASE_COSMEAN:
+      lnL=like_cos_mean();
+      break;    
+    case RADIAL_PHASE_LMOMENT:
+      lnL=like_linear_moment();
+      break;
+    case RADIAL_PHASE_KS:
+      lnL=KSTest(0);  
+      break;
+    case RADIAL_PHASE_KUIPER:
+      lnL=KSTest(1);
+      break;
+    default:
+      fprintf(stderr, "Error: unknown Estimator=%d\n", estimator);
+      exit(estimator);
+  }  
+  
+  //   printf("%g,%g: %g\n", pars[0],pars[1],lnL);
   return lnL;
 }
 
-int init(int dataid)
+void init()
 {
-  char datafile[1024]=ROOTDIR"/data/"DATAFILE;
+  char datafile[1024]=ROOTDIR"/data/mockhalo_wenting.hdf5";
+  R_MIN=1;
+  R_MAX=1000;
+  M0=183.5017;
+  C0=16.1560;
   
-  load_data(datafile, dataid);
+  if(NULL!=getenv("DynDataFile"))
+  {
+    printf("Importing parameters from environment..\n");
+    sprintf(datafile,"%s/data/%s", ROOTDIR, getenv("DynDataFile"));
+    R_MIN=strtod(getenv("DynRMIN"),NULL);
+    R_MAX=strtod(getenv("DynRMAX"),NULL);
+    M0=strtod(getenv("DynM0"),NULL);
+    C0=strtod(getenv("DynC0"),NULL);
+  }
+  else
+    printf("Warning: Using default parameters with datafile %s .\n", datafile);
+ 
+  printf("%s; %g,%g;%g,%g\n", datafile, R_MIN,R_MAX,M0,C0);
+  decode_NFWprof(Z0,M0,C0,VIR_C200,&Halo);
+  Rhos0=Halo.Rhos;
+  Rs0=Halo.Rs;
+  
+  load_data(datafile);
+  shuffle_data(100);
   alloc_integration_space();
-  return ESTIMATOR; 
 }
 void select_particles(int subsample_id)
 {
   sample_data(subsample_id);
-  #if ESTIMATOR==RADIAL_BIN_ESTIMATOR
   fill_radial_bin();
-  #endif
 }
 void freeze_energy(double pars[])
 {//fix the energy parameter according to initial potential
   int i;
+  define_halo(pars);
+  #pragma omp parallel for
+  for(i=0;i<nP;i++)
+      P[i].E=P[i].K+halo_pot(P[i].r);
+}
+void define_halo(double pars[])
+{ 
 #if FIT_PAR_TYPE==PAR_TYPE_M_C
   decode_NFWprof(Z0,pars[0]*M0,pars[1]*C0,VIR_C200,&Halo);  
 #elif  FIT_PAR_TYPE==PAR_TYPE_RHOS_RS
   decode_NFWprof2(Z0,pars[0]*Rhos0,pars[1]*Rs0,VIR_C200,&Halo);
 #endif
-  #pragma omp parallel for
-  for(i=0;i<nP;i++)
-      P[i].E=P[i].K+halo_pot(P[i].r);
 }
-double freeze_and_like(double pars[])
+double freeze_and_like(double pars[], int estimator)
 {
   freeze_energy(pars);
-  return likelihood(pars);
+  return likelihood(pars, estimator);
 }
