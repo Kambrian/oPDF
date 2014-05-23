@@ -16,7 +16,10 @@ def P2Sig(pval):
 
 def AD2Sig(AD):
   """convert AndersonDarling TS to sigma"""
-  return P2Sig(ADSurvFunc(AD))
+  AD=np.array(AD)
+  sig=P2Sig(ADSurvFunc(AD))
+  sig[AD>5]=(np.log(AD[AD>5])+0.22)/0.66
+  return sig
   
 class ProgressMonitor:
 	"""monitor progress of your loops"""

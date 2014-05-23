@@ -1,12 +1,15 @@
-import sys,os,ConfigParser
+import sys,os,ConfigParser,h5py
+from numpy import *
+import matplotlib
+import __main__ as main
+if hasattr(main, '__file__'): #non-interactive
+  matplotlib.use('Agg')
+matplotlib.rcParams.update({'font.size': 15, 'ps.fonttype' : 42 , 'pdf.fonttype' : 42 ,' image.origin': 'lower', 'image.interpolation': None})
+from matplotlib.pyplot import *
+from myutils import *
 from dynio import *
 #os.environ['OMP_NUM_THREADS']='32'
-from matplotlib.pyplot import *
-from numpy import *
-from scipy.stats import chi2,norm
-from myutils import *
-import triangle
-import glob
+
 
 def pick_particles(sample=0):
   select_particles(sample)
@@ -14,66 +17,201 @@ def pick_particles(sample=0):
   freeze_energy(1,1)
   return P
 
-def TSprof(bintype='E',sample=0,nbin=20,estimator=8):
+def scanTS2D(bintype=('E','r'), sample=0, nbin=30, estimator=8, logscale=True, plotcount=False):
   P=pick_particles(sample)  
+  #p=P.StructP #original copy
   rmin=P.R_MIN.value
   rmax=P.R_MAX.value
-  proxy=copy(P.P[bintype])
-  if bintype=='E':
-    proxy=-proxy
-  xmin,xmax=proxy[proxy>0].min(),proxy.max()
-  x=logspace(log10(xmin),log10(xmax),nbin)
+  proxy=dict()
+  x=dict()
+  for b in bintype:
+    x[b],proxy[b]=P.gen_bin(b,nbin,logscale)
+  TS=empty([nbin,nbin])
+  for i,x0 in enumerate(x[bintype[0]][:-1]):
+    x1=x[bintype[0]][i+1]
+    fx=(proxy[bintype[0]]>=x0)*(proxy[bintype[0]]<x1)
+    if bintype[0]=='r': #update radial limits for radial cut
+	P.R_MIN.value=x0
+	P.R_MAX.value=x1
+    for j,y0 in enumerate(x[bintype[1]][:-1]):
+      y1=x[bintype[1]][j+1]
+      fy=(proxy[bintype[1]]>=y0)*(proxy[bintype[1]]<y1)
+      if sum(fx*fy)==0:
+	TS[i,j]=nan
+	continue
+      #P.P2P.contents=(Particle*P.nP.value).from_buffer_copy(p) #make a copy to the c-pointer
+      #P=ParticleData() #reinitialize the particle data to be the new copy
+      P.P['flag']=0
+      P.P['flag'][fx*fy]=1
+      if bintype[1]=='r': #update radial limits for radial cut
+	P.R_MIN.value=y0
+	P.R_MAX.value=y1
+      squeeze_data()
+      #if (array(bintype)=='r').any(): #update the bin counts for radial cut
+	#lib.fill_radial_bin() #TODO: uncomment this when estimator=4
+      TS[i,j]=like(1,1,estimator)
+      print i,j,P.nP.value, TS[i,j]
+      P.R_MIN.value=rmin #restore radial limits
+      P.R_MAX.value=rmax
+      P=pick_particles(sample)  #restore sample
+  if logspace:
+    extent=[log10(x[b][j]) for b in bintype for j in [0,-1]]
+  else:
+    extent=[x[b][j] for b in bintype for j in [0,-1]]
+  if plotcount:
+    figure()
+    subplot(1,2,1)
+    H=histogram2d(proxy[bintype[0]],proxy[bintype[1]],[x[b] for b in bintype])
+    imshow(H[0].T,extent=extent,origin='lower', interpolation='None')
+    subplot(1,2,2)
+  if estimator==8:
+    im=AD2Sig(-TS.T)
+  else:  
+    im=TS.T  
+  imshow(im,extent=extent,origin='lower', interpolation='None')
+  colorbar()
+  #CS=contour(AD2Sig(-TS.T),levels=[1,3,5,7],extent=extent,origin='lower')
+  #clabel(CS,inline=1)
+  if logscale:
+    xlabel(r'$\log$(%s)'%bintype[0])
+    ylabel(r'$\log$(%s)'%bintype[1])
+  else:  
+    xlabel(bintype[0])
+    ylabel(bintype[1])
+  return TS,x,proxy
+
+def TSprof(bintype='E',sample=0,nbin=50,estimator=8,logscale=True,plotcount=True,equalcount=False):
+  P=pick_particles(sample)
+  rmin=P.R_MIN.value
+  rmax=P.R_MAX.value
+  try:
+    len(nbin)
+    x=nbin
+    proxy=copy(P.P[bintype])
+  except:
+    x,proxy=P.gen_bin(bintype,nbin,logscale,equalcount=equalcount)
   TS=[]
   for i,x0 in enumerate(x[:-1]):
     x1=x[i+1]
+    fx=(proxy>=x0)*(proxy<x1)
+    if sum(fx)==0:
+      TS.append(nan)
+      continue
     P.P['flag']=0
-    P.P['flag'][logical_and(proxy>=x0,proxy<x1)]=1
+    P.P['flag'][fx]=1
     if bintype=='r': #update radial limits for radial cut
       P.R_MIN.value=x0
       P.R_MAX.value=x1
     squeeze_data() #radial limits actually get updated inside this func.
-    if bintype=='r': #update the bin counts for radial cut
-      lib.fill_radial_bin()
+    #if bintype=='r': #update the bin counts for radial cut
+      #lib.fill_radial_bin() #TODO: uncomment this when estimator=4
     TS.append(like(1,1,estimator))
     print i, P.nP.value, TS[-1]
     P.R_MIN.value=rmin #restore radial limits
     P.R_MAX.value=rmax
     P=pick_particles(sample) 
   
-  #figure()
-  #subplot(211)
-  #hist(proxy,x,log=True)
-  #xscale('log')
-  #xlim(x.min(),x.max())
-  #ylabel('Count')
-  #subplot(212)
-  plot(x[:-1],AD2Sig(-array(TS)))
-  xscale('log')
+  if plotcount:
+    figure()
+    subplot(211)
+    hist(proxy,x,log=logscale)
+    if logscale:
+      xscale('log')
+    xlim(x.min(),x.max())
+    ylabel('Count')
+    subplot(212)
+  #plot(x[:-1],AD2Sig(-array(TS)))
+  plot(x[:-1],(-array(TS)))
+  if logscale:
+    xscale('log')
   xlim(x.min(),x.max())
   xlabel(bintype)
-  ylabel(r'Discrepancy/$\sigma$')
-  return x,TS
+  ylabel('TS')
+  #ylabel(r'Discrepancy/$\sigma$')
+  return TS,x
 
-def plot_halo_TS(halo,estimator=8):    
+def plot_halo_TS(halo,estimator=8, rmax=None, flagsave=False):    
   get_config(halo)
-  os.environ['DynRMAX']='500'
+  if rmax!=None:
+    os.environ['DynRMAX']=format(rmax)
+  else:
+    rmax=float(os.environ['DynRMAX'])
   init()
+  x=dict()
+  TS=dict()
   subplot(311)
-  TSprof(bintype='r',estimator=estimator)
+  TS['r'],x['r']=TSprof(bintype='r',estimator=estimator,plotcount=False)
   title(" ".join([halo,NameList[estimator]]))
   subplot(312)
-  TSprof(bintype='E',estimator=estimator)
+  TS['E'],x['E']=TSprof(bintype='E',estimator=estimator,plotcount=False)
   subplot(313)
-  TSprof(bintype='L2',estimator=estimator)
-  
+  TS['L2'],x['L2']=TSprof(bintype='L2',estimator=estimator,plotcount=False)
+  tight_layout()
+  if flagsave:
+    outfile=rootdir+'plots/'+'_'.join(['TS',halo,NameList[estimator],format(rmax,'.0f')])
+    savefig(outfile+'.eps')
+    f=h5py.File(outfile+'.hdf5', 'w')
+    for b in ['r','E','L2']:
+      group=f.create_group(b)
+      group.create_dataset('x',data=x[b])
+      group.create_dataset('TS',data=TS[b])
+    f.close()  
+  free_data()
+  return TS,x
+    
+def plot_halo_scan(halo,bintype,rmax=None, estimator=10, nbin=30, flagsave=False):  
+  get_config(halo)
+  if rmax!=None:
+    os.environ['DynRMAX']=format(rmax)
+  else:
+    rmax=float(os.environ['DynRMAX'])
+  init()
+  TS,x,proxy=scanTS2D(bintype,nbin=nbin,estimator=estimator)
+  title(halo+' '+NameList[estimator])
+  axis('tight')
+  if flagsave:
+    outfile=rootdir+'plots/'+'_'.join(['Scan',halo,NameList[estimator]]+list(bintype))+'_'+format(rmax,'.0f')
+    savefig(outfile+'.eps')
+    f=h5py.File(outfile+'.hdf5', 'w')
+    f.create_dataset('bintype',data=bintype)
+    for b in bintype:
+      f.create_dataset(b,data=x[b])
+    f.create_dataset('TS',data=TS)
+    f.close()   
+  free_data()
+  return TS,x
+
 if __name__=="__main__":
+ 
   #ion()
-  halo='AqA4'
-  estimator=8
+  halo='AqA4N'
+  estimator=10
   if len(sys.argv)>1:
     halo=sys.argv[1]  
   if len(sys.argv)>2:
     estimator=int(sys.argv[2])
-  plot_halo_TS(halo,estimator)
+ 
+  get_config(halo)
+  #os.environ['DynRMAX']='100'
+  init()  
+  TSprof('r',nbin=200)
   show()
+  TSprof('r',nbin=200, equalcount=True)
 
+  #plot_halo_TS(halo,estimator,rmax=rmax, flagsave=True)
+  
+  #rmax=100
+  #tsmap=dict()
+  #for b in [('E','r'),('L2','r'),('E','L2')]:
+    #figure();
+    #tsmap[b]=plot_halo_scan(halo,b,rmax=rmax,estimator=estimator,flagsave=True)
+  
+  
+  
+  #show()
+  #init()
+  #P=pick_particles(0)
+  #x=dict()
+  #p=dict()
+  #for b in ['E','L2','r']:
+    #x[b],p[b]=P.gen_bin(b)  

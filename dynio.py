@@ -82,7 +82,20 @@ class ParticleData:
     print '-----------'
     lib.print_data()
     print '============='
-
+  def gen_bin(self,bintype,nbin=30,logscale=True, equalcount=False):
+    proxy=np.copy(self.P[bintype])
+    n=nbin+1
+    if bintype=='E':
+	proxy=-proxy
+    if equalcount:
+        x=np.array(np.percentile(proxy,list(np.linspace(0,100,n))))
+    else:  
+      if logscale:  
+	x=np.logspace(np.log10(proxy[proxy>0].min()),np.log10(proxy.max()),n)
+      else:
+	x=np.linspace(proxy.min(),proxy.max(),n)
+    return x,proxy  
+      
 def get_config(halo):
   c=ConfigParser.ConfigParser()
   c.optionxform=str
@@ -90,6 +103,11 @@ def get_config(halo):
   for x in c.options(halo):
     os.environ[x]=c.get(halo,x)
 
+if os.uname()[1]=='Medivh':
+    rootdir='/work/Projects/DynDistr/'
+else:
+    rootdir='/gpfs/data/jvbq85/DynDistr/'    
+    
 if __name__=="__main__":
   import os
   get_config('AqA4')

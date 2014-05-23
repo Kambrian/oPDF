@@ -455,17 +455,21 @@ double like_iterative_radial()
     return lnL;
 }
 
-double likelihood(double pars[], int estimator)
+void like_init(double pars[], int estimator)
 {
   int i;
-  double lnL;
-  if(pars[0]<0||pars[1]<0) return -INFINITY;
+  if(pars[0]<0||pars[1]<0) return;
   define_halo(pars);
   
   #pragma omp parallel for
   for(i=0;i<nP;i++)
     solve_radial_orbit(i,estimator);
+}
+double like_eval(double pars[], int estimator)
+{
+  double lnL;
   
+  if(pars[0]<0||pars[1]<0) return -INFINITY;
   switch(estimator)
   {
     case RADIAL_PHASE_BINNED:
@@ -514,6 +518,12 @@ double likelihood(double pars[], int estimator)
   
   //   printf("%g,%g: %g\n", pars[0],pars[1],lnL);
   return lnL;
+}
+
+double likelihood(double pars[], int estimator)
+{
+  like_init(pars, estimator);
+  return like_eval(pars, estimator);
 }
 
 void init()

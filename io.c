@@ -154,8 +154,8 @@ void sample_data(int subsample_id)
   P=malloc(sizeof(Particle)*nP);
   
   int i,j,imin,imax;
-  imin=subsample_id*SUBSAMPLE_SIZE;
-  imax=imin+SUBSAMPLE_SIZE;
+  imin=subsample_id*nP;
+  imax=imin+nP;
   if(imin>=nPall) {printf("error: subsample id overflow; sampleid=%d,imin=%d,nP=%d\n", subsample_id, imin, nPall); exit(1);}
   if(imax>nPall) {printf("Warning: subsample truncated to tail of data; sampleid=%d, imax=%d, nP=%d\n", subsample_id, imax, nPall); imax=nPall;}
   for(i=imin,j=0;i<imax;i++)
@@ -196,13 +196,17 @@ int squeeze_data()
   return nP;
 }
 
-void free_data()
+void free_sample()
 {
   if(nP)
   {
   free(P);
   nP=0;
   }
+}
+void free_data()
+{
+  free_sample();
   if(nPall)
   {
   free(Pall);

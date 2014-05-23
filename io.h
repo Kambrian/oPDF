@@ -1,7 +1,7 @@
 // #define FILTER_FLAG
 // #define FILTER_RAND_SIZE 10000 //select a random sample of the given size
 
-#define SUBSAMPLE_SIZE 10000 //only load a subsample of this size 
+// #define SUBSAMPLE_SIZE 500000 //only load a subsample of this size 
 
 // #define V0
 // #define L0
@@ -30,4 +30,5 @@ extern void load_data(char *datafile);
 extern void shuffle_data(unsigned long int seed);
 extern void sample_data(int subsample_id);
 extern int squeeze_data();
+extern void free_sample();
 extern void free_data();
