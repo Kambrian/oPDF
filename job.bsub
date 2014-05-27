@@ -23,8 +23,7 @@ module load intel_comp/c4/2013.1.046 gsl/1.16 platform_mpi/9.1.2 hdf5/1.8.12 pyt
 
 export OMP_NUM_THREADS=24
 
-python TSmap.py AqA4sub 10
-
-python TSmap.py AqA4N 10
-
-python TSmap.py AqA4subN 10
+for halo in AqA4 AqA4N AqA4sub AqA4subN AqB4 AqB4sub
+do
+python TSmap.py $halo
+done

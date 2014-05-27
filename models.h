@@ -29,8 +29,8 @@
 #endif
 
 //#define ESTIMATOR 10  //this has been moved to makefile
-#define RETURN_RAWMEAN 
-#define RETURN_PROB //for KS and Kuiper
+// #define RETURN_RAWMEAN 
+// #define RETURN_PROB //for KS and Kuiper
 
 #define IS_PHASE_ESTIMATOR(x) ((x)>=RADIAL_PHASE_BINNED)
 

@@ -65,10 +65,8 @@ def scanTS2D(bintype=('E','r'), sample=0, nbin=30, estimator=8, logscale=True, p
     imshow(H[0].T,extent=extent,origin='lower', interpolation='None')
     subplot(1,2,2)
   if estimator==8:
-    im=AD2Sig(-TS.T)
-  else:  
-    im=TS.T  
-  imshow(im,extent=extent,origin='lower', interpolation='None')
+    TS=AD2Sig(-TS)  
+  imshow(TS.T,extent=extent,origin='lower', interpolation='None')
   colorbar()
   #CS=contour(AD2Sig(-TS.T),levels=[1,3,5,7],extent=extent,origin='lower')
   #clabel(CS,inline=1)
@@ -80,7 +78,7 @@ def scanTS2D(bintype=('E','r'), sample=0, nbin=30, estimator=8, logscale=True, p
     ylabel(bintype[1])
   return TS,x,proxy
 
-def TSprof(bintype='E',sample=0,nbin=50,estimator=8,logscale=True,plotcount=True,equalcount=False):
+def TSprof(bintype='E',sample=0,nbin=100,estimator=8,logscale=True,plotcount=True,equalcount=True):
   P=pick_particles(sample)
   rmin=P.R_MIN.value
   rmax=P.R_MAX.value
@@ -121,17 +119,31 @@ def TSprof(bintype='E',sample=0,nbin=50,estimator=8,logscale=True,plotcount=True
     ylabel('Count')
     subplot(212)
   #plot(x[:-1],AD2Sig(-array(TS)))
-  plot(x[:-1],(-array(TS)))
+  #plot(x[:-1],(-array(TS)))
+  TS.append(nan)
+  TS=array(TS)
+  if estimator==8:
+    TS=AD2Sig(-TS)
+  step(x,TS, where='post')
   if logscale:
     xscale('log')
   xlim(x.min(),x.max())
   xlabel(bintype)
   ylabel('TS')
   #ylabel(r'Discrepancy/$\sigma$')
+  if bintype=='r':
+    rconv=float(os.environ['DynRconv'])
+    rv=float(os.environ['DynRv'])
+    plot([rconv,rconv],ylim(),'k:')
+    plot([rv,rv],ylim(),'k:')
   return TS,x
 
-def plot_halo_TS(halo,estimator=8, rmax=None, flagsave=False):    
+def plot_halo_TS(halo,estimator=8, nbin=100, rmin=None, rmax=None, equalcount=True, flagsave=False):    
   get_config(halo)
+  if rmin!=None:
+    os.environ['DynRMIN']=format(rmin)
+  else:
+    rmin=float(os.environ['DynRMIN'])
   if rmax!=None:
     os.environ['DynRMAX']=format(rmax)
   else:
@@ -139,16 +151,18 @@ def plot_halo_TS(halo,estimator=8, rmax=None, flagsave=False):
   init()
   x=dict()
   TS=dict()
+  figure()
   subplot(311)
-  TS['r'],x['r']=TSprof(bintype='r',estimator=estimator,plotcount=False)
+  TS['r'],x['r']=TSprof(bintype='r',estimator=estimator,nbin=nbin, equalcount=equalcount, plotcount=False)
   title(" ".join([halo,NameList[estimator]]))
+  xlim(rmin,rmax)
   subplot(312)
-  TS['E'],x['E']=TSprof(bintype='E',estimator=estimator,plotcount=False)
+  TS['E'],x['E']=TSprof(bintype='E',estimator=estimator,nbin=nbin, equalcount=equalcount, plotcount=False)
   subplot(313)
-  TS['L2'],x['L2']=TSprof(bintype='L2',estimator=estimator,plotcount=False)
+  TS['L2'],x['L2']=TSprof(bintype='L2',estimator=estimator,nbin=nbin, equalcount=equalcount, plotcount=False)
   tight_layout()
   if flagsave:
-    outfile=rootdir+'plots/'+'_'.join(['TS',halo,NameList[estimator],format(rmax,'.0f')])
+    outfile=rootdir+'plots/'+'_'.join(['TS',halo,NameList[estimator],'R%g'%rmin, format(rmax,'.0f')])
     savefig(outfile+'.eps')
     f=h5py.File(outfile+'.hdf5', 'w')
     for b in ['r','E','L2']:
@@ -191,22 +205,22 @@ if __name__=="__main__":
   if len(sys.argv)>2:
     estimator=int(sys.argv[2])
  
-  get_config(halo)
+  #get_config(halo)
   #os.environ['DynRMAX']='100'
-  init()  
-  TSprof('r',nbin=200)
-  show()
-  TSprof('r',nbin=200, equalcount=True)
+  #init()  
+  #TSprof('r', estimator=estimator, nbin=200)
+  #show()
+  #TSprof('r', estimator=estimator, nbin=200, equalcount=True)
 
-  #plot_halo_TS(halo,estimator,rmax=rmax, flagsave=True)
-  
+  plot_halo_TS(halo,estimator=8,rmin=0.01, rmax=1000, flagsave=True)
+  plot_halo_TS(halo,estimator=8,rmin=1, rmax=200, flagsave=True)
+  plot_halo_TS(halo,estimator=10,rmin=0.01, rmax=1000, flagsave=True)
+  plot_halo_TS(halo,estimator=10,rmin=1, rmax=200, flagsave=True)
   #rmax=100
   #tsmap=dict()
   #for b in [('E','r'),('L2','r'),('E','L2')]:
     #figure();
     #tsmap[b]=plot_halo_scan(halo,b,rmax=rmax,estimator=estimator,flagsave=True)
-  
-  
   
   #show()
   #init()

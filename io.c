@@ -9,6 +9,7 @@
 #include "hdf_util.h"
 #include "io.h"
 
+int SUBSAMPLE_SIZE;
 double R_MIN, R_MAX;
 static Particle *Pall;
 static int nPall;
@@ -145,11 +146,11 @@ void sample_data(int subsample_id)
     P=Pall;
     return;
   }
-#ifdef SUBSAMPLE_SIZE
+if(SUBSAMPLE_SIZE>0)
   nP=SUBSAMPLE_SIZE;
-#else
+else
   nP=nPall;
-#endif
+
   if(P!=NULL&&P!=Pall) free(P);
   P=malloc(sizeof(Particle)*nP);
   
@@ -172,6 +173,7 @@ void sample_data(int subsample_id)
   }
   nP=j;
   P=realloc(P,sizeof(Particle)*nP);
+//   printf("%d particles sampled.\n", nP);
 //   srand48(nP);
 //   #ifdef FILTER_RAND_SIZE
 //   for(i=0;i<nP;i++)

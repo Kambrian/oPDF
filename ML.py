@@ -1,37 +1,28 @@
 import sys,os
 from dynio import *
-os.environ['OMP_NUM_THREADS']='32'
+#os.environ['OMP_NUM_THREADS']='32'
 
-
-fullpars='mc'
+estimator=8
 if len(sys.argv)>1:
-  freepars=sys.argv[1]
-else:
-  freepars=fullpars
+  estimator=int(sys.argv[1])
 
-init(-1)
+get_config('AqA4')
+#os.environ['DynSIZE']='1000'
+init()
 select_particles(0)
 
 from scipy.optimize import *
-like= lambda x:-likefunc2(PARTYPE(x[0],x[1]))
+like= lambda x:-likefunc2(PARTYPE(x[0],x[1]), estimator)
+#result=fmin(like, 10**(random.rand(2)-0.5), xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
 x=fmin(like, [2,1.5])
 print x
-#numpy.gradient(f, *varargs)[source]
  
 from iminuit import Minuit
 from iminuit.ConsoleFrontend import ConsoleFrontend
+neglike2=lambda m,c: -likefunc2(PARTYPE(m,c),estimator)
 
-#freepars=''
-#freepars=fullpars 
-fixnames=fullpars.translate(None,freepars)
-fixdict={} #gen a dict for fixed pars
-for x in fixnames: 
-  fixdict['fix_'+x]=True
-#p['par'][6]=1
 defaults={'m':2,'c':1.5}
-defaults.update(fixdict)
-m=Minuit(neglike2,print_level=3,errordef=0.5,limit_m=[0.1,10],limit_c=[0.1,10],frontend=ConsoleFrontend(),**defaults)
-#m=Minuit(like,print_level=3,errordef=0.5,frontend=ConsoleFrontend(),limit_a=[8,11],limit_b=[10,13],limit_c=[-4,-1],limit_d=[-2,0],**defaults) #for HOD
+m=Minuit(neglike2, print_level=3,errordef=0.5,limit_m=[0.1,10],limit_c=[0.1,10],frontend=ConsoleFrontend(),**defaults)
 
 m.set_strategy(2);
 m.tol=1e-3 #default convergence edm<1e-4*tol*errordef, but we do not need that high accuracy

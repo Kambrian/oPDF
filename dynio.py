@@ -31,11 +31,11 @@ prototype=CFUNCTYPE(c_double, PARTYPEXV)
 dataprob6d=prototype(("dataprob6d",lib))
 
 
-neglike=lambda m,c,estimator: -likefunc(PARTYPE(m,c),estimator)
-like=lambda m,c,estimator: likefunc(PARTYPE(m,c),estimator)
+#neglike=lambda m,c,estimator: -likefunc(PARTYPE(m,c),estimator)
+#like=lambda m,c,estimator: likefunc(PARTYPE(m,c),estimator)
 freeze_energy=lambda m,c: freezefunc(PARTYPE(m,c))
-like2=lambda m,c,estimator: likefunc2(PARTYPE(m,c),estimator) #freeze_and_like()
-neglike2=lambda m,c,estimator: -likefunc2(PARTYPE(m,c),estimator)
+#like2=lambda m,c,estimator: likefunc2(PARTYPE(m,c),estimator) #freeze_and_like()
+#neglike2=lambda m,c,estimator: -likefunc2(PARTYPE(m,c),estimator)
 
 def gen_par(p):
   "convert parameter array p into PARTYPE() array"
@@ -50,6 +50,22 @@ def pack_to_dict(p):
   for i,pp in enumerate(p):
     d[parname_repo[i]]=pp
   return d
+
+class NFWHalo(Structure):
+  """all properties are physical"""
+  _fields_=[('z', c_double),
+	    ('M', c_double),
+	    ('c', c_double),
+	    ('Rv', c_double), 
+	    ('Rs', c_double),
+	    ('Rhos', c_double),
+	    ('Pots', c_double),#-4*pi*G*rhos*rs^2, the potential at r=0
+	    ('virtype', c_int)
+	    ]
+Halo=NFWHalo.in_dll(lib, 'Halo')
+comoving_virial_radius=lib.comoving_virial_radius
+comoving_virial_radius.argtypes=[c_double, c_double, c_int]
+comoving_virial_radius.restype=c_double
 
 class Particle(Structure):
   _fields_=[('flag', c_int),
@@ -67,6 +83,7 @@ class Particle(Structure):
 
 class ParticleData:
   def __init__(self):
+    self.SIZE=c_int.in_dll(lib,'SUBSAMPLE_SIZE')
     self.R_MIN=c_double.in_dll(lib,'R_MIN')
     self.R_MAX=c_double.in_dll(lib,'R_MAX')
     self.nP=c_int.in_dll(lib,'nP')

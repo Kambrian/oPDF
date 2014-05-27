@@ -529,6 +529,7 @@ double likelihood(double pars[], int estimator)
 void init()
 {
   char datafile[1024]=ROOTDIR"/data/mockhalo_wenting.hdf5";
+  SUBSAMPLE_SIZE=1000;
   R_MIN=1;
   R_MAX=1000;
   M0=183.5017;
@@ -538,6 +539,7 @@ void init()
   {
     printf("Importing parameters from environment..\n");
     sprintf(datafile,"%s/data/%s", ROOTDIR, getenv("DynDataFile"));
+    SUBSAMPLE_SIZE=strtol(getenv("DynSIZE"),NULL, 10);
     R_MIN=strtod(getenv("DynRMIN"),NULL);
     R_MAX=strtod(getenv("DynRMAX"),NULL);
     M0=strtod(getenv("DynM0"),NULL);

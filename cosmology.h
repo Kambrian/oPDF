@@ -8,8 +8,8 @@
 
 /* virial definitions */
 #define VIR_TH 0
-#define VIR_B200 1
-#define VIR_C200 2
+#define VIR_C200 1
+#define VIR_B200 2
 
 struct CosmParZ
 {
