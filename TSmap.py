@@ -1,16 +1,25 @@
 import sys,os,ConfigParser,h5py
+from collections import OrderedDict
 from numpy import *
 import matplotlib
-import __main__ as main
-if hasattr(main, '__file__'): #non-interactive
-  matplotlib.use('Agg')
+#import __main__ as main
+#if hasattr(main, '__file__'): #non-interactive
+  #matplotlib.use('Agg')
 matplotlib.rcParams.update({'font.size': 15, 'ps.fonttype' : 42 , 'pdf.fonttype' : 42 ,' image.origin': 'lower', 'image.interpolation': None})
 from matplotlib.pyplot import *
 from myutils import *
 from dynio import *
 #os.environ['OMP_NUM_THREADS']='32'
 
-
+def load_TSmap(file):
+  f=h5py.File(file,'r')
+  bintype=f['/bintype']
+  x=OrderedDict()
+  for b in bintype:
+    x[b]=f[b][:]
+  TS=f['/TS'][:]
+  return TS,x
+ 
 def pick_particles(sample=0):
   select_particles(sample)
   P=ParticleData()
@@ -22,8 +31,8 @@ def scanTS2D(bintype=('E','r'), sample=0, nbin=30, estimator=8, logscale=True, p
   #p=P.StructP #original copy
   rmin=P.R_MIN.value
   rmax=P.R_MAX.value
-  proxy=dict()
-  x=dict()
+  proxy=OrderedDict()
+  x=OrderedDict()
   for b in bintype:
     x[b],proxy[b]=P.gen_bin(b,nbin,logscale)
   TS=empty([nbin,nbin])
@@ -49,7 +58,7 @@ def scanTS2D(bintype=('E','r'), sample=0, nbin=30, estimator=8, logscale=True, p
       squeeze_data()
       #if (array(bintype)=='r').any(): #update the bin counts for radial cut
 	#lib.fill_radial_bin() #TODO: uncomment this when estimator=4
-      TS[i,j]=like(1,1,estimator)
+      TS[i,j]=elike(1,1,estimator)
       print i,j,P.nP.value, TS[i,j]
       P.R_MIN.value=rmin #restore radial limits
       P.R_MAX.value=rmax
@@ -103,7 +112,7 @@ def TSprof(bintype='E',sample=0,nbin=100,estimator=8,logscale=True,plotcount=Tru
     squeeze_data() #radial limits actually get updated inside this func.
     #if bintype=='r': #update the bin counts for radial cut
       #lib.fill_radial_bin() #TODO: uncomment this when estimator=4
-    TS.append(like(1,1,estimator))
+    TS.append(elike(1,1,estimator))
     print i, P.nP.value, TS[-1]
     P.R_MIN.value=rmin #restore radial limits
     P.R_MAX.value=rmax
@@ -198,7 +207,7 @@ def plot_halo_scan(halo,bintype,rmax=None, estimator=10, nbin=30, flagsave=False
 if __name__=="__main__":
  
   #ion()
-  halo='AqA4N'
+  halo='AqA4Fit4AppFull'
   estimator=10
   if len(sys.argv)>1:
     halo=sys.argv[1]  
@@ -211,16 +220,17 @@ if __name__=="__main__":
   #TSprof('r', estimator=estimator, nbin=200)
   #show()
   #TSprof('r', estimator=estimator, nbin=200, equalcount=True)
-
-  plot_halo_TS(halo,estimator=8,rmin=0.01, rmax=1000, flagsave=True)
-  plot_halo_TS(halo,estimator=8,rmin=1, rmax=200, flagsave=True)
-  plot_halo_TS(halo,estimator=10,rmin=0.01, rmax=1000, flagsave=True)
-  plot_halo_TS(halo,estimator=10,rmin=1, rmax=200, flagsave=True)
+  #for halo in ['AqA4Fit4','AqA4Fit8','AqA4Fit10','AqA4LargeRFit4','AqA4LargeRFit8','AqA4LargeRFit10']:  
+  plot_halo_TS(halo,estimator=10,flagsave=True)
+  #plot_halo_TS(halo,estimator=8,rmin=0.01, rmax=1000, flagsave=True)
+  #plot_halo_TS(halo,estimator=8,rmin=1, rmax=200, flagsave=True)
+  #plot_halo_TS(halo,estimator=10,rmin=0.01, rmax=1000, flagsave=True)
+  #plot_halo_TS(halo,estimator=10,rmin=1, rmax=200, flagsave=True)
   #rmax=100
-  #tsmap=dict()
-  #for b in [('E','r'),('L2','r'),('E','L2')]:
-    #figure();
-    #tsmap[b]=plot_halo_scan(halo,b,rmax=rmax,estimator=estimator,flagsave=True)
+  tsmap=dict()
+  for b in [('E','r'),('L2','r'),('E','L2')]:
+    figure();
+    tsmap[b]=plot_halo_scan(halo,b,estimator=10,flagsave=True)
   
   #show()
   #init()

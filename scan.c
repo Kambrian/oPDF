@@ -32,7 +32,7 @@ int main(int argc, char **argv)
   }
   return 0;
 */  
-  
+ 
   double x,y,xlim[3]={-3,3,0.04};//{lims, step}
   sprintf(outdir,"/gpfs/data/jvbq85/DynDistr/data/scanHuge%d",subsample_id);
 //   double x,y,xlim[3]={-0.2,0.2,0.002};//{lims, step}
@@ -44,7 +44,6 @@ int main(int argc, char **argv)
   
   init();
   select_particles(subsample_id);
-  
   
   for(x=xlim[0];x<=xlim[1];x+=xlim[2])
   {

@@ -12,9 +12,59 @@ import glob
 ion()
         
 def show_legend():
-  a=[x for x in gca().get_children() if isinstance(x,matplotlib.patches.Ellipse)]
-  l=[getp(x,'label') for x in a]
-  legend(a,l,loc=3)  
+    a=[x for x in gca().get_children() if isinstance(x,matplotlib.patches.Ellipse)]
+    l=[getp(x,'label') for x in a]
+    legend(a,l,loc=3)
+    
+ColorList={0:'k',4:'r',8:'g',9:'b',10:'c',11:'m',12:'y',13:'k'}
+def plot_scan(mid,T=1,sample=0):
+    SigmaDef={4:1.1,8:-1.084,9:-2.3,10:-1.15,11:-1.101,12:-0.714,13:-1.15}
+    data=loadtxt(rootdir+'/data/scanZoom%d/model%d.T%d'%(sample,mid,T))
+    if int(sqrt(data.shape[0]))**2!=data.shape[0]:
+        print data.shape
+        return [],[],[]
+    n=sqrt(data.shape[0])
+    x=data[:,0].reshape([n,n],order='F')
+    y=data[:,1].reshape([n,n],order='F')
+    z=data[:,2].reshape([n,n],order='F')
+    x=log10(x)
+    y=log10(y)
+    figure()
+    #imshow(z,extent=[x.min(),x.max(),y.min(),y.max()],origin='lower')
+    if mid==4:
+        lvls=[nanmax(z)-SigmaDef[mid]]
+    else:
+        lvls=[SigmaDef[mid]]
+    lvls=nanmax(z)-array([0,0.01,0.1,0.2,1,3,5,10,20])    
+    #CS=contour(x,y,z,levels=lvls,origin='lower',colors=ColorList[mid],linestyles='solid')
+    CS=contour(x,y,z,levels=lvls,origin='lower',linestyles='solid') 
+    #CS=contour(z,levels=lvls,extent=[x.min(),x.max(),y.min(),y.max()],origin='lower',colors=ColorList[mid])
+    #clabel(CS,inline=1)
+    xlabel(r'$\log(M/M_0)$')
+    ylabel(r'$\log(c/c_0)$')
+    title(NameList[mid]+' T%d'%T)
+    #axis([-1,1,-1,1])
+    h=Ellipse((0,0),0,0,fill=False, color=ColorList[mid],label=NameList[mid])
+    #savefig('/work/Projects/DynDistr/plots/Scan%d_Model%d_T%d.eps'%(sample,mid,T))
+    return x,y,z,h
+
+def check_fit():
+	hall=[]
+	fminfit={10:[0.511067, 3.418906],11:[0.698747,1.774041],12:[0.620638, 2.495314], 13:[0.528289,3.213150],4:[0.887955,1.211126],8:[0.762275,1.527824],9:[0.862825,1.347704]}
+	minuitfit={10:[1.220458,0.821241], 11:[0.484838,4.199952], 12:[0.762192, 1.660001], 13:[0.530566, 3.177460], 4:[1.218284,0.729737], 8:[0.762047,1.527773], 9:[0.862815,1.347850]}
+	LowPrecfit={10:[1.015049,1.018265], 11:[1.010887, 1.058054], 4:[1.010851, 0.970722], 8:[0.761972,1.527838]}
+	IniOfffit={10:[1.096413,0.925138], 11:[0.908809, 1.200061], 4:[0.907599,1.199348], 8:[0.761999, 1.527716]}
+	HighPrecfit={10:[0.468171, 4.413201], 11:[0.769737,1.500002], 4:[0.798530,1.443032], 8:[0.761952, 1.527847]}
+	for mid in [4,8,10,11]:
+		h=plot_scan(mid,T=1,sample=0)
+		plot(log10(fminfit[mid][0]), log10(fminfit[mid][1]), 'o')
+		plot(log10(minuitfit[mid][0]), log10(minuitfit[mid][1]), 'd', markersize=10)
+		plot(log10(LowPrecfit[mid][0]), log10(LowPrecfit[mid][1]), 'x', markersize=10)
+		plot(log10(HighPrecfit[mid][0]), log10(HighPrecfit[mid][1]), '^', markersize=10)
+		plot(log10(IniOfffit[mid][0]), log10(IniOfffit[mid][1]), 'v', markersize=10)
+		hall.append(h[-1])
+	#legend(hall,[getp(x,'label') for x in hall],loc=1)   
+	#savefig('/work/Projects/DynDistr/plots/SigmaScan.eps')    
   
 class EnsembleFile:
   """ file of the fitted parameters for an ensemble of realizations """
@@ -26,7 +76,8 @@ class EnsembleFile:
     #variables here are instance-specific, different for different instances
     self.file=infile
     self.rawdata=loadtxt(infile)
-    self.pars=self.rawdata[self.rawdata[:,-1]>0,0:2]
+    self.pars=self.rawdata[:,0:2]
+    #self.pars=self.rawdata[self.rawdata[:,-1]>0,0:2]
     self.id=int(os.path.basename(self.file).split('_')[0][3:])
     self.estimator=self.NameList[self.id]
     self.color=self.ColorList[self.id]
@@ -139,6 +190,24 @@ def plot_high_prec(T=1,fit='Fmin'):
   ylabel(r'$c/c_0$')
   savefig('/work/Projects/DynDistr/plots/Ensemble%s_T%d.eps'%(fit,T))
 
+def plot_AD(mid=8,percents=0.6):
+	l=['','InitOff','HighPrec','HighPrecRand','Fmin','FminRand']
+	colors=['r','g','b','c','m','k']
+	hall=[]
+	for i,a in enumerate(l):
+		f=EnsembleFile(rootdir+'/data/mockfit'+a+'_mc/fit%d_mc.dat'%mid)
+		f.color=colors[i]
+		hall.append(f.plot_contour(percents=percents, logscale=True))
+	l[0]='LowPrec'	
+	legend(hall,l, loc=1)	
+	plot([0.1,10],[1,1],'k:',[1,1],[0.1,10],'k:')
+	axis([0.3,3,0.3,3])
+	xtickloc=[0.3,0.5,1.0,1.5,2.0,2.5,3.0]
+	xticks(xtickloc, map(str, xtickloc))
+	yticks(xtickloc, map(str, xtickloc))
+	xlabel(r'$M/M_0$')
+	ylabel(r'$c/c_0$')
+	
 def chi2sig(ts,dof=1):
   '''convert a chi2 TS to sigma'''
   pval=chi2.sf(ts,dof)

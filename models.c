@@ -17,6 +17,8 @@
 #include "io.h"
 #include "models.h"
 
+#define EPS 1e-16
+double MODEL_TOL_BIN=1e-2, MODEL_TOL_REL=1e-3; //should be sufficient, good enough to constrain mass to 1% accuracy with 100000 particles
 #define Z0 0. 
 double M0,C0,Rhos0,Rs0;
 struct NFWParZ Halo;
@@ -24,7 +26,7 @@ struct NFWParZ Halo;
 double halo_pot(double r)
 {
   double x=r/Halo.Rs;
-  if(x<1e-16) return Halo.Pots; //to avoid numerical nan at x=0;
+  if(x<EPS) return Halo.Pots; //to avoid numerical nan at x=0;
   return Halo.Pots*log(1+x)/x; //the halo boundary is irrelevant in this problem, since only the potential difference affects the orbit
 }
 static int is_forbidden(double r, int pid)
@@ -80,7 +82,8 @@ void solve_radial_limits(int pid)
       else
 	rbin[0]=xmid;
       
-      if(dx/(rbin[1]-lbin[0])<MODEL_TOL_BIN) break; 
+//       if(dx/(rbin[1]-lbin[0])<MODEL_TOL_BIN) break; 
+	  if(dx/MIN(P[pid].r-lbin[0], rbin[1]-P[pid].r)<MODEL_TOL_BIN) break; //converge sub bins, so that t-integral converges
     }
     P[pid].rlim[0]=lbin[0];
     P[pid].rlim[1]=rbin[1];
@@ -131,6 +134,7 @@ void solve_radial_orbit(int pid, int estimator)
   size_t neval;
   gsl_integration_cquad (&F, P[pid].rlim[0],P[pid].rlim[1], 0, MODEL_TOL_REL, //3, 
 			 GSL_workspaceC, &(P[pid].T), &error, &neval);
+  if(P[pid].T<=0||isnan(P[pid].T)||P[pid].T==INFINITY){ fprintf(stderr,"Warning: T=%g, reset to 1.\n", P[pid].T);P[pid].T=1.;}
   if(IS_PHASE_ESTIMATOR(estimator))
   {
   double t;
@@ -142,6 +146,12 @@ void solve_radial_orbit(int pid, int estimator)
   t=t/P[pid].T/2.;
   P[pid].theta=P[pid].vr>=0?t:(1-t);//radial phase
 #endif
+	if(P[pid].theta<=0.){
+		//fprintf(stderr,"Warning: theta=%g (%g/%g), reset to EPS.\n", P[pid].theta, t, P[pid].T); 
+		P[pid].theta=EPS;}  //to avoid numerical problems
+	if(P[pid].theta>=1.){
+		//fprintf(stderr,"Warning: theta=%g (%g,%g), reset to 1-EPS.\n", P[pid].theta, t, P[pid].T); 
+		P[pid].theta=1-EPS;}
 //   if(P[pid].theta==INFINITY) 
 //   {printf("p=%d, r=%g, rlim=[%g,%g], t=%g, T=%g\n", pid, P[pid].r, P[pid].rlim[0], P[pid].rlim[1], t, P[pid].T*2);
 //     printf("1/v=%g, isforbiidden=%d\n", vr_inv_part(P[pid].rlim[0],pid), is_forbidden(P[pid].rlim[0],pid));};
@@ -281,7 +291,9 @@ double AndersonDarlingTest()
   {
    #pragma omp for 
     for(i=0;i<nP;i++)
+	{
       theta[i]=P[i].theta;
+	}
     #pragma omp single
       qsort(theta, nP, sizeof(double), cmpDouble);
     #pragma omp for reduction(+:lnL)
@@ -548,7 +560,7 @@ void init()
   else
     printf("Warning: Using default parameters with datafile %s .\n", datafile);
  
-  printf("%s; %g,%g;%g,%g\n", datafile, R_MIN,R_MAX,M0,C0);
+  printf("%s; %d; %g,%g;%g,%g\n", datafile, SUBSAMPLE_SIZE, R_MIN,R_MAX,M0,C0);
   decode_NFWprof(Z0,M0,C0,VIR_C200,&Halo);
   Rhos0=Halo.Rhos;
   Rs0=Halo.Rs;

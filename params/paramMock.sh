@@ -1,4 +1,5 @@
 export DynDataFile=mockhalo_wenting.hdf5
+export DynSIZE=1000
 export DynRMIN=1
 export DynRMAX=1000
 export DynM0=183.5017

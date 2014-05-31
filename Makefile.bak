@@ -76,7 +76,7 @@ LDFLAGS+= -g
 endif
 
 #-----File Dependencies----------------------
-SRC_MAIN=scan.c
+SRC_MAIN=scan.c NumericalConvergence.c
 EXEC=$(basename $(SRC_MAIN))
 OBJS_MAIN=$(addsuffix .o, $(EXEC))
 SRC_COMM = io.c hdf_util.c cosmology.c mymath.c models.c
@@ -161,6 +161,5 @@ io.o: mymath.h hdf_util.h io.h
 hdf_util.o: hdf_util.h mymath.h
 cosmology.o: mymath.h cosmology.h
 mymath.o: mymath.h
-models.o: mymath.h cosmology.h io.h models.h
 models.o: mymath.h cosmology.h io.h models.h
 scan.o: mymath.h cosmology.h io.h models.h

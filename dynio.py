@@ -1,7 +1,7 @@
 from ctypes import *
 from math import *
 import numpy as np
-import os,ConfigParser
+import os,ConfigParser,h5py
 
 NameList={0:'f(E,L)',4:'RBin',8:'AD',9:'Resultant',10:'Mean',11:'KS',12:'Kuiper',13:'CosMean'}
 
@@ -31,11 +31,9 @@ prototype=CFUNCTYPE(c_double, PARTYPEXV)
 dataprob6d=prototype(("dataprob6d",lib))
 
 
-#neglike=lambda m,c,estimator: -likefunc(PARTYPE(m,c),estimator)
-#like=lambda m,c,estimator: likefunc(PARTYPE(m,c),estimator)
+elike=lambda m,c,estimator: likefunc(PARTYPE(m,c),estimator)
 freeze_energy=lambda m,c: freezefunc(PARTYPE(m,c))
-#like2=lambda m,c,estimator: likefunc2(PARTYPE(m,c),estimator) #freeze_and_like()
-#neglike2=lambda m,c,estimator: -likefunc2(PARTYPE(m,c),estimator)
+elike2=lambda m,c,estimator: likefunc2(PARTYPE(m,c),estimator) #freeze_and_like()
 
 def gen_par(p):
   "convert parameter array p into PARTYPE() array"
@@ -92,6 +90,7 @@ class ParticleData:
     self.StructP=(Particle*self.nP.value).from_address(addressof(self.P2P.contents))
     self.P=np.frombuffer(self.StructP,np.dtype(self.StructP))[0]
     #P=from_buffer(cast(P2P, POINTER(Particle*nP.value)).contents)
+
   def print_data(self):
     print self.nP.value, '%0x'%addressof(self.P2P.contents)
     print self.P2P[0].x[0], self.P2P[0].r
@@ -99,6 +98,7 @@ class ParticleData:
     print '-----------'
     lib.print_data()
     print '============='
+
   def gen_bin(self,bintype,nbin=30,logscale=True, equalcount=False):
     proxy=np.copy(self.P[bintype])
     n=nbin+1
@@ -111,8 +111,52 @@ class ParticleData:
 	x=np.logspace(np.log10(proxy[proxy>0].min()),np.log10(proxy.max()),n)
       else:
 	x=np.linspace(proxy.min(),proxy.max(),n)
-    return x,proxy  
-      
+    return x,proxy
+  
+  def assign_TSmap(self, TS, x):
+    '''select particles with TS in the range [lim[0],lim[1]], 
+    where TS is a map with pixel boundaries in x, 
+    and x is an ordereddict
+    return: update P['flag'] in place.'''
+    p=((TS>lim[0])*(TS<lim[1])).nonzero()
+    b=x.keys()
+    xx=x.values()
+    f=np.zeros(self.nP.value)
+    for pix in zip(p[0],p[1]):
+	f=f+(self.P[b[0]]>xx[0][pix[0]])*(self.P[b[0]]<xx[0][pix[0]+1])*(self.P[b[1]]>xx[1][pix[1]])*(self.P[b[1]]<xx[1][pix[1]+1])
+    f=f>0
+    print "Found %d particles"%np.sum(f)  
+    self.P['flag'][:]=f
+    
+  def filter_TSmap(self, TS, x, lim):
+    '''select particles with TS in the range [lim[0],lim[1]], 
+    where TS is a map with pixel boundaries in x, 
+    and x is an ordereddict
+    return: update P['flag'] in place.'''
+    p=((TS>lim[0])*(TS<lim[1])).nonzero()
+    b=x.keys()
+    xx=x.values()
+    f=np.zeros(self.nP.value)
+    for pix in zip(p[0],p[1]):
+	f=f+(self.P[b[0]]>xx[0][pix[0]])*(self.P[b[0]]<xx[0][pix[0]+1])*(self.P[b[1]]>xx[1][pix[1]])*(self.P[b[1]]<xx[1][pix[1]+1])
+    f=f>0
+    print "Found %d particles"%np.sum(f)  
+    self.P['flag'][:]=f
+
+class SubData:
+  def __init__(self, infile):
+    f=h5py.File(infile,'r')
+    self.x=f['/x'][...]
+    self.v=f['/v'][...]
+    self.m=f['/m'][...]
+    f.close()
+    self.r=np.sqrt(np.sum(self.x**2,1))
+    self.vr=np.sum(self.v*self.x,1)/self.r
+    self.vr[np.isnan(self.vr)]=0
+    self.K=np.sum(self.v**2,1)/2.
+    self.L2=np.sum(np.cross(self.x, self.v)**2,1)
+    self.Nsub=self.x.shape[0]
+
 def get_config(halo):
   c=ConfigParser.ConfigParser()
   c.optionxform=str
@@ -126,7 +170,6 @@ else:
     rootdir='/gpfs/data/jvbq85/DynDistr/'    
     
 if __name__=="__main__":
-  import os
   get_config('AqA4')
   init()
   select_particles(0)
