@@ -14,7 +14,7 @@
 #include "models.h"
 
 #define EPS 1e-16
-double MODEL_TOL_BIN=1e-2, MODEL_TOL_REL=1e-3; //should be sufficient, good enough to constrain mass to 1% accuracy with 100000 particles
+double MODEL_TOL_BIN=1e-2, MODEL_TOL_BIN_ABS=1e-5, MODEL_TOL_REL=1e-3; //should be sufficient, good enough to constrain mass to 1% accuracy with 100000 particles
 //accuracy in theta and phase-TS are approximately MODEL_TOL_REL, independent of nP.
 //but it's still not accurate enough for minuit to work with the hessian; better use fmin()
 #define Z0 0. 
@@ -37,54 +37,56 @@ static int is_forbidden(double r, int pid)
 
 void solve_radial_limits ( int pid )
 {
-    //estimate pericenter and apocenter (outer bounds, to serve as integration limits),
-    //according to current potential and E,L,r
-    P[pid].rlim[0]=R_MIN;
-    P[pid].rlim[1]=R_MAX;
-    if ( is_forbidden ( P[pid].r,pid ) ) { //forbidden due to large difference between current pot and initial pot
-        P[pid].rlim[0]=P[pid].r;
-        P[pid].rlim[1]=P[pid].r;
-        return;
-    }
-    if ( !is_forbidden ( P[pid].rlim[0],pid ) &&!is_forbidden ( P[pid].rlim[1],pid ) ) return; //no need to zoom
-
-    double xmid;
-    xmid= ( P[pid].rlim[0]+P[pid].rlim[1] ) /2;
-    while ( is_forbidden ( xmid, pid ) ) { //shrink the bin till midpoint is allowed
-        if ( xmid<P[pid].r )
-            P[pid].rlim[0]=xmid;
-        else
-            P[pid].rlim[1]=xmid;
-        xmid= ( P[pid].rlim[0]+P[pid].rlim[1] ) /2;
-    }
-
-    //now good mid
-    double lbin[2], rbin[2], dx;
-    lbin[0]=P[pid].rlim[0];
-    lbin[1]=xmid;
-    rbin[0]=xmid;
-    rbin[1]=P[pid].rlim[1];
-    dx= ( P[pid].rlim[1]-P[pid].rlim[0] ) /2;
-    while ( 1 ) {
-        dx/=2.;
-
-        xmid= ( lbin[0]+lbin[1] ) /2.;
-        if ( is_forbidden ( xmid, pid ) )
-            lbin[0]=xmid;
-        else
-            lbin[1]=xmid;
-
-        xmid= ( rbin[0]+rbin[1] ) /2.;
-        if ( is_forbidden ( xmid, pid ) )
-            rbin[1]=xmid;
-        else
-            rbin[0]=xmid;
-
-//       if(dx/(rbin[1]-lbin[0])<MODEL_TOL_BIN) break;
-        if ( dx/MIN ( P[pid].r-lbin[0], rbin[1]-P[pid].r ) <MODEL_TOL_BIN ) break; //converge sub bins, so that t-integral converges
-    }
-    P[pid].rlim[0]=lbin[0];
-    P[pid].rlim[1]=rbin[1];
+  //estimate pericenter and apocenter (outer bounds, to serve as integration limits),
+  //according to current potential and E,L,r
+  if ( is_forbidden ( P[pid].r,pid ) ) { //forbidden due to large difference between current pot and initial pot
+	P[pid].rlim[0]=P[pid].r;
+	P[pid].rlim[1]=P[pid].r;
+	return;
+  }
+  
+  char allow_left=0,allow_right=0;
+  P[pid].rlim[0]=R_MIN;
+  P[pid].rlim[1]=R_MAX;
+  if ( !is_forbidden ( P[pid].rlim[0],pid ) ) allow_left=1;
+  if ( !is_forbidden ( P[pid].rlim[1],pid ) ) allow_right=1;
+  if (allow_left && allow_right) return; //no need to zoom
+  
+  double lbin[2], rbin[2], dx, xmid;
+  if (!allow_left) //shrink left
+  {
+	lbin[0]=P[pid].rlim[0];
+	lbin[1]=P[pid].r;
+	dx=lbin[1]-lbin[0];
+	while(1)
+	{
+	  dx/=2.;
+	  xmid= ( lbin[0]+lbin[1] ) /2.;
+	  if ( is_forbidden ( xmid, pid ) )
+		lbin[0]=xmid;
+	  else
+		lbin[1]=xmid;
+	  if (dx/( P[pid].r-lbin[0])<MODEL_TOL_BIN||dx<MODEL_TOL_BIN_ABS) break;
+	}
+	P[pid].rlim[0]=lbin[0];
+  }
+  if(!allow_right)//shrink right
+  {
+	rbin[0]=P[pid].r;
+	rbin[1]=P[pid].rlim[1];
+	dx=rbin[1]-rbin[0];
+	while(1)
+	{
+	  dx/=2.;
+	  xmid= ( rbin[0]+rbin[1] ) /2.;
+	  if ( is_forbidden ( xmid, pid ) )
+		rbin[1]=xmid;
+	  else
+		rbin[0]=xmid;
+	  if ( dx/(rbin[1]-P[pid].r ) <MODEL_TOL_BIN||dx<MODEL_TOL_BIN_ABS ) break;
+	}
+	P[pid].rlim[1]=rbin[1];
+  }
 }
 
 double vr_inv_part(double r, int pid)
@@ -132,7 +134,7 @@ void solve_radial_orbit(int pid, int estimator)//bottleneck in gsl_integration_c
   size_t neval;
   gsl_integration_cquad (&F, P[pid].rlim[0],P[pid].rlim[1], 0, MODEL_TOL_REL, //3, 
 			 GSL_workspaceC, &(P[pid].T), &error, &neval);
-  if(P[pid].T<=0||isnan(P[pid].T)||P[pid].T==INFINITY){ fprintf(stderr,"Warning: T=%g, reset to 1.\n", P[pid].T);P[pid].T=1.;}
+  if(P[pid].T<=0||isnan(P[pid].T)||P[pid].T==INFINITY){ fprintf(stderr,"Warning: T=%g, reset to 1. %d:[%g,%g]\n", P[pid].T, pid, P[pid].rlim[0], P[pid].rlim[1]);P[pid].T=1.;}
   if(IS_PHASE_ESTIMATOR(estimator))
   {
   double t;

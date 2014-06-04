@@ -53,7 +53,7 @@
 
 #define NUM_PAR_MAX 10
 
-extern double MODEL_TOL_BIN, MODEL_TOL_REL;
+extern double MODEL_TOL_BIN, MODEL_TOL_BIN_ABS, MODEL_TOL_REL;
 // #define MODEL_TOL_BIN 1e-6 //bin size relative error
 // #define MODEL_TOL_REL 1e-8 //relative tolerance for PERIOD integral
 #define MODEL_MAX_INTVAL 1000

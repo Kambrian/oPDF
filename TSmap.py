@@ -233,7 +233,7 @@ if __name__=="__main__":
     #tsmap[b]=plot_halo_scan(halo,b,estimator=10,flagsave=True)
   
   #tsmap=dict()
-  for halo in ['Mock','AqA4Fit4','AqA4Fit8','AqA4subN','AqA4subFit8','AqB4Fit8','AqB4subFit8']:
+  for halo in ['AqA4Fit4','AqA4Fit8','AqA4subN','AqA4subFit8','AqB4Fit8','AqB4subFit8']:
 	  plot_halo_TS(halo, estimator=10, rmin=1, rmax=200, flagsave=True)
     #figure();
     #tsmap[halo]=plot_halo_scan(halo,('E','L2'),estimator=10,flagsave=True)
