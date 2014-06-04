@@ -8,6 +8,7 @@
 #include "mymath.h"
 #include "hdf_util.h"
 #include "io.h"
+#include "models.h"
 
 int SUBSAMPLE_SIZE;
 double R_MIN, R_MAX;
@@ -214,6 +215,7 @@ void free_data()
   free(Pall);
   nPall=0;
   }
+  free_integration_space();
 }
 void print_data()
 {

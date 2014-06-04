@@ -1,7 +1,3 @@
-/*ToDo:
- * Same data for good estimators, directly compare their performance (likelihood curve, CI) (3.84/2 for log-like, -2.48 for roulette, at 95% CL)
- * shift to new data
- */
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -19,6 +15,8 @@
 
 #define EPS 1e-16
 double MODEL_TOL_BIN=1e-2, MODEL_TOL_REL=1e-3; //should be sufficient, good enough to constrain mass to 1% accuracy with 100000 particles
+//accuracy in theta and phase-TS are approximately MODEL_TOL_REL, independent of nP.
+//but it's still not accurate enough for minuit to work with the hessian; better use fmin()
 #define Z0 0. 
 double M0,C0,Rhos0,Rs0;
 struct NFWParZ Halo;
@@ -37,53 +35,53 @@ static int is_forbidden(double r, int pid)
   return 0;
 }
 
-void solve_radial_limits(int pid)
-{//estimate pericenter and apocenter (outer bounds, to serve as integration limits), 
-  //according to current potential and E,L,r
-  P[pid].rlim[0]=R_MIN;
-  P[pid].rlim[1]=R_MAX;
-  if(is_forbidden(P[pid].r,pid)) //forbidden due to large difference between current pot and initial pot
-  {
-    P[pid].rlim[0]=P[pid].r;
-    P[pid].rlim[1]=P[pid].r;
-    return;
-  }
-  if(!is_forbidden(P[pid].rlim[0],pid)&!is_forbidden(P[pid].rlim[1],pid)) return; //no need to zoom
-  
-  double xmid;
-  xmid=(P[pid].rlim[0]+P[pid].rlim[1])/2;
-  while(is_forbidden(xmid, pid)) //shrink the bin till midpoint is allowed
-  {
-    if(xmid<P[pid].r) 
-      P[pid].rlim[0]=xmid;
-    else
-      P[pid].rlim[1]=xmid;
-    xmid=(P[pid].rlim[0]+P[pid].rlim[1])/2;
-  }
+void solve_radial_limits ( int pid )
+{
+    //estimate pericenter and apocenter (outer bounds, to serve as integration limits),
+    //according to current potential and E,L,r
+    P[pid].rlim[0]=R_MIN;
+    P[pid].rlim[1]=R_MAX;
+    if ( is_forbidden ( P[pid].r,pid ) ) { //forbidden due to large difference between current pot and initial pot
+        P[pid].rlim[0]=P[pid].r;
+        P[pid].rlim[1]=P[pid].r;
+        return;
+    }
+    if ( !is_forbidden ( P[pid].rlim[0],pid ) &&!is_forbidden ( P[pid].rlim[1],pid ) ) return; //no need to zoom
 
-  //now good mid
+    double xmid;
+    xmid= ( P[pid].rlim[0]+P[pid].rlim[1] ) /2;
+    while ( is_forbidden ( xmid, pid ) ) { //shrink the bin till midpoint is allowed
+        if ( xmid<P[pid].r )
+            P[pid].rlim[0]=xmid;
+        else
+            P[pid].rlim[1]=xmid;
+        xmid= ( P[pid].rlim[0]+P[pid].rlim[1] ) /2;
+    }
+
+    //now good mid
     double lbin[2], rbin[2], dx;
-    lbin[0]=P[pid].rlim[0];lbin[1]=xmid;
-    rbin[0]=xmid;rbin[1]=P[pid].rlim[1];
-    dx=(P[pid].rlim[1]-P[pid].rlim[0])/2;
-    while(1)
-    {
-      dx/=2.;
-      
-      xmid=(lbin[0]+lbin[1])/2.;
-      if(is_forbidden(xmid, pid)) 
-	lbin[0]=xmid;
-      else
-	lbin[1]=xmid;
-      
-      xmid=(rbin[0]+rbin[1])/2.;
-      if(is_forbidden(xmid, pid))
-	rbin[1]=xmid;
-      else
-	rbin[0]=xmid;
-      
-//       if(dx/(rbin[1]-lbin[0])<MODEL_TOL_BIN) break; 
-	  if(dx/MIN(P[pid].r-lbin[0], rbin[1]-P[pid].r)<MODEL_TOL_BIN) break; //converge sub bins, so that t-integral converges
+    lbin[0]=P[pid].rlim[0];
+    lbin[1]=xmid;
+    rbin[0]=xmid;
+    rbin[1]=P[pid].rlim[1];
+    dx= ( P[pid].rlim[1]-P[pid].rlim[0] ) /2;
+    while ( 1 ) {
+        dx/=2.;
+
+        xmid= ( lbin[0]+lbin[1] ) /2.;
+        if ( is_forbidden ( xmid, pid ) )
+            lbin[0]=xmid;
+        else
+            lbin[1]=xmid;
+
+        xmid= ( rbin[0]+rbin[1] ) /2.;
+        if ( is_forbidden ( xmid, pid ) )
+            rbin[1]=xmid;
+        else
+            rbin[0]=xmid;
+
+//       if(dx/(rbin[1]-lbin[0])<MODEL_TOL_BIN) break;
+        if ( dx/MIN ( P[pid].r-lbin[0], rbin[1]-P[pid].r ) <MODEL_TOL_BIN ) break; //converge sub bins, so that t-integral converges
     }
     P[pid].rlim[0]=lbin[0];
     P[pid].rlim[1]=rbin[1];
@@ -115,7 +113,7 @@ void free_integration_space()
   {//gsl_integration_workspace_free (GSL_workspace);
     gsl_integration_cquad_workspace_free (GSL_workspaceC);}
 }
-void solve_radial_orbit(int pid, int estimator)
+void solve_radial_orbit(int pid, int estimator)//bottleneck in gsl_integration_cquad
 {//find peri(apo)-centers and integrate the period 
   solve_radial_limits(pid); //according to current potential and E,L,r; E must be initialized with a initial potential
   if(is_forbidden(P[pid].r,pid))
@@ -398,6 +396,33 @@ void fill_radial_bin()
     }
   }
 }
+void predict_radial_count (double RadialCountPred[], int nbin)
+{
+    int i,j;
+    double dr= ( R_MAX-R_MIN ) /nbin;
+
+    for ( i=0; i<nbin; i++ ) {
+//       if(0==RadialCountAll[i]) continue; //definitely skip empty bins (they have no contribution, but may produce NaNs)
+        double rbin[2];
+        rbin[0]=R_MIN+dr*i;
+        rbin[1]=rbin[0]+dr;
+        gsl_function F;
+        F.function = &vr_inv_rfunc;
+        double error,t;
+        size_t neval;
+        double p;
+        p=0.;
+        #pragma omp parallel for private(error,t,neval) firstprivate(F) reduction(+:p)
+        for ( j=0; j<nP; j++ ) {
+            if ( P[j].rlim[0]>=rbin[1]||P[j].rlim[1]<=rbin[0] ) continue;
+			F.params = &j;
+            gsl_integration_cquad ( &F, MAX ( rbin[0],P[j].rlim[0] ), MIN ( rbin[1],P[j].rlim[1] ), 0, MODEL_TOL_REL, //3,
+                                    GSL_workspaceC, &t, &error, &neval );
+            p+=t/P[j].T;
+        }
+        RadialCountPred[i]=p;
+    }
+}
 double like_radial_bin()
 {
   int i,j;
@@ -534,8 +559,14 @@ double like_eval(double pars[], int estimator)
 
 double likelihood(double pars[], int estimator)
 {
+// 	time_t t1,t2,t3;
+// 	t1=time(NULL);
   like_init(pars, estimator);
-  return like_eval(pars, estimator);
+//   t2=time(NULL);
+  double lnL=like_eval(pars, estimator);
+//   t3=time(NULL);
+//   printf("Time: %ld,%ld, %ld,%ld,%ld\n", t2-t1, t3-t2, t1,t2,t3);
+  return lnL;
 }
 
 void init()

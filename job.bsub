@@ -22,4 +22,4 @@ module load intel_comp/c4/2013.1.046 gsl/1.16 platform_mpi/9.1.2 hdf5/1.8.12 pyt
 
 export OMP_NUM_THREADS=12
 
-python Fmin.py AqA4N
+python TSmap.py AqA4Fit4

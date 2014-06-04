@@ -7,6 +7,13 @@ from scipy.stats import gaussian_kde,norm
 from matplotlib.pyplot import *
 from matplotlib.patches import Ellipse
 
+def plot_circle(cen=[0,0], r=1, **kwargs):
+	phi=np.arange(0,2*np.pi+0.11,0.1)
+	x=cen[0]+r*np.cos(phi)
+	y=cen[1]+r*np.sin(phi)
+	h=plot(x,y,**kwargs)
+	return h
+	
 def ADSurvFunc(AD):
   return 1-norm.cdf(np.log(AD),loc=-0.22,scale=0.66);
 
@@ -55,7 +62,7 @@ def percent2level(p,z):
     l=[x[abs(frac-pi).argmin()] for pi in p]
     return l
   
-def percentile_contour(data, nbin=100, percents=0.683, color='r', logscale=False, **kwargs):
+def percentile_contour(data, nbin=100, percents=0.683, color=None, logscale=False, **kwargs):
     """
     plot contour at specific percentile levels
     

@@ -19,9 +19,17 @@ init=lib.init
 #init.restype=c_int
 select_particles=lib.select_particles
 select_particles.argtypes=[c_int]
-squeeze_data=lib.squeeze_data
-squeeze_data.restype=c_int
+lib.squeeze_data.restype=c_int #avoid using this directly. use P.squeeze_data() instead.
+#squeeze_data=lib.squeeze_data
+#squeeze_data.restype=c_int
 free_data=lib.free_data
+lib.like_init.argtypes=[PARTYPE,c_int]
+like_init=lambda m,c,estimator: lib.like_init(PARTYPE(m,c), estimator)
+lib.predict_radial_count.argtypes=[POINTER(c_double), c_int]
+def predict_radial_count(nbin=100):
+	n=np.empty(nbin,dtype='f8')
+	lib.predict_radial_count(n.ctypes.data_as(POINTER(c_double)), nbin)
+	return n
 
 #wenting's lib
 prototype=CFUNCTYPE(c_double, c_double, c_double, c_double)
@@ -91,6 +99,10 @@ class ParticleData:
     self.P=np.frombuffer(self.StructP,np.dtype(self.StructP))[0]
     #P=from_buffer(cast(P2P, POINTER(Particle*nP.value)).contents)
 
+  def squeeze_data(self):
+	  lib.squeeze_data()
+	  self.__init__()
+	  
   def print_data(self):
     print self.nP.value, '%0x'%addressof(self.P2P.contents)
     print self.P2P[0].x[0], self.P2P[0].r
@@ -100,18 +112,18 @@ class ParticleData:
     print '============='
 
   def gen_bin(self,bintype,nbin=30,logscale=True, equalcount=False):
-    proxy=np.copy(self.P[bintype])
-    n=nbin+1
-    if bintype=='E':
-	proxy=-proxy
-    if equalcount:
-        x=np.array(np.percentile(proxy,list(np.linspace(0,100,n))))
-    else:  
-      if logscale:  
-	x=np.logspace(np.log10(proxy[proxy>0].min()),np.log10(proxy.max()),n)
-      else:
-	x=np.linspace(proxy.min(),proxy.max(),n)
-    return x,proxy
+	proxy=np.copy(self.P[bintype])
+	n=nbin+1
+	if bintype=='E':
+		proxy=-proxy
+	if equalcount:
+		x=np.array(np.percentile(proxy,list(np.linspace(0,100,n))))
+	else:  
+		if logscale:  
+			x=np.logspace(np.log10(proxy[proxy>0].min()),np.log10(proxy.max()),n)
+		else:
+			x=np.linspace(proxy.min(),proxy.max(),n)
+	return x,proxy
   
   def assign_TSmap(self, TS, x):
     '''select particles with TS in the range [lim[0],lim[1]], 
@@ -123,25 +135,29 @@ class ParticleData:
     xx=x.values()
     f=np.zeros(self.nP.value)
     for pix in zip(p[0],p[1]):
-	f=f+(self.P[b[0]]>xx[0][pix[0]])*(self.P[b[0]]<xx[0][pix[0]+1])*(self.P[b[1]]>xx[1][pix[1]])*(self.P[b[1]]<xx[1][pix[1]+1])
+		f=f+(self.P[b[0]]>xx[0][pix[0]])*(self.P[b[0]]<xx[0][pix[0]+1])*(self.P[b[1]]>xx[1][pix[1]])*(self.P[b[1]]<xx[1][pix[1]+1])
     f=f>0
     print "Found %d particles"%np.sum(f)  
     self.P['flag'][:]=f
     
   def filter_TSmap(self, TS, x, lim):
-    '''select particles with TS in the range [lim[0],lim[1]], 
-    where TS is a map with pixel boundaries in x, 
-    and x is an ordereddict
-    return: update P['flag'] in place.'''
-    p=((TS>lim[0])*(TS<lim[1])).nonzero()
-    b=x.keys()
-    xx=x.values()
-    f=np.zeros(self.nP.value)
-    for pix in zip(p[0],p[1]):
-	f=f+(self.P[b[0]]>xx[0][pix[0]])*(self.P[b[0]]<xx[0][pix[0]+1])*(self.P[b[1]]>xx[1][pix[1]])*(self.P[b[1]]<xx[1][pix[1]+1])
-    f=f>0
-    print "Found %d particles"%np.sum(f)  
-    self.P['flag'][:]=f
+		'''select particles with TS in the range [lim[0],lim[1]], 
+		where TS is a map with pixel boundaries in x, 
+		and x is an ordereddict
+		return: update P['flag'] in place.'''
+		self.P['flag']=0
+		p=((TS>lim[0])*(TS<lim[1])).nonzero()
+		b=x.keys()
+		xx=x.values()
+		for pix in zip(p[0],p[1]):
+			ff=np.ones(self.nP.value)
+			for i in [0,1]:
+				if b[i]=='E':
+					ff=ff*(self.P[b[i]]<-xx[i][pix[i]])*(self.P[b[i]]>-xx[i][pix[i]+1])
+				else:
+					ff=ff*(self.P[b[i]]>xx[i][pix[i]])*(self.P[b[i]]<xx[i][pix[i]+1])
+			self.P['flag'][ff>0]=1
+		print "Found %d pixels, %d particles"%(p[0].shape[0],np.sum(self.P['flag']))
 
 class SubData:
   def __init__(self, infile):

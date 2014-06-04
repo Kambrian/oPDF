@@ -29,7 +29,7 @@
 #endif
 
 //#define ESTIMATOR 10  //this has been moved to makefile
-// #define RETURN_RAWMEAN 
+#define RETURN_RAWMEAN 
 // #define RETURN_PROB //for KS and Kuiper
 
 #define IS_PHASE_ESTIMATOR(x) ((x)>=RADIAL_PHASE_BINNED)
@@ -68,6 +68,7 @@ extern void solve_radial_limits(int pid);
 extern double vr_inv_part(double r, int pid);
 extern void solve_radial_orbit(int pid, int estimator);
 extern void fill_radial_bin();
+extern void predict_radial_count (double RadialCountPred[], int nbin);
 extern void like_init(double pars[], int estimator);
 extern double like_eval(double pars[], int estimator);
 extern double likelihood(double pars[], int estimator);
