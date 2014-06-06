@@ -16,7 +16,7 @@ def show_legend():
     l=[getp(x,'label') for x in a]
     legend(a,l,loc=3)
     
-ColorList={0:'k',4:'r',8:'g',9:'b',10:'c',11:'m',12:'y',13:'k'}
+ColorList={0:'k',4:'r',8:'g',9:'b',10:'c',11:'m',12:'y',13:'k', 14:'c'}
 def plot_scan(mid,T=1,sample=0):
     SigmaDef={4:1.1,8:-1.084,9:-2.3,10:-1.15,11:-1.101,12:-0.714,13:-1.15}
     data=loadtxt(rootdir+'/data/scanZoom%d/model%d.T%d'%(sample,mid,T))

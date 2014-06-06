@@ -3,7 +3,7 @@ from math import *
 import numpy as np
 import os,ConfigParser,h5py
 
-NameList={0:'f(E,L)',4:'RBin',8:'AD',9:'Resultant',10:'Mean',11:'KS',12:'Kuiper',13:'CosMean'}
+NameList={0:'f(E,L)',4:'RBin',8:'AD',9:'Resultant',10:'Mean',11:'KS',12:'Kuiper',13:'CosMean', 14:'RawMean'}
 
 #load the library
 lib=CDLL("./libdyn.so")
