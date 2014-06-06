@@ -23,6 +23,8 @@ lib.squeeze_data.restype=c_int #avoid using this directly. use P.squeeze_data() 
 #squeeze_data=lib.squeeze_data
 #squeeze_data.restype=c_int
 free_data=lib.free_data
+lib.halo_pot.argtypes=[c_double]
+lib.halo_pot.restype=c_double
 lib.like_init.argtypes=[PARTYPE,c_int]
 like_init=lambda m,c,estimator: lib.like_init(PARTYPE(m,c), estimator)
 lib.predict_radial_count.argtypes=[POINTER(c_double), c_int]
@@ -172,7 +174,10 @@ class SubData:
     self.K=np.sum(self.v**2,1)/2.
     self.L2=np.sum(np.cross(self.x, self.v)**2,1)
     self.Nsub=self.x.shape[0]
-
+  def eval_energy(self):
+	"""calc binding energy for each sub. the halo potential must be initialized before calling this func,
+	via freeze_energy() or define_halo()"""
+	self.E=np.array([k+lib.halo_pot(r) for k,r in zip(self.K,self.r)])
 def get_config(halo):
   c=ConfigParser.ConfigParser()
   c.optionxform=str

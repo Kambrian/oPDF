@@ -182,6 +182,18 @@ double like_cos_mean()
       c+=cos(P[i].theta*2*k*M_PI);
   return -2*k*(c*c)/nP;//chisquare(2) distributed; make negative to be comparable to likelihood
 }
+double like_mean_phase()
+{  //raw mean phase (not squared)
+  int i,k=1;//k-th order moments, zoom in to examine the rotational symmetry on 2pi/k scale
+  double c=0.;
+   #pragma omp parallel for reduction(+:c)
+    for(i=0;i<nP;i++)
+    {
+      c+=P[i].theta;
+    }
+    c/=nP;c-=0.5; 
+    return c*sqrt(12.*nP);//standard normal variable
+}
 double like_linear_moment()
 {  
   int i,k=1;//k-th order moments, zoom in to examine the rotational symmetry on 2pi/k scale
@@ -192,11 +204,8 @@ double like_linear_moment()
       c+=P[i].theta;
     }
     c/=nP;c-=0.5; 
-#ifdef RETURN_RAWMEAN
-    return c*sqrt(12.*nP);//standard normal variable
-#else    
+  //squared mean phase
     return -c*c*12*nP; //a standard chisquare variable
-#endif
 }
 
 double KSTest(int FlagKuiper)
@@ -497,7 +506,7 @@ double like_iterative_radial()
 void like_init(double pars[], int estimator)
 {
   int i;
-  if(pars[0]<0||pars[1]<0) return;
+  if(pars[0]<=0||pars[1]<=0) return;
   define_halo(pars);
   
   #pragma omp parallel for
@@ -508,7 +517,7 @@ double like_eval(double pars[], int estimator)
 {
   double lnL;
   
-  if(pars[0]<0||pars[1]<0) return -INFINITY;
+  if(pars[0]<=0||pars[1]<=0) return -INFINITY;
   switch(estimator)
   {
     case RADIAL_PHASE_BINNED:
@@ -544,6 +553,9 @@ double like_eval(double pars[], int estimator)
     case RADIAL_PHASE_LMOMENT:
       lnL=like_linear_moment();
       break;
+	case RADIAL_PHASE_LMEANRAW:
+      lnL=like_mean_phase();
+      break;  
     case RADIAL_PHASE_KS:
       lnL=KSTest(0);  
       break;

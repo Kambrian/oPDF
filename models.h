@@ -23,13 +23,14 @@
 #define RADIAL_PHASE_KS 11 //ks-test
 #define RADIAL_PHASE_KUIPER 12 //kuiper's test
 #define RADIAL_PHASE_COSMEAN 13 //<cos(theta)>
+#define RADIAL_PHASE_LMEANRAW 14 //mean phase, std normal
 
 #ifndef NBIN_R
 #define NBIN_R 30
 #endif
 
 //#define ESTIMATOR 10  //this has been moved to makefile
-#define RETURN_RAWMEAN 
+// #define RETURN_RAWMEAN 
 // #define RETURN_PROB //for KS and Kuiper
 
 #define IS_PHASE_ESTIMATOR(x) ((x)>=RADIAL_PHASE_BINNED)

@@ -204,6 +204,36 @@ def plot_halo_scan(halo,bintype,rmax=None, estimator=10, nbin=30, flagsave=False
   free_data()
   return TS,x
 
+def SubOnTSmap(halo, bintype=('E','L2'), mmin=100, scmap=cm.gist_rainbow, shiftcmap=False, markercolor='k', interpolation='None'):
+  "plot subhaloes on top of TS contour"
+  get_config(halo)
+  init()
+  P=pick_particles(0)
+  free_data()
+  S=SubData(rootdir+'/data/'+halo[0:4]+'sublist.hdf5')
+  S.eval_energy()
+  TS,x=load_TSmap(rootdir+'/plots/full_halo/R1_200/100x100/Scan_'+halo+'_Mean_'+bintype[0]+'_'+bintype[1]+'_%.0f.hdf5'%P.R_MAX.value)
+  extent=[log10(b[j]) for b in x.values() for j in [0,-1]]
+  figure()
+  if shiftcmap: #so that TS=0 is at the center of the colormap
+	tsmin=nanmin(TS)
+	tsmax=nanmax(TS)
+	if tsmin<0 and tsmax>0:
+	  scmap=shiftedColorMap(scmap, midpoint=-tsmin/(tsmax-tsmin))
+  imshow(TS.T, extent=extent, origin='lower', cmap=scmap, interpolation=interpolation)
+  #contour(TS.T, extent=extent, origin='lower', cmap=cm.jet)
+  colorbar()
+  xlabel('log('+bintype[0]+')')
+  ylabel('log('+bintype[1]+')')
+  name2data={'E': -S.E, 'L2': S.L2, 'r': S.r}
+  for i in range(sum(S.m>mmin)):
+	  if S.r[i]<P.R_MAX and S.r[i]>P.R_MIN:
+		plot(np.log10(name2data[bintype[0]][i]), np.log10(name2data[bintype[1]][i]), 'o', markeredgecolor=markercolor, markeredgewidth=1, markerfacecolor='none', markersize=S.m[i]**(1./3)/1.5)
+  axis('tight')
+  #xlim(1,xlim()[1])
+  outfile=rootdir+'plots/'+'_'.join(['Scan',halo,'Mean']+list(bintype))+'_'+format(P.R_MAX.value,'.0f')+'_sub'
+  savefig(outfile+'.eps')
+  
 if __name__=="__main__":
  
   #ion()
