@@ -10,6 +10,26 @@
 #define PHASE_PERIOD 1
 // #define SWAP_T
 
+// typedef enum
+// {
+//   EID_Radial=0,
+//   EID_RadialBin,
+//   EID_MixedRadial,
+//   EID_Entropy,
+//   EID_Iterative,
+//   EID_Phase=100,
+//   EID_PhaseAD,
+//   EID_PhaseADProb,
+//   EID_PhaseMean,
+//   EID_PhaseMeanRaw,
+//   EID_PhaseBin,
+//   EID_PhasePartition,
+//   EID_PhaseProcess,
+//   EID_PhaseKS,
+//   EID_PhaseKuiper,
+//   EID_PhaseResultant,
+//   EID_PhaseCosMean,
+// } Estimator_t;
 #define ENTROPY_ESTIMATOR 1 //conditional like; junk
 #define ITERATIVE_ESTIMATOR 2 //iterative entropy; still junk
 #define MIXED_RADIAL_ESTIMATOR 3
@@ -24,10 +44,6 @@
 #define RADIAL_PHASE_KUIPER 12 //kuiper's test
 #define RADIAL_PHASE_COSMEAN 13 //<cos(theta)>
 #define RADIAL_PHASE_LMEANRAW 14 //mean phase, std normal
-
-#ifndef NBIN_R
-#define NBIN_R 30
-#endif
 
 //#define ESTIMATOR 10  //this has been moved to makefile
 // #define RETURN_RAWMEAN 
@@ -53,29 +69,24 @@
 
 
 #define NUM_PAR_MAX 10
-
 extern double MODEL_TOL_BIN, MODEL_TOL_BIN_ABS, MODEL_TOL_REL;
-// #define MODEL_TOL_BIN 1e-6 //bin size relative error
-// #define MODEL_TOL_REL 1e-8 //relative tolerance for PERIOD integral
-#define MODEL_MAX_INTVAL 1000
-
-extern double M0,C0,Rhos0,Rs0;
+extern double HaloM0,HaloC0,HaloRhos0,HaloRs0,HaloZ0; //to define the reference point (units) of the scan
 extern struct NFWParZ Halo;
 
 extern void alloc_integration_space();
 extern void free_integration_space();
-extern double halo_pot(double r);
-extern void solve_radial_limits(int pid);
-extern double vr_inv_part(double r, int pid);
-extern void solve_radial_orbit(int pid, int estimator);
-extern void fill_radial_bin();
-extern void predict_radial_count (double RadialCountPred[], int nbin);
-extern void like_init(double pars[], int estimator);
-extern double like_eval(double pars[], int estimator);
-extern double likelihood(double pars[], int estimator);
 
 extern void define_halo(double pars[]);
-extern void init();
-extern void freeze_energy(double pars[]);
-extern double freeze_and_like(double pars[], int estimator);
-extern void select_particles(int subsample_id);
+extern double halo_pot(double r);
+extern void solve_radial_limits ( Particle_t *P, double rmin, double rmax);
+extern double vr_inv_part(double r, double E, double L2);
+extern void solve_radial_orbit(Particle_t *P, double rmin, double rmax, int estimator);
+
+extern void predict_radial_count (double RadialCountPred[], int nbin, Tracer_t *Sample);
+
+extern void like_init(double pars[], int estimator, Tracer_t *Sample);
+extern double like_eval(double pars[], int estimator,Tracer_t *Sample);
+extern double likelihood(double pars[], int estimator, Tracer_t *Sample);
+
+extern void freeze_energy(double pars[], Tracer_t *Sample);
+extern double freeze_and_like(double pars[], int estimator, Tracer_t *Sample);

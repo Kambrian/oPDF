@@ -42,8 +42,12 @@ int main(int argc, char **argv)
   myfopen(fp,buf,"w");
   printf("%s (mid=%d): saving to %s...\n",argv[0],estimator,buf);fflush(stdout);
   
-  init();
-  select_particles(subsample_id);
+  Tracer_t FullSample, Sample;
+  init_tracer(&FullSample);
+  make_sample(subsample_id, &Sample, &FullSample);
+  free_tracer(&FullSample);
+  
+  alloc_integration_space();
   
   for(x=xlim[0];x<=xlim[1];x+=xlim[2])
   {
@@ -51,14 +55,15 @@ int main(int argc, char **argv)
     {
       pars[0]=pow(10.,x);
       pars[1]=pow(10.,y);
-      fprintf(fp,"%g\t%g\t%g\n",pars[0],pars[1],freeze_and_like(pars, estimator));
+      fprintf(fp,"%g\t%g\t%g\n",pars[0],pars[1],freeze_and_like(pars, estimator, &Sample));
     }
     fflush(fp);
   }
   fclose(fp);
 
   free_integration_space();
-  
+  free_tracer(&Sample);
+//   free_tracer(&FullSample);
   return 0;
   
 }

@@ -33,15 +33,20 @@ int main(int argc, char **argv)
   }
   return 0;
 */   
-  init();
-  select_particles(subsample_id);
+  Tracer_t FullSample, Sample;
+  init_tracer(&FullSample);
+  make_sample(subsample_id, &Sample, &FullSample);
+  free_tracer(&FullSample);
+  
+  alloc_integration_space();
+  
 //   printf("%g,%g\n", MODEL_TOL_BIN, MODEL_TOL_REL);
 //   freeze_and_like(pars, estimator);
   for(MODEL_TOL_BIN=1e-1;MODEL_TOL_BIN>1e-5;MODEL_TOL_BIN/=10)
   {
 	  printf("%g:\t", MODEL_TOL_BIN);
 	  for(MODEL_TOL_REL=1e-3;MODEL_TOL_REL>1e-6;MODEL_TOL_REL/=10)
-	  {printf("%g, %g; ", MODEL_TOL_REL, freeze_and_like(pars, estimator));fflush(stdout);}
+	  {printf("%g, %g; ", MODEL_TOL_REL, freeze_and_like(pars, estimator,&Sample));fflush(stdout);}
 	  printf("\n");
   }
 /*
@@ -78,6 +83,7 @@ int main(int argc, char **argv)
   printf("\n %ld sec\n", t2-t1);fflush(stdout);
   t1=time(NULL);*/
   free_integration_space();
+  free_tracer(&Sample);
   
   return 0;
   
