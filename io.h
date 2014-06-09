@@ -9,7 +9,7 @@
 
 typedef struct
   {
-    int flag;
+    int flag; //will be assigned a binID for binned MinDist estimator
     double r;
     double K;
     double L2;

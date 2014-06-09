@@ -17,6 +17,17 @@ static int nPall;
 Particle *P;
 int nP;
 
+ static int cmpPartFlag(const void *p1, const void *p2)
+ { //in ascending order
+   if(((Particle *)p1)->flag > ((Particle *)p2)->flag ) 
+     return 1;
+   
+   if(((Particle *)p1)->flag < ((Particle *)p2)->flag ) 
+     return -1;
+   
+   return 0;
+ }
+ 
  static int cmpPartR(const void *p1, const void *p2)
  { //in ascending order
    if(((Particle *)p1)->r > ((Particle *)p2)->r ) 
@@ -224,4 +235,9 @@ void print_data()
   printf("%g, %g\n", P[1].x[0], P[1].r);
   printf("%d, %p\n", nPall, Pall);
   printf("%g-%g\n", R_MIN, R_MAX);
+}
+
+void sort_flag()
+{//sort according to flag in ascending order
+  qsort(P, nP, sizeof(Particle), cmpPartFlag); 
 }
