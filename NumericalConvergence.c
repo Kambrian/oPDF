@@ -57,11 +57,11 @@ int main(int argc, char **argv)
   {printf("%g,", freeze_and_like(pars,estimator));fflush(stdout);}
   t2=time(NULL);
   printf("\n %ld sec\n", t2-t1);fflush(stdout);
-  t1=time(NULL);
+  t1=time(NULL);*/
   MODEL_TOL_BIN=1e-2;MODEL_TOL_REL=1e-3;//this is pretty good
   for(pars[0]=0.95;pars[0]<1.05;pars[0]+=0.01)
-  {printf("%g,", freeze_and_like(pars,estimator));fflush(stdout);}
-  t2=time(NULL);
+  {printf("%g,", freeze_and_like(pars,estimator,&Sample));fflush(stdout);}
+  /*t2=time(NULL);
   printf("\n %ld sec\n", t2-t1);fflush(stdout);
   t1=time(NULL);
   MODEL_TOL_BIN=1e-2;MODEL_TOL_REL=1e-4;

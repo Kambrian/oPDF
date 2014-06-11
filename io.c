@@ -174,7 +174,7 @@ void copy_tracer(int offset, int sample_size, Tracer_t *Sample, Tracer_t *FullSa
 	else //sub copy
 	  Sample->nP=sample_size;
 
-	if(offset+Sample->nP>=FullSample->nP) 
+	if(offset+Sample->nP>FullSample->nP) 
 	{
 	  printf("error: subsample overflow;%d~%d,nP=%d\n", offset, offset+Sample->nP, FullSample->nP); 
 	  exit(1);
@@ -185,7 +185,7 @@ void copy_tracer(int offset, int sample_size, Tracer_t *Sample, Tracer_t *FullSa
   }
   Sample->rmin=FullSample->rmin;
   Sample->rmax=FullSample->rmax;
-  Sample->nbin_r=FullSample->nbin_r;  //this is not necessarily initilized.
+  Sample->nbin_r=0;  //means RadialCount un-initialized
 }
 
 void cut_tracer(Tracer_t *Sample, double rmin, double rmax)

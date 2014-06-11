@@ -22,15 +22,12 @@ typedef struct
   Particle_t *P;
 } Tracer_t;
 
-extern Tracer_t FullSample;
-
 extern void load_tracer(char *datafile, Tracer_t * Sample);
 extern void shuffle_tracer(unsigned long int seed, Tracer_t *Sample);
 extern void resample_tracer(unsigned long int seed, Tracer_t *ReSample, Tracer_t *Sample);
 extern void copy_tracer(int offset, int sample_size, Tracer_t *Sample, Tracer_t *FullSample);
 extern void squeeze_tracer(Tracer_t *Sample);
 extern void free_tracer(Tracer_t *Sample);
-//extern void free_data();
 extern void print_tracer(Tracer_t *Sample);
 extern void sort_tracer_flag(Tracer_t *Sample);
 extern void cut_tracer(Tracer_t *Sample, double rmin, double rmax);
