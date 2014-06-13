@@ -45,7 +45,7 @@ class NFWHalo_t(ctypes.Structure):
 	    ]  
 
 #=======================load the library==========================
-lib=ctypes.CDLL("./libdyn.so")
+lib=ctypes.CDLL("../libdyn.so")
 #general
 lib.MaxNPar=10
 lib.ParType=ctypes.c_double*lib.MaxNPar
