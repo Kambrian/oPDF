@@ -585,6 +585,27 @@ double likelihood(double pars[], int estimator, Tracer_t *Sample)
   return lnL;
 }
 
+double like_to_chi2(double lnL, int estimator)
+{//convert likelihood() values to a chi-square measure
+#define LogADMean (-0.22)
+#define LogADSig 0.66
+  switch(estimator)
+  {
+	case RADIAL_PHASE_LMEANRAW:
+	  return lnL*lnL;
+	case RADIAL_PHASE_LMOMENT:
+	  return -lnL;
+	case RADIAL_PHASE_ROULETTE:
+	  lnL=(log(-lnL)-LogADMean)/LogADSig;
+	  return lnL*lnL;
+// 	case RADIAL_BIN_ESTIMATOR:
+// 	  return -lnL*2;  //simply 2*(the negative loglike), to make it comparable to chisquare
+	default:
+	  fprintf(stderr, "Error: like_to_chi2() not implemented for estimator=%d yet\n", estimator);
+	  exit(1);
+  }
+}
+
 void freeze_energy(double pars[], Tracer_t *Sample)
 {//fix the energy parameter according to initial potential
   int i;
@@ -598,4 +619,31 @@ double freeze_and_like(double pars[], int estimator, Tracer_t *Sample)
 {
   freeze_energy(pars, Sample);
   return likelihood(pars, estimator, Sample);
+}
+
+double jointLE_like(double pars[], int estimator, int nbinL, int nbinE, Tracer_t *Sample)
+{//automatically update views if needed.
+  int i;
+  double chi2;
+  if(Sample->nView!=nbinL||Sample->ViewType!='L') //already allocated
+	create_tracer_views(Sample, nbinL, 'L');
+  for(i=0,chi2=0;i<nbinL;i++)
+	chi2+=jointE_like(pars, estimator, nbinE, Sample->Views+i);
+  return chi2;
+}
+double jointE_like(double pars[], int estimator, int nbin, Tracer_t *Sample)
+{//this does freeze_and_like
+  int i;
+  double lnL, chi2;
+  freeze_energy(pars, Sample);
+  create_tracer_views(Sample, nbin, 'E');
+  for(i=0,chi2=0;i<nbin;i++)
+  {
+// 	if(estimator==RADIAL_BIN_ESTIMATOR)  count_tracer_radial(View+i, NumRadialBin);
+	lnL=likelihood(pars, estimator, Sample->Views+i);
+	chi2+=like_to_chi2(lnL, estimator);
+// 	if(estimator==RADIAL_BIN_ESTIMATOR)  free_tracer_rcount(View+i);
+  }
+  free_tracer_views(Sample);
+  return chi2;
 }

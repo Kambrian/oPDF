@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 */   
   Tracer_t FullSample, Sample;
   init_tracer(&FullSample);
-  make_sample(subsample_id, &Sample, &FullSample);
+  make_sample(subsample_id*SubSampleSize, SubSampleSize, &Sample, &FullSample);
   free_tracer(&FullSample);
   
   alloc_integration_space();

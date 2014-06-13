@@ -24,7 +24,7 @@ int main(int argc, char **argv)
   }
   estimator=atoi(argv[1]);
   subsample_id=atoi(argv[2]);
-  
+ 
 /*  double x,en=sqrt(1000.);
   for(x=0.022;x<0.023;x+=0.0001)
   {
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
   
   Tracer_t FullSample, Sample;
   init_tracer(&FullSample);
-  make_sample(subsample_id, &Sample, &FullSample);
+  make_sample(subsample_id*SubSampleSize, SubSampleSize, &Sample, &FullSample);
   free_tracer(&FullSample);
   
   alloc_integration_space();

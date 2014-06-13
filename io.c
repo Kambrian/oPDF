@@ -21,6 +21,28 @@ static int cmpPartFlag(const void *p1, const void *p2)
    return 0;
  }
  
+static int cmpPartE(const void *p1, const void *p2)
+{ //in ascending order
+  if(((Particle_t *)p1)->E > ((Particle_t *)p2)->E ) 
+	return 1;
+  
+  if(((Particle_t *)p1)->E < ((Particle_t *)p2)->E ) 
+	return -1;
+  
+  return 0;
+}
+ 
+static int cmpPartL(const void *p1, const void *p2)
+ { //in ascending order
+   if(((Particle_t *)p1)->L2 > ((Particle_t *)p2)->L2 ) 
+     return 1;
+   
+   if(((Particle_t *)p1)->L2 < ((Particle_t *)p2)->L2 ) 
+     return -1;
+   
+   return 0;
+ }
+ 
  static int cmpPartR(const void *p1, const void *p2)
  { //in ascending order
    if(((Particle_t *)p1)->r > ((Particle_t *)p2)->r ) 
@@ -31,7 +53,7 @@ static int cmpPartFlag(const void *p1, const void *p2)
    
    return 0;
  }
-void load_tracer(char *datafile, Tracer_t * Sample)
+void load_tracer_particles(char *datafile, Tracer_t * Sample)
 {
     int i,j;
     FloatMat A;
@@ -124,7 +146,7 @@ void load_tracer(char *datafile, Tracer_t * Sample)
     printf("%d particles loaded\n",Sample->nP);
 }
 
-void shuffle_tracer(unsigned long int seed, Tracer_t *Sample)
+void shuffle_tracer_particles(unsigned long int seed, Tracer_t *Sample)
 {
     const gsl_rng_type * T;
     gsl_rng * r;
@@ -141,12 +163,12 @@ void shuffle_tracer(unsigned long int seed, Tracer_t *Sample)
     gsl_rng_free (r);
 }
 
-void resample_tracer(unsigned long int seed, Tracer_t *ReSample, Tracer_t *Sample)
+void resample_tracer_particles(unsigned long int seed, Tracer_t *ReSample, Tracer_t *Sample)
 {//bootstrap resampling (with replacement)
     const gsl_rng_type * T;
     gsl_rng * r;
 	
-	copy_tracer(0, -1, ReSample, Sample); //null copy
+	copy_tracer_particles(0, -1, ReSample, Sample); //null copy
 	ReSample->P=malloc(sizeof(Particle_t)*Sample->nP);
     /* create a generator chosen by the
        environment variable GSL_RNG_TYPE */
@@ -160,7 +182,7 @@ void resample_tracer(unsigned long int seed, Tracer_t *ReSample, Tracer_t *Sampl
     gsl_rng_free (r);
 }
 
-void copy_tracer(int offset, int sample_size, Tracer_t *Sample, Tracer_t *FullSample)
+void copy_tracer_particles(int offset, int sample_size, Tracer_t *Sample, Tracer_t *FullSample)
 {
   if(sample_size<0) //null copy
   {
@@ -185,10 +207,10 @@ void copy_tracer(int offset, int sample_size, Tracer_t *Sample, Tracer_t *FullSa
   }
   Sample->rmin=FullSample->rmin;
   Sample->rmax=FullSample->rmax;
-  Sample->nbin_r=0;  //means RadialCount un-initialized
+  //its the user's responsibility to manage RadialCount[]
 }
 
-void cut_tracer(Tracer_t *Sample, double rmin, double rmax)
+void cut_tracer_particles(Tracer_t *Sample, double rmin, double rmax)
 {//apply radial cuts
   int i,j;
   Sample->rmin=rmin;
@@ -205,7 +227,7 @@ void cut_tracer(Tracer_t *Sample, double rmin, double rmax)
   Sample->P=realloc(Sample->P,sizeof(Particle_t)*Sample->nP);
 }
 
-void squeeze_tracer(Tracer_t *Sample)
+void squeeze_tracer_particles(Tracer_t *Sample)
 {//remove flag=0 particles from P, in place.
   int i,j;
   
@@ -221,13 +243,8 @@ void squeeze_tracer(Tracer_t *Sample)
   Sample->P=realloc(Sample->P,sizeof(Particle_t)*Sample->nP);
 }
 
-void free_tracer(Tracer_t *Sample)
+void free_tracer_particles(Tracer_t *Sample)
 {
-  if(Sample->nbin_r)
-  {
-	free(Sample->RadialCount);
-	Sample->nbin_r=0;
-  }
   if(Sample->nP)
   {
   free(Sample->P);
@@ -235,32 +252,100 @@ void free_tracer(Tracer_t *Sample)
   }
 }
 
-// void free_data()
-// {
-//   free_tracer(&DefaultSample);
-//   free_tracer(&FullSample);
-//   free_integration_space();
-// }
-void print_tracer(Tracer_t *Sample)
+void free_tracer(Tracer_t *Sample)
+{
+  free_tracer_rcounts(Sample);
+  free_tracer_views(Sample);
+  free_tracer_particles(Sample);
+}
+
+void print_tracer_particle(Tracer_t *Sample, int i)
 {
   printf("%d, %p\n", Sample->nP, Sample->P);
-  printf("%g, %g\n", Sample->P[0].x[0], Sample->P[0].r);
-  printf("%g, %g\n", Sample->P[1].x[0], Sample->P[1].r);
+  printf("%g, %g\n", Sample->P[i].x[0], Sample->P[i].r);
   printf("%g-%g\n", Sample->rmin, Sample->rmax);
 }
 
-void sort_tracer_flag(Tracer_t *Sample)
-{//sort according to flag in ascending order
-  qsort(Sample->P, Sample->nP, sizeof(Particle_t), cmpPartFlag); 
+void sort_part_flag(Particle_t *P, int nP)
+{//ascending in flag
+  qsort(P, nP, sizeof(Particle_t), cmpPartFlag);
+}
+void sort_part_L(Particle_t *P, int nP)
+{//ascending in L
+  qsort(P, nP, sizeof(Particle_t), cmpPartL);
+}
+void sort_part_E(Particle_t *P, int nP)
+{//ascending in E
+  qsort(P, nP, sizeof(Particle_t), cmpPartE);
 }
 
+void create_tracer_views(Tracer_t *Sample, int nView, char proxy)
+{//sort Sample and divide into nView equal-size subsamples, discarding remainders.
+  //the data are not copied. so only views are generated.
+  if(nView!=Sample->nView)
+	free_tracer_views(Sample); //clean up.
+  if(nView>1)//otherwise no need to sort
+  {
+	switch(proxy)
+	{
+	  case 'E':
+		qsort(Sample->P, Sample->nP, sizeof(Particle_t), cmpPartE);
+		break;
+	  case 'L':
+		qsort(Sample->P, Sample->nP, sizeof(Particle_t), cmpPartL);
+		break;
+	  case 'f':
+		qsort(Sample->P, Sample->nP, sizeof(Particle_t), cmpPartFlag);
+		break;
+	  default:
+		fprintf(stderr, "error: unknown proxy=%c\n", proxy);
+		exit(1);
+	}
+  }
+  Sample->Views=calloc(nView, sizeof(TracerView));
+  int i,nP,offset;
+  nP=Sample->nP/nView;
+  for(i=0,offset=0;i<nView;i++)
+  {
+	copy_tracer_particles(0, -1, Sample->Views+i, Sample);
+	Sample->Views[i].nP=nP;
+	Sample->Views[i].P=Sample->P+offset;
+	offset+=nP;
+  }
+  Sample->nView=nView;
+  Sample->ViewType=proxy;
+}
+void free_tracer_views(Tracer_t *Sample)
+{
+  if(Sample->nView)
+  {
+	int i;
+	for(i=0;i<Sample->nView;i++)//deep cleaning first
+	  free_tracer_views(Sample->Views+i);
+	free(Sample->Views);
+	Sample->nView=0;
+	Sample->ViewType=0;
+  }
+}
+void free_tracer_rcounts(Tracer_t *Sample)
+{
+  if(Sample->nbin_r)
+  {
+	free(Sample->RadialCount);
+	Sample->nbin_r=0;
+  }
+}
 void count_tracer_radial(Tracer_t *Sample, int nbin)
 {//count inside linear radial bins
+  //init rmin-rmax before calling.
   int i,j;
   double dr;
+  if(Sample->rmax==0) {fprintf(stderr, "Error: cut particles or assign rmin/rmax first\n"); exit(1);}
+  if(Sample->nbin_r!=nbin) //need to realloc
+	free_tracer_rcounts(Sample);
   Sample->nbin_r=nbin;
-  dr=(Sample->rmax-Sample->rmin)/Sample->nbin_r;
   Sample->RadialCount=calloc(Sample->nbin_r, sizeof(int));
+  dr=(Sample->rmax-Sample->rmin)/Sample->nbin_r;
   #pragma omp parallel
   {
 	int *bincount;
@@ -281,9 +366,10 @@ void count_tracer_radial(Tracer_t *Sample, int nbin)
     free(bincount);
   }
 }
+
 //======higher level funcs====================
 int NumRadialCountBin=30;
-int SUBSAMPLE_SIZE=1000;
+int SubSampleSize=1000;
 void init_tracer(Tracer_t *Sample)
 {
   char datafile[1024]=ROOTDIR"/data/mockhalo_wenting.hdf5";
@@ -296,7 +382,7 @@ void init_tracer(Tracer_t *Sample)
   {
     printf("Importing parameters from environment..\n");
     sprintf(datafile,"%s/data/%s", ROOTDIR, getenv("DynDataFile"));
-    SUBSAMPLE_SIZE=strtol(getenv("DynSIZE"),NULL, 10);
+    SubSampleSize=strtol(getenv("DynSIZE"),NULL, 10);
     Sample->rmin=strtod(getenv("DynRMIN"),NULL);
     Sample->rmax=strtod(getenv("DynRMAX"),NULL);
     HaloM0=strtod(getenv("DynM0"),NULL);
@@ -305,18 +391,18 @@ void init_tracer(Tracer_t *Sample)
   else
     printf("Warning: Using default parameters with datafile %s .\n", datafile);
  
-  printf("%s; %d; %g,%g;%g,%g\n", datafile, SUBSAMPLE_SIZE, Sample->rmin,Sample->rmax,HaloM0,HaloC0);
+  printf("%s; %d; %g,%g;%g,%g\n", datafile, SubSampleSize, Sample->rmin,Sample->rmax,HaloM0,HaloC0);
   decode_NFWprof(HaloZ0,HaloM0,HaloC0,VIR_C200,&Halo);
   HaloRhos0=Halo.Rhos;
   HaloRs0=Halo.Rs;
   
-  load_tracer(datafile, Sample);
-  cut_tracer(Sample,Sample->rmin,Sample->rmax);
-  shuffle_tracer(100,Sample);
+  load_tracer_particles(datafile, Sample);
+  cut_tracer_particles(Sample,Sample->rmin,Sample->rmax);
+  shuffle_tracer_particles(100,Sample);
   count_tracer_radial(Sample, NumRadialCountBin);
 }
-void make_sample(int sample_id, Tracer_t *Sample, Tracer_t *FullSample)
+void make_sample(int offset, int samplesize, Tracer_t *Sample, Tracer_t *FullSample)
 {//make a subsample
-  copy_tracer(sample_id*SUBSAMPLE_SIZE,SUBSAMPLE_SIZE, Sample, FullSample);
+  copy_tracer_particles(offset, samplesize, Sample, FullSample);
   count_tracer_radial(Sample, NumRadialCountBin);
 }

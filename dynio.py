@@ -19,14 +19,18 @@ class Particle_t(ctypes.Structure):
 Particle_p=ctypes.POINTER(Particle_t)  
 
 class Tracer_t(ctypes.Structure):
-  _fields_=[('nP', ctypes.c_int),
-			('nbin_r', ctypes.c_int),
-			('RadialCount', ctypes.POINTER(ctypes.c_int)),
-			('rmin', ctypes.c_double),
-			('rmax', ctypes.c_double),
-			('P', ctypes.POINTER(Particle_t))
-			]
+  pass
 Tracer_p=ctypes.POINTER(Tracer_t)
+Tracer_t._fields_=[('nP', ctypes.c_int),
+				   ('P', Particle_p),
+				   ('nbin_r', ctypes.c_int),
+				   ('RadialCount', ctypes.POINTER(ctypes.c_int)),
+				   ('rmin', ctypes.c_double),
+				   ('rmax', ctypes.c_double),
+				   ('nView', ctypes.c_int),
+				   ('ViewType', ctypes.c_char),
+				   ('Views', Tracer_p)
+				  ]
 
 class NFWHalo_t(ctypes.Structure):
   """all properties are physical"""
@@ -48,13 +52,37 @@ lib.ParType=ctypes.c_double*lib.MaxNPar
 lib.MODEL_TOL_BIN=ctypes.c_double.in_dll(lib,'MODEL_TOL_BIN')
 lib.MODEL_TOL_BIN_ABS=ctypes.c_double.in_dll(lib,'MODEL_TOL_BIN_ABS')
 lib.MODEL_TOL_REL=ctypes.c_double.in_dll(lib,'MODEL_TOL_REL')
-lib.SUBSAMPLE_SIZE=ctypes.c_int.in_dll(lib,'SUBSAMPLE_SIZE')
+lib.SubSampleSize=ctypes.c_int.in_dll(lib,'SubSampleSize')
 lib.NumRadialCountBin=ctypes.c_int.in_dll(lib,'NumRadialCountBin')
 lib.alloc_integration_space.restype=None
 lib.alloc_integration_space.argtypes=[]
 lib.free_integration_space.restype=None
 lib.free_integration_space.argtypes=[]
+lib.like_to_chi2.restype=ctypes.c_double
+lib.like_to_chi2.argtypes=[ctypes.c_double, ctypes.c_int]
 lib.NameList={0:'f(E,L)',4:'RBin',8:'AD',9:'Resultant',10:'Mean',11:'KS',12:'Kuiper',13:'CosMean', 14:'RawMean'}
+if os.uname()[1]=='Medivh':
+    lib.rootdir='/work/Projects/DynDistr/'
+else:
+    lib.rootdir='/gpfs/data/jvbq85/DynDistr/'
+    
+lib.open=lib.alloc_integration_space
+lib.close=lib.free_integration_space
+
+def get_config(halo):
+  if halo==None:
+	return {}
+  c=ConfigParser.ConfigParser()
+  c.optionxform=str
+  c.read('DataFiles.cfg')
+  try:
+	options=dict(c.items(halo))
+  except:
+	options=dict(c.defaults())
+	print "Warning: no config for %s; using defaults."%halo
+  return options    
+
+lib.get_config=get_config
 
 #models
 lib.like_init.restype=None
@@ -64,9 +92,14 @@ lib.like_eval.argtypes=[lib.ParType, ctypes.c_int, Tracer_p]
 lib.likelihood.restype=ctypes.c_double
 lib.likelihood.argtypes=[lib.ParType, ctypes.c_int, Tracer_p]
 lib.freeze_energy.restype=None
-lib.freeze_energy.argtypes=[lib.ParType]
+lib.freeze_energy.argtypes=[lib.ParType, Tracer_p]
 lib.freeze_and_like.restype=ctypes.c_double
 lib.freeze_and_like.argtypes=[lib.ParType, ctypes.c_int, Tracer_p]
+lib.jointLE_like.restype=ctypes.c_double
+lib.jointLE_like.argtypes=[lib.ParType, ctypes.c_int, ctypes.c_int, ctypes.c_int, Tracer_p]
+#extern double jointE_like(double pars[], int estimator, int nbin, Tracer_t *Sample);
+lib.jointE_like.restype=ctypes.c_double
+lib.jointE_like.argtypes=[lib.ParType, ctypes.c_int, ctypes.c_int, Tracer_p]
 
 lib.predict_radial_count.restype=None
 lib.predict_radial_count.argtypes=[ctypes.POINTER(ctypes.c_double), ctypes.c_int, Tracer_p]
@@ -79,39 +112,51 @@ lib.comoving_virial_radius.argtypes=[ctypes.c_double, ctypes.c_double, ctypes.c_
 lib.comoving_virial_radius.restype=ctypes.c_double
 
 #tracers
-lib.load_tracer.restype=None
-lib.load_tracer.argtypes=[ctypes.c_char_p, Tracer_p]
-lib.shuffle_tracer.restype=None
-lib.shuffle_tracer.argtypes=[ctypes.c_ulong, Tracer_p]
-lib.resample_tracer.restype=None
-lib.resample_tracer.argtypes=[ctypes.c_ulong, Tracer_p, Tracer_p]
-lib.copy_tracer.restype=None
-lib.copy_tracer.argtypes=[ctypes.c_int, ctypes.c_int, Tracer_p, Tracer_p]
-#extern void copy_tracer(int offset, int sample_size, Tracer_t *Sample, Tracer_t *FullSample);
-lib.squeeze_tracer.restype=None
-lib.squeeze_tracer.argtypes=[Tracer_p]
-#extern void squeeze_tracer(Tracer_t *Sample);
-lib.free_tracer.restype=None
-lib.free_tracer.argtypes=[Tracer_p]
-#extern void free_tracer(Tracer_t *Sample);
-lib.print_tracer.restype=None
-lib.print_tracer.argtypes=[Tracer_p]
-#extern void print_tracer(Tracer_t *Sample);
-lib.sort_tracer_flag.restype=None
-lib.sort_tracer_flag.argtypes=[Tracer_p]
-#extern void sort_tracer_flag(Tracer_t *Sample);
-lib.cut_tracer.restype=None
-lib.cut_tracer.argtypes=[Tracer_p, ctypes.c_double, ctypes.c_double]
+lib.load_tracer_particles.restype=None
+lib.load_tracer_particles.argtypes=[ctypes.c_char_p, Tracer_p]
+lib.cut_tracer_particles.restype=None
+lib.cut_tracer_particles.argtypes=[Tracer_p, ctypes.c_double, ctypes.c_double]
 #extern void cut_tracer(Tracer_t *Sample, double rmin, double rmax);
+lib.shuffle_tracer_particles.restype=None
+lib.shuffle_tracer_particles.argtypes=[ctypes.c_ulong, Tracer_p]
+lib.squeeze_tracer_particles.restype=None
+lib.squeeze_tracer_particles.argtypes=[Tracer_p]
+#extern void squeeze_tracer(Tracer_t *Sample);
+lib.free_tracer_particles.restype=None
+lib.free_tracer_particles.argtypes=[Tracer_p]
+lib.print_tracer_particle.restype=None
+lib.print_tracer_particle.argtypes=[Tracer_p, ctypes.c_int]
+lib.resample_tracer_particles.restype=None
+lib.resample_tracer_particles.argtypes=[ctypes.c_ulong, Tracer_p, Tracer_p]
+lib.copy_tracer_particles.restype=None
+lib.copy_tracer_particles.argtypes=[ctypes.c_int, ctypes.c_int, Tracer_p, Tracer_p]
 lib.count_tracer_radial.restype=None
 lib.count_tracer_radial.argtypes=[Tracer_p, ctypes.c_int]
 #extern void count_tracer_radial(Tracer_t *Sample, int nbin);
+lib.free_tracer_rcounts.restype=None
+lib.free_tracer_rcounts.argtypes=[Tracer_p]
+lib.sort_part_flag.restype=None
+lib.sort_part_flag.argtypes=[Particle_p, ctypes.c_int]
+#extern void sort_part_flag(Particle_t *P, int nP);
+lib.sort_part_E.restype=None
+lib.sort_part_E.argtypes=[Particle_p, ctypes.c_int]
+#extern void sort_part_L(Particle_t *P, int nP);
+lib.sort_part_L.restype=None
+lib.sort_part_L.argtypes=[Particle_p, ctypes.c_int]
+#extern void sort_part_E(Particle_t *P, int nP);
+lib.create_tracer_views.restype=None
+lib.create_tracer_views.argtypes=[Tracer_p, ctypes.c_int, ctypes.c_char]
+lib.free_tracer_views.restype=None
+lib.free_tracer_views.argtypes=[Tracer_p]
 lib.init_tracer.restype=None
 lib.init_tracer.argtypes=[Tracer_p]
 #extern void init_tracer(Tracer_t *Sample);
 lib.make_sample.restype=None
-lib.make_sample.argtypes=[ctypes.c_int, Tracer_p, Tracer_p]
-#extern void make_sample(int sample_id, Tracer_t *Sample, Tracer_t *FullSample);
+lib.make_sample.argtypes=[ctypes.c_int, ctypes.c_int, Tracer_p, Tracer_p]
+#extern void make_sample(int offset, int size, Tracer_t *Sample, Tracer_t *FullSample);
+lib.free_tracer.restype=None
+lib.free_tracer.argtypes=[Tracer_p]
+#extern void free_tracer(Tracer_t *Sample);
 
 #wenting's lib
 prototype=ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double)
@@ -123,7 +168,6 @@ lib.dataprob6d=prototype(("dataprob6d",lib))
 #elike=lambda m,c,estimator: likefunc(PARTYPE(m,c),estimator)
 #freeze_energy=lambda m,c: freezefunc(PARTYPE(m,c))
 #elike2=lambda m,c,estimator: likefunc2(PARTYPE(m,c),estimator) #freeze_and_like()
-
 #====================python wrapper classes=========================================
 
 class NFWHalo(object):
@@ -151,44 +195,60 @@ class Tracer(Tracer_t):
 	configuration according to get_config(halo). newoptions will overide get_config.'''
 	Tracer_t.__init__(self)
 	self.nP=0  #init state
-	self._as_parameter_=ctypes.byref(self) #this makes it possible to directly pass this as pointer arg
+	self.nView=0
+	#self._as_parameter_=ctypes.byref(self) #this makes it possible to directly pass this as pointer arg
 	self._pointer=ctypes.byref(self) #or ctypes.cast(ctypes.pointer(self), Tracer_p)? or ctypes.pointer(self)
 	if halo!=None or newoptions!={}:
-	  options=get_config(halo)
+	  options=lib.get_config(halo)
 	  options.update(newoptions)
 	  print options
 	  for k,v in options.iteritems():
 		os.environ[k]=str(v)
 	  self.auto_load()
 	  
-  def __del__(self):
-	print "deleting Tracer ", id(self)
+  def clean(self):
+	''' never defined it as __del__ and rely on the garbage collector.
+	it's dangerous. gc may never call your __del__.
+	call it yourself.'''
+	#print "cleaning Tracer ", id(self)
 	lib.free_tracer(self._pointer)
+	#print self.nView
 
+  def __enter__(self):
+	return self
+  
+  def __exit__(self, type, value, traceback):
+	self.clean()
+	
   def __update_array(self):
 	'''this should be called whenever the pointer self.P has changed
 	to point the numpy array to the new memory'''
 	Parr=(Particle_t*self.nP).from_address(ctypes.addressof(self.P.contents)) #struct array
 	self.data=np.frombuffer(Parr, np.dtype(Parr))[0] #the numpy array
   
-  def print_data(self):
+  def print_data(self, i=0):
 	print self.nP, '%0x'%ctypes.addressof(self.P.contents)
-	print self.P[0].x[0], self.P[0].r
-	print self.P[1].x[0], self.P[1].r
-	print self.data[1]['x'][0], self.data[1]['r']
+	print self.P[i].x[0], self.P[i].r
+	print self.data[i]['x'][0], self.data[i]['r']
 	print '-----------'
-	lib.print_tracer(self._pointer)
+	lib.print_tracer_particle(self._pointer, i)
 	print '============='
 	
-  def freeze_energy(self, pars):
-	lib.freeze_energy(lib.ParType(pars))
+  def freeze_energy(self, pars=[1,1]):
+	lib.freeze_energy(lib.ParType(*pars), self._pointer)
 
-  def likelihood(self, pars, estimator):
+  def likelihood(self, pars=[1,1], estimator=10):
 	return lib.likelihood(lib.ParType(*pars), estimator, self._pointer)
   
-  def freeze_and_like(self, pars, estimator):
+  def freeze_and_like(self, pars=[1,1], estimator=10):
 	return lib.freeze_and_like(lib.ParType(*pars), estimator, self._pointer)
-
+  
+  def jointE_like(self, pars=[1,1], estimator=10, nbinE=10):
+	return lib.jointE_like(lib.ParType(*pars), estimator, nbinE, self._pointer)
+	
+  def jointLE_like(self, pars=[1,1], estimator=10, nbinL=10, nbinE=10):
+	return lib.jointLE_like(lib.ParType(*pars), estimator, nbinL, nbinE, self._pointer)
+		
   def predict_radial_count(self, nbin=100):
 	n=np.empty(nbin,dtype='f8')
 	lib.predict_radial_count(n.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), nbin)
@@ -196,30 +256,36 @@ class Tracer(Tracer_t):
 	return n
   
   def load(self, infile):
-	lib.load_tracer(ctypes.c_char_p(infile), self._pointer)
+	lib.load_tracer_particles(ctypes.c_char_p(infile), self._pointer)
 	self.__update_array()
 	
   def copy(self, offset=0, size=0):
 	newsample=Tracer()
-	lib.copy_tracer(offset, size, newsample._pointer, self._pointer)
+	lib.copy_tracer_particles(offset, size, newsample._pointer, self._pointer)
 	newsample.__update_array()
 	return newsample
   
+  def create_views(self, n=10, proxy='L'):
+	lib.create_tracer_views(self._pointer, n, proxy)
+	
+  def destroy_views(self):
+	lib.free_tracer_views(self._pointer)
+
   def radial_cut(self, rmin, rmax):
-	lib.cut_tracer(self._pointer, rmin, rmax)
+	lib.cut_tracer_particles(self._pointer, rmin, rmax)
 	self.__update_array()
 	
   def shuffle(self, seed):
-	lib.shuffle_tracer(ctypes.c_ulong(seed), self._pointer)
+	lib.shuffle_tracer_particles(ctypes.c_ulong(seed), self._pointer)
 	
   def resample(self, seed):
 	newsample=Tracer()
-	lib.resample_tracer(seed, newsample._pointer, self._pointer)
+	lib.resample_tracer_particles(seed, newsample._pointer, self._pointer)
 	newsample.__update_array()
 	return newsample
 
   def squeeze(self):
-	lib.squeeze_tracer(self._pointer)
+	lib.squeeze_tracer_particles(self._pointer)
 	self.__update_array()
 	
   def radial_count(self, nbin=None):
@@ -227,8 +293,11 @@ class Tracer(Tracer_t):
 	  nbin=lib.NumRadialCountBin
 	lib.count_tracer_radial(self._pointer, nbin)
 	  
-  def sort_flag(self):
-	lib.sort_tracer_flag(self._pointer)
+  def sort(self, proxy, offset=0,n=0):
+	if n==0:
+	  n=self.nP
+	sort_func={'flag': lib.sort_part_flag, 'E': lib.sort_part_E, 'L2': lib.sort_part_L}
+	sort_func[proxy](ctypes.byref(Particle_t.from_buffer(Sample.P[offset])), n)
 
   def auto_load(self):
 	'''high level init; it does the following:
@@ -243,7 +312,8 @@ class Tracer(Tracer_t):
 	'''high level sampling; 
 	copy() and radial_count()'''
 	newsample=Tracer()
-	lib.make_sample(sampleid, newsample._pointer, self._pointer)
+	size=lib.SubSampleSize.value
+	lib.make_sample(sampleid*size, size, newsample._pointer, self._pointer)
 	newsample.__update_array()
 	return newsample
 	
@@ -261,7 +331,7 @@ class Tracer(Tracer_t):
   
   def assign_TSmap(self, TS, x):
 	 #TODO
-	 return 
+	 pass
 
   def filter_TSmap(self, TS, x, lim):
 	'''select particles with TS in the range [lim[0],lim[1]], 
@@ -296,40 +366,29 @@ class SubData(object):
 	"""calc binding energy for each sub. the halo potential must be initialized before calling this func,
 	via freeze_energy() or define_halo()"""
 	self.E=np.array([-k-lib.halo_pot(r) for k,r in zip(self.K,self.r)])
-
-def get_config(halo):
-  if halo==None:
-	return {}
-  c=ConfigParser.ConfigParser()
-  c.optionxform=str
-  c.read('DataFiles.cfg')
-  try:
-	options=dict(c.items(halo))
-  except:
-	options=dict(c.defaults())
-	print "Warning: no config for %s; using defaults."%halo
-  return options
-	
-if os.uname()[1]=='Medivh':
-    rootdir='/work/Projects/DynDistr/'
-else:
-    rootdir='/gpfs/data/jvbq85/DynDistr/'    
-
+  
 if __name__=="__main__":
+  lib.open() # common initialization
   FullSample=Tracer('AqA4',DynSIZE=100)
   Sample=FullSample.sample()
-  FullSample.print_data()
-  Sample.print_data()
+  FullSample.print_data(10)
+  Sample.print_data(10)
   Sample.data[1]['r']=2
   Sample.rmin=10
-  Sample.print_data()
-  del FullSample,Sample
+  Sample.print_data(1)
+  Sample.sort('L2')
+  Sample.print_data(1)
+  print Sample.jointLE_like([1,1])
+  FullSample.clean()
+  Sample.clean()
   
-  FullSample2=Tracer('Mock')
-  Sample2=FullSample2.sample()
-  FullSample.print_data()
-  Sample.print_data()
-  Sample.data[1]['r']=2
-  Sample.rmin=10
-  Sample.print_data()
-  del FullSample,Sample
+  #good practice: use with!
+  with Tracer('Mock') as FullSample:
+	with FullSample.sample() as Sample:
+	  FullSample.print_data()
+	  Sample.print_data()
+	  Sample.data[1]['r']=2
+	  Sample.rmin=10
+	  Sample.print_data()
+
+  lib.close()

@@ -87,6 +87,10 @@ extern void predict_radial_count (double RadialCountPred[], int nbin, Tracer_t *
 extern void like_init(double pars[], int estimator, Tracer_t *Sample);
 extern double like_eval(double pars[], int estimator,Tracer_t *Sample);
 extern double likelihood(double pars[], int estimator, Tracer_t *Sample);
+extern double like_to_chi2(double lnL, int estimator);
 
 extern void freeze_energy(double pars[], Tracer_t *Sample);
 extern double freeze_and_like(double pars[], int estimator, Tracer_t *Sample);
+
+extern double jointLE_like(double pars[], int estimator, int nbinL, int nbinE, Tracer_t *Sample);
+extern double jointE_like(double pars[], int estimator, int nbin, Tracer_t *Sample);
