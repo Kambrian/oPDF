@@ -44,6 +44,14 @@
 #define RADIAL_PHASE_KUIPER 12 //kuiper's test
 #define RADIAL_PHASE_COSMEAN 13 //<cos(theta)>
 #define RADIAL_PHASE_LMEANRAW 14 //mean phase, std normal
+#define RADIAL_PHASE_AD_GEV 15 //ADtest likelihood, from GEV fit
+#define RADIAL_PHASE_AD_BINORMAL 16 //AD like, from binormal fit
+#define RADIAL_PHASE_AD_NORMAL 17 //AD like, from normal fit
+#define LnADMean (-0.22)
+#define LnADSig 0.66
+#define LnAD_GEV_K (-0.2128)
+#define LnAD_GEV_SIGMA 0.6335
+#define LnAD_GEV_MU (-0.4776)
 
 //#define ESTIMATOR 10  //this has been moved to makefile
 // #define RETURN_RAWMEAN 
@@ -84,13 +92,25 @@ extern void solve_radial_orbit(Particle_t *P, double rmin, double rmax, int esti
 
 extern void predict_radial_count (double RadialCountPred[], int nbin, Tracer_t *Sample);
 
-extern void like_init(double pars[], int estimator, Tracer_t *Sample);
-extern double like_eval(double pars[], int estimator,Tracer_t *Sample);
-extern double likelihood(double pars[], int estimator, Tracer_t *Sample);
+/* --types of likelihood:
+likelihood: elemetary likelihood evaluation =(init+eval)
+freeze_and_like: freeze energy and calc like =(freeze_energy+likelihood)
+joint_Flike: automatically create/manage views, freeze energy, and likelihood
+views_like: likelihood on existing views
+views_Flike: freeze_and_like on existing views
+*/
+
+extern void like_init(double pars[], int estimator, Tracer_t *Sample); //define halo and prepare orbit
+extern double like_eval(double pars[], int estimator,Tracer_t *Sample); 
+extern double likelihood(double pars[], int estimator, Tracer_t *Sample); //init and eval
 extern double like_to_chi2(double lnL, int estimator);
 
 extern void freeze_energy(double pars[], Tracer_t *Sample);
 extern double freeze_and_like(double pars[], int estimator, Tracer_t *Sample);
 
-extern double jointLE_like(double pars[], int estimator, int nbinL, int nbinE, Tracer_t *Sample);
-extern double jointE_like(double pars[], int estimator, int nbin, Tracer_t *Sample);
+extern double jointLE_Flike(double pars[], int estimator, int nbinL, int nbinE, Tracer_t *Sample);
+extern double jointE_Flike(double pars[], int estimator, int nbin, Tracer_t *Sample);
+
+extern void create_nested_views(double pars[], int nbin[], char ViewTypes[], Tracer_t *Sample);
+extern double nested_views_like(double pars[], int estimator, Tracer_t *Sample);
+extern double nested_views_Flike(double pars[], int estimator, Tracer_t *Sample);

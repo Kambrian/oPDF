@@ -3,11 +3,13 @@ from dynio import *
 os.environ['OMP_NUM_THREADS']='32'
 
 from matplotlib.pyplot import *
+import matplotlib.pyplot as plt
 from numpy import *
 from scipy.stats import chi2,norm
 from myutils import *
 import triangle
-import glob
+import glob,itertools
+import h5py
 
 ion()
         
@@ -17,6 +19,83 @@ def show_legend():
     legend(a,l,loc=3)
     
 ColorList={0:'k',4:'r',8:'g',9:'b',10:'c',11:'m',12:'y',13:'k', 14:'c'}
+def image_newscan(mid, proxy, indir='scanMock10000Zoom', flagsave=False):
+  if proxy=='EL':
+	proxy='LE'
+  name='|'.join([lib.NameList[mid],proxy]).rstrip('|')
+  infile=lib.rootdir+'/plots/'+indir+'/'+name.replace('|','_')+'.hdf5'
+  f=h5py.File(infile,'r')
+  mm=f['/logm'][...]
+  cc=f['/logc'][...]
+  ts=f['/ts']
+  nbin=ts.attrs['nbinE']*ts.attrs['nbinL']
+  dm=mm[0,1]-mm[0,0]
+  dc=cc[1,0]-cc[0,0]
+  extent=[mm.ravel().min()-dm/2,mm.ravel().max()+dm/2,cc.ravel().min()-dc/2,cc.ravel().max()+dc/2]
+  plt.figure()
+  plt.imshow(ts, extent=extent, cmap=plt.cm.summer)
+  #cs=plt.contour(mm,cc,y)
+  #plt.clabel(cs, inline=1)
+  levels=chi2.ppf([0.683, 0.954, 0.997], nbin)
+  cs=plt.contour(mm,cc,ts, levels=levels)
+  plt.clabel(cs, inline=1, fmt={levels[0]:r'1$\sigma$', levels[1]: r'2$\sigma$', levels[2]: r'3$\sigma$'})
+  plt.plot(mm.ravel()[ts.value.argmin()],cc.ravel()[ts.value.argmin()],'ro')
+  plt.title(name)
+  plt.xlabel(r'$\log(M/M_0)$')
+  plt.ylabel(r'$\log(c/c_0)$')
+  if flagsave:
+	plt.savefig(infile.replace('.hdf5','.eps'))
+
+def contour_newscan(mid, proxy, indir='scanMock10000Zoom', levels={0.68:r'1$\sigma$'}, likerat=False, flagsave=False, colors=None, clabel=True, **kwargs):
+  if proxy=='EL':
+	proxy='LE'
+  name='|'.join([lib.NameList[mid],proxy]).rstrip('|')
+  infile=lib.rootdir+'/plots/'+indir+'/'+name.replace('|','_')+'.hdf5'
+  f=h5py.File(infile,'r')
+  mm=f['/logm'][...]
+  cc=f['/logc'][...]
+  ts=f['/ts']
+  print ts.value.min()
+  nbin=ts.attrs['nbinE']*ts.attrs['nbinL']
+  fmt={}
+  for k,v in levels.iteritems():
+	if likerat: #likelihood ratio to determine confidence level
+	  lvl=ts.value.min()+chi2.ppf(k, 2)
+	else:
+	  lvl=chi2.ppf(k,nbin)
+	fmt[lvl]=v
+  cs=plt.contour(mm,cc,ts, levels=fmt.keys(), colors=colors, **kwargs)	
+  if clabel:
+	plt.clabel(cs, inline=1, fmt=fmt)
+  h=Ellipse((0,0),0,0,fill=False, color=list(colors)[0], label=name)
+  plt.plot(mm.ravel()[ts.value.argmin()],cc.ravel()[ts.value.argmin()],'o',color=list(colors)[0])
+  plt.title(name)
+  plt.xlabel(r'$\log(M/M_0)$')
+  plt.ylabel(r'$\log(c/c_0)$')
+  if flagsave:
+	plt.savefig(infile.replace('.hdf5','.eps'))
+  return h
+
+def plot_newscan(indir='scanMock10000Zoom',percent=0.68, likerat=False, savefig=False):
+  nmax=5
+  colors=itertools.cycle(plt.cm.jet(np.linspace(0.,1.,nmax)))
+  plt.figure()
+  hall=[]
+  for mid,proxy in [(8,''),(8,'L'),(10,''),(10,'L')]:
+	  name='|'.join([lib.NameList[mid],proxy]).rstrip('|')
+	  h=contour_newscan(mid, proxy, indir, levels={percent:name}, colors=(colors.next(),), clabel=True, likerat=likerat)
+	  hall.append(h)
+  plt.legend(hall,[plt.getp(x,'label') for x in hall],loc=3)
+  plt.plot(plt.xlim(),[0,0],'k:',[0,0],plt.ylim(),'k:')
+  plt.title(indir)
+  plt.xlim([-0.25,0.25])
+  plt.ylim([-0.25,0.25])
+  if savefig:
+	if likerat:
+	  plt.savefig(lib.rootdir+'/plots/'+indir+'/contours_likerat.eps')
+	else:
+	  plt.savefig(lib.rootdir+'/plots/'+indir+'/contours.eps')
+
 def plot_scan(mid,T=1,sample=0):
     SigmaDef={4:1.1,8:-1.084,9:-2.3,10:-1.15,11:-1.101,12:-0.714,13:-1.15}
     data=loadtxt(rootdir+'/data/scanZoom%d/model%d.T%d'%(sample,mid,T))

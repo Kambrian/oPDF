@@ -19,6 +19,13 @@ typedef char Bool;
 #define MAX(x,y) ((x)>(y)?(x):(y))
 #define SATURATE(x,x0) ((x)>(x0)?1.0:(x)/(x0))
 #define BrokenPL(x,a,b) ((x)<1.0?pow(x,a):pow(x,b))
+// debugging macros so we can pin down message origin at a glance
+#define WHERESTR  "[file %s, line %d]: "
+#define WHEREARG  __FILE__, __LINE__
+#define DEBUGPRINT2(...)       fprintf(stderr, __VA_ARGS__)
+#define DEBUGPRINT(_fmt, ...)  DEBUGPRINT2(WHERESTR _fmt, WHEREARG, __VA_ARGS__)
+//example:  DEBUGPRINT("hey, x=%d\n", x);
+
 
 extern int cmpDouble(const void *p1, const void *p2);
 extern double factorial(int n);
@@ -53,5 +60,7 @@ extern int try_readfile(char * filename);
 extern double KSprob(int n,double d);
 extern float KSprobNR(int n, double d);
 extern float KuiperProb(int n, double d);
+extern double GeneralizedExtremeValuePDF(double x, double mu, double sigma, double k);
+extern double NormPDF(double x,double mu, double sigma);
 #define MYMATH_HEADER_INCLUDED
 #endif

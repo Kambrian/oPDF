@@ -12,7 +12,7 @@
 #include "cosmology.h"
 #include "io.h"
 #include "models.h"
-
+	
 #define EPS 1e-16
 #define MODEL_MAX_INTVAL 1000
 double MODEL_TOL_BIN=1e-2, MODEL_TOL_BIN_ABS=1e-5, MODEL_TOL_REL=1e-3; //should be sufficient, good enough to constrain mass to 1% accuracy with 100000 particles
@@ -332,6 +332,27 @@ double AndersonDarlingTest(Tracer_t *Sample)
   lnL=lnL/Sample->nP-Sample->nP; 
   return -lnL; //differ by -1, to make it comparable to a loglike
 }
+double AndersonDarlingLike(Tracer_t *Sample, int estimator)
+{/* adopting a PDF fit of ln(AD),
+    return the log(Prob), the real likelihood (posterior probability)
+    */
+    double lnAD=log(-AndersonDarlingTest(Sample));
+	static double gpar[2][3]={{0.569,   -0.570,    0.511}, { 0.431,    0.227,    0.569}}; //w, mu, sigma
+	switch(estimator)
+	{
+	  case RADIAL_PHASE_AD_GEV:
+		return log(GeneralizedExtremeValuePDF(lnAD, LnAD_GEV_MU, LnAD_GEV_SIGMA, LnAD_GEV_K)); //loglikelihood
+	  case RADIAL_PHASE_AD_BINORMAL:
+		return log(gpar[0][0]*NormPDF(lnAD, gpar[0][1], gpar[0][2])
+				  +gpar[1][0]*NormPDF(lnAD, gpar[1][1], gpar[1][2]));
+	  case RADIAL_PHASE_AD_NORMAL:
+		lnAD=(lnAD-LnADMean)/LnADSig;
+		return -lnAD*lnAD/2.; //loglike, subject to a const difference
+	  default:
+		DEBUGPRINT("Error: %d is not a ADLike estimator\n", estimator);
+		exit(1);
+	}
+}
 double like_phase_binned(Tracer_t *Sample)
 {
   int i,j;
@@ -546,6 +567,11 @@ double like_eval(double pars[], int estimator,Tracer_t *Sample)
     case RADIAL_PHASE_ROULETTE:
       lnL=AndersonDarlingTest(Sample);
       break;
+	case RADIAL_PHASE_AD_GEV:
+	case RADIAL_PHASE_AD_BINORMAL:
+	case RADIAL_PHASE_AD_NORMAL:
+      lnL=AndersonDarlingLike(Sample, estimator);
+      break;  
     case RADIAL_PHASE_CMOMENT:
       lnL=like_circular_moment(Sample);
       break;
@@ -565,7 +591,7 @@ double like_eval(double pars[], int estimator,Tracer_t *Sample)
       lnL=KSTest(1,Sample);
       break;
     default:
-      fprintf(stderr, "Error: unknown Estimator=%d\n", estimator);
+      DEBUGPRINT("Error: unknown Estimator=%d\n", estimator);
       exit(estimator);
   }  
   
@@ -587,8 +613,6 @@ double likelihood(double pars[], int estimator, Tracer_t *Sample)
 
 double like_to_chi2(double lnL, int estimator)
 {//convert likelihood() values to a chi-square measure
-#define LogADMean (-0.22)
-#define LogADSig 0.66
   switch(estimator)
   {
 	case RADIAL_PHASE_LMEANRAW:
@@ -596,8 +620,12 @@ double like_to_chi2(double lnL, int estimator)
 	case RADIAL_PHASE_LMOMENT:
 	  return -lnL;
 	case RADIAL_PHASE_ROULETTE:
-	  lnL=(log(-lnL)-LogADMean)/LogADSig;
+	  lnL=(log(-lnL)-LnADMean)/LnADSig;
 	  return lnL*lnL;
+	case RADIAL_PHASE_AD_GEV:
+	case RADIAL_PHASE_AD_BINORMAL:
+	case RADIAL_PHASE_AD_NORMAL:  
+	  return -2.*lnL; //simply 2*(the negative loglike), to make it comparable to chisquare; Note these could differ from the chi-2 by a constant.
 // 	case RADIAL_BIN_ESTIMATOR:
 // 	  return -lnL*2;  //simply 2*(the negative loglike), to make it comparable to chisquare
 	default:
@@ -621,17 +649,17 @@ double freeze_and_like(double pars[], int estimator, Tracer_t *Sample)
   return likelihood(pars, estimator, Sample);
 }
 
-double jointLE_like(double pars[], int estimator, int nbinL, int nbinE, Tracer_t *Sample)
-{//automatically update views if needed.
+double jointLE_Flike(double pars[], int estimator, int nbinL, int nbinE, Tracer_t *Sample)
+{//automatically update views if needed; then freeze and like
   int i;
   double chi2;
   if(Sample->nView!=nbinL||Sample->ViewType!='L') //already allocated
 	create_tracer_views(Sample, nbinL, 'L');
   for(i=0,chi2=0;i<nbinL;i++)
-	chi2+=jointE_like(pars, estimator, nbinE, Sample->Views+i);
+	chi2+=jointE_Flike(pars, estimator, nbinE, Sample->Views+i);
   return chi2;
 }
-double jointE_like(double pars[], int estimator, int nbin, Tracer_t *Sample)
+double jointE_Flike(double pars[], int estimator, int nbin, Tracer_t *Sample)
 {//this does freeze_and_like
   int i;
   double lnL, chi2;
@@ -646,4 +674,35 @@ double jointE_like(double pars[], int estimator, int nbin, Tracer_t *Sample)
   }
   free_tracer_views(Sample);
   return chi2;
+}
+void create_nested_views(double pars[], int nbin[], char ViewTypes[], Tracer_t *Sample)//iteratively: freeze, fit; then freeze, then fit.
+{//ViewTypes should be a non-empty string!
+  //used to create static views (jointE, jointLE dynamically create views by themselves instead)
+  //do not mix this with joint_like functions, since they destroy the views!
+  int i;
+  if(ViewTypes[0]=='E')  freeze_energy(pars, Sample);
+  create_tracer_views(Sample, nbin[0], ViewTypes[0]);
+  if(ViewTypes[1]=='\0') return; //done
+  
+  for(i=0;i<nbin[0];i++)
+	create_nested_views(pars, nbin+1, ViewTypes+1, Sample->Views+i);//descend
+}
+double nested_views_like(double pars[], int estimator, Tracer_t *Sample)
+{//pure like, without freezing energy
+  double lnL;
+  if(!Sample->nView)
+  {
+	lnL=likelihood(pars, estimator, Sample);
+	return like_to_chi2(lnL,estimator);
+  }
+  
+  int i;
+  for(i=0,lnL=0.;i<Sample->nView;i++)
+	lnL+=nested_views_like(pars, estimator, Sample->Views+i);
+  return lnL;
+}
+double nested_views_Flike(double pars[], int estimator, Tracer_t *Sample)
+{//freeze and like
+  freeze_energy(pars, Sample);
+  return nested_views_like(pars, estimator, Sample);
 }

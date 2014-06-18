@@ -282,8 +282,7 @@ void sort_part_E(Particle_t *P, int nP)
 void create_tracer_views(Tracer_t *Sample, int nView, char proxy)
 {//sort Sample and divide into nView equal-size subsamples, discarding remainders.
   //the data are not copied. so only views are generated.
-  if(nView!=Sample->nView)
-	free_tracer_views(Sample); //clean up.
+
   if(nView>1)//otherwise no need to sort
   {
 	switch(proxy)
@@ -302,7 +301,8 @@ void create_tracer_views(Tracer_t *Sample, int nView, char proxy)
 		exit(1);
 	}
   }
-  Sample->Views=calloc(nView, sizeof(TracerView));
+  free_tracer_views(Sample); //always try to clean up first.
+  Sample->Views=calloc(nView, sizeof(TracerView));//now safe to re-alloc
   int i,nP,offset;
   nP=Sample->nP/nView;
   for(i=0,offset=0;i<nView;i++)
@@ -324,7 +324,7 @@ void free_tracer_views(Tracer_t *Sample)
 	  free_tracer_views(Sample->Views+i);
 	free(Sample->Views);
 	Sample->nView=0;
-	Sample->ViewType=0;
+	Sample->ViewType='\0';
   }
 }
 void free_tracer_rcounts(Tracer_t *Sample)

@@ -60,7 +60,7 @@ lib.free_integration_space.restype=None
 lib.free_integration_space.argtypes=[]
 lib.like_to_chi2.restype=ctypes.c_double
 lib.like_to_chi2.argtypes=[ctypes.c_double, ctypes.c_int]
-lib.NameList={0:'f(E,L)',4:'RBin',8:'AD',9:'Resultant',10:'Mean',11:'KS',12:'Kuiper',13:'CosMean', 14:'RawMean'}
+lib.NameList={0:'f(E,L)',4:'RBin',8:'AD',9:'Resultant',10:'Mean',11:'KS',12:'Kuiper',13:'CosMean', 14:'RawMean', 15:'ADGEV', 16:'ADBN', 17:'ADNM'}
 if os.uname()[1]=='Medivh':
     lib.rootdir='/work/Projects/DynDistr/'
 else:
@@ -95,12 +95,17 @@ lib.freeze_energy.restype=None
 lib.freeze_energy.argtypes=[lib.ParType, Tracer_p]
 lib.freeze_and_like.restype=ctypes.c_double
 lib.freeze_and_like.argtypes=[lib.ParType, ctypes.c_int, Tracer_p]
-lib.jointLE_like.restype=ctypes.c_double
-lib.jointLE_like.argtypes=[lib.ParType, ctypes.c_int, ctypes.c_int, ctypes.c_int, Tracer_p]
+lib.jointLE_Flike.restype=ctypes.c_double
+lib.jointLE_Flike.argtypes=[lib.ParType, ctypes.c_int, ctypes.c_int, ctypes.c_int, Tracer_p]
 #extern double jointE_like(double pars[], int estimator, int nbin, Tracer_t *Sample);
-lib.jointE_like.restype=ctypes.c_double
-lib.jointE_like.argtypes=[lib.ParType, ctypes.c_int, ctypes.c_int, Tracer_p]
-
+lib.jointE_Flike.restype=ctypes.c_double
+lib.jointE_Flike.argtypes=[lib.ParType, ctypes.c_int, ctypes.c_int, Tracer_p]
+lib.create_nested_views.restype=None
+lib.create_nested_views.argtypes=[lib.ParType, ctypes.POINTER(ctypes.c_int), ctypes.c_char_p, Tracer_p];
+lib.nested_views_like.restype=ctypes.c_double
+lib.nested_views_like.argtypes=[lib.ParType, ctypes.c_int, Tracer_p]
+lib.nested_views_Flike.restype=ctypes.c_double
+lib.nested_views_Flike.argtypes=[lib.ParType, ctypes.c_int, Tracer_p]
 lib.predict_radial_count.restype=None
 lib.predict_radial_count.argtypes=[ctypes.POINTER(ctypes.c_double), ctypes.c_int, Tracer_p]
 #halos
@@ -243,12 +248,25 @@ class Tracer(Tracer_t):
   def freeze_and_like(self, pars=[1,1], estimator=10):
 	return lib.freeze_and_like(lib.ParType(*pars), estimator, self._pointer)
   
-  def jointE_like(self, pars=[1,1], estimator=10, nbinE=10):
-	return lib.jointE_like(lib.ParType(*pars), estimator, nbinE, self._pointer)
+  def jointE_Flike(self, pars=[1,1], estimator=10, nbinE=10):
+	return lib.jointE_Flike(lib.ParType(*pars), estimator, nbinE, self._pointer)
 	
-  def jointLE_like(self, pars=[1,1], estimator=10, nbinL=10, nbinE=10):
-	return lib.jointLE_like(lib.ParType(*pars), estimator, nbinL, nbinE, self._pointer)
-		
+  def jointLE_Flike(self, pars=[1,1], estimator=10, nbinL=10, nbinE=10):
+	return lib.jointLE_Flike(lib.ParType(*pars), estimator, nbinL, nbinE, self._pointer)
+
+  def create_nested_views(self, pars=[1,1], nbin=[10,10], viewtypes='EL'):
+	try:
+	  nbin=list(nbin)
+	except:
+	  nbin=[nbin]
+	lib.create_nested_views(lib.ParType(*pars), (ctypes.c_int*(len(nbin)+1))(*nbin), ctypes.c_char_p(viewtypes), self._pointer)
+  
+  def nested_views_like(self, pars=[1,1], estimator=10):
+	return lib.nested_views_like(lib.ParType(*pars), estimator, self._pointer)
+  
+  def nested_views_Flike(self, pars=[1,1], estimator=10):
+	return lib.nested_views_Flike(lib.ParType(*pars), estimator, self._pointer)
+  
   def predict_radial_count(self, nbin=100):
 	n=np.empty(nbin,dtype='f8')
 	lib.predict_radial_count(n.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), nbin)

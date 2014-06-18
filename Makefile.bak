@@ -62,8 +62,8 @@ ifeq ("$(ESTIMATOR)", "")
 ESTIMATOR=10
 endif
 
-CFLAGS += $(HDFINC) $(GSLINC) -DROOTDIR=$(ROOTDIR) -DESTIMATOR=$(ESTIMATOR)
-LDFLAGS += $(HDFLIB) $(GSLLIB)
+CFLAGS += $(HDFINC) $(GSLINC) -DROOTDIR=$(ROOTDIR) -DESTIMATOR=$(ESTIMATOR) $(OMPLIB)
+LDFLAGS += $(HDFLIB) $(GSLLIB) $(OMPLIB)
 
 #~ ifeq ($(USER),kam)      #my laptop has hdf v1.6
 ifeq ($(shell uname -n),kam-laptop)
@@ -98,11 +98,6 @@ all: $(EXEC)
 %.f.o : %.f90
 	$(FC) $< $(FFLAGS) -c -o $@
 	
-#Additional Dependencies
-
-#Additional Flags
-models scan lib: CFLAGS+=$(OMPLIB)	
-models scan lib: LDFLAGS+=$(OMPLIB)
 #mpi flags
 #gama_WL_rand: CC:=$(MPICC)
 
@@ -163,3 +158,4 @@ cosmology.o: mymath.h cosmology.h
 mymath.o: mymath.h
 models.o: mymath.h cosmology.h io.h models.h
 scan.o: mymath.h cosmology.h io.h models.h
+NumericalConvergence.o: mymath.h cosmology.h io.h models.h

@@ -2,13 +2,13 @@
 #BSUB -L /bin/bash       # script shell language (/bin/tcsh, /bin/ksh etc.) NOTE: this cause problem on SHAO cluster of missing libimf.so
 #BSUB -n 12               # number of cores required
 #BSUB -M 10000             #in MB
-#BSUB -J Fmin               # name of job
+#BSUB -J scan               # name of job
 #BSUB -o Log.%J    # log file for standard output
 #BSUB -e Log.%J     # log file for standard error
-#BSUB -q shm4
+#BSUB -q cosma
 #BSUB -P durham             #project to charge time; durham or dp004
-##BSUB -x
-##BSUB -R "span[ptile=12]"     # number of processors to use per node
+#BSUB -x
+#BSUB -R "span[ptile=12]"     # number of processors to use per node
 ##BSUB -R "model=SandyBridge"
 #ulimit -s unlimited
 
@@ -20,6 +20,7 @@ module load intel_comp/c4/2013.1.046 gsl/1.16 platform_mpi/9.1.2 hdf5/1.8.12 pyt
 # python MCMCgen.py 20
 # python mockFmin.py
 
-export OMP_NUM_THREADS=12
-
-python TSmap.py AqA4Fit4
+export OMP_NUM_THREADS=24
+estimator=$1
+proxy=$2
+python scanMockSingle_job.py $estimator $proxy

@@ -358,3 +358,23 @@ float KuiperProb(int n, double d)
   }
   return 1.0;
 }
+
+double GeneralizedExtremeValuePDF(double x, double mu, double sigma, double k)
+{
+  double t, tk;
+  if(k==0.)
+  {
+	t=-(x-mu)/sigma;
+	return 1./sigma*exp(t-exp(t));
+  }
+  
+  t=1+k*(x-mu)/sigma;
+  if(t<=0) return 0.;
+  tk=pow(t, -1./k);
+  return 1./sigma*exp(-tk)*tk/t;
+}
+
+double NormPDF(double x,double mu, double sigma)
+{
+	return exp(-(x-mu)*(x-mu)/sigma/sigma/2.)/sqrt(2*M_PI)/sigma;
+}

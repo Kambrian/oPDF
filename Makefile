@@ -152,7 +152,7 @@ distclean: clean
 #-----end--- auto dependencies below---------	
 # DO NOT DELETE
 
-io.o: mymath.h hdf_util.h io.h
+io.o: mymath.h hdf_util.h io.h models.h cosmology.h
 hdf_util.o: hdf_util.h mymath.h
 cosmology.o: mymath.h cosmology.h
 mymath.o: mymath.h

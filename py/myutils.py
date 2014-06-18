@@ -1,12 +1,12 @@
 """ utility functions """
-
-
 import sys
 import numpy as np
 from scipy.stats import gaussian_kde,norm
 import matplotlib
-from matplotlib.pyplot import *
+#matplotlib.user('Agg')
+import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
+matplotlib.rcParams.update({'font.size': 15, 'ps.fonttype' : 42 , 'pdf.fonttype' : 42 ,' image.origin': 'lower', 'image.interpolation': 'None'})
 
 def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
     '''
@@ -56,7 +56,7 @@ def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
         cdict['alpha'].append((si, a, a))
 
     newcmap = matplotlib.colors.LinearSegmentedColormap(name, cdict)
-    register_cmap(cmap=newcmap)
+    plt.register_cmap(cmap=newcmap)
 
     return newcmap
   
@@ -64,7 +64,7 @@ def plot_circle(cen=[0,0], r=1, **kwargs):
 	phi=np.arange(0,2*np.pi+0.11,0.1)
 	x=cen[0]+r*np.cos(phi)
 	y=cen[1]+r*np.sin(phi)
-	h=plot(x,y,**kwargs)
+	h=plt.plot(x,y,**kwargs)
 	return h
 	
 def ADSurvFunc(AD):
@@ -135,11 +135,11 @@ def percentile_contour(data, nbin=100, percents=0.683, color=None, logscale=Fals
     Z = np.reshape(kernel(positions).T, X.shape)
     lvls=percent2level(percents,Z)
     if logscale:
-      h0=contour(np.exp(X),np.exp(Y),Z,lvls, colors=color, **kwargs)
-      loglog()
+      h0=plt.contour(np.exp(X),np.exp(Y),Z,lvls, colors=color, **kwargs)
+      plt.loglog()
     else:
-      h0=contour(X,Y,Z,lvls, colors=color, **kwargs)
-    h=Ellipse((0,0),0,0,fill=False, color=color, **kwargs)
+      h0=plt.contour(X,Y,Z,lvls, colors=color, **kwargs)
+    h=plt.Ellipse((0,0),0,0,fill=False, color=color, **kwargs)
     return h,h0
   
 def plot_cov_ellipse(cov, pos, nstd=1, ax=None, **kwargs):
@@ -195,7 +195,7 @@ def skeleton(x,y,nbin=10,alpha=0.683):
 	x=np.array(x)
 	y=np.array(y)
 	
-	[count,xbin]=np.histogram(x,nbin)
+	count,xbin=np.histogram(x,nbin)
 	nbin=len(xbin)-1
 	bin=np.digitize(x,xbin)-1
 	
@@ -218,6 +218,6 @@ def skeleton(x,y,nbin=10,alpha=0.683):
 		if count[i]:
 			ylim[:,i]=[tmp[np.ceil(alpha*count[i])],tmp[np.ceil((1-alpha)*count[i])]]
 		else:
-			ylim[:,i]=[NaN,NaN]
+			ylim[:,i]=[np.NaN,np.NaN]
 			
 	return {'x':{'median':xmed,'mean':xm,'bin':xbin,'hist':count},'y':{'median':ymed,'mean':ym,'std':ysig,'CI':ylim}}
