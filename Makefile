@@ -148,7 +148,7 @@ clean:
 	rm -f $(OBJS) $(OBJS_COMM) $(OBJS_MAIN)
 	
 distclean: clean
-	rm -f $(EXEC) libdyn.so *~ *.pyc
+	rm -f $(EXEC) libdyn.so *~ *.pyc py/*.pyc
 #-----end--- auto dependencies below---------	
 # DO NOT DELETE
 

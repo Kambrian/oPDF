@@ -1,4 +1,4 @@
-#scan with binned min dist estimator
+#using nested_views rather than jointEL
 import matplotlib
 matplotlib.use('Agg')
 from dynio import *
@@ -6,23 +6,36 @@ from myutils import *
 import h5py,os,sys
 from scipy.stats import chi2
 
-estimator=int(sys.argv[1])
-proxy='' #one of '','E','L','LE'
-if len(sys.argv)==3:
+try: 
+  estimator=int(sys.argv[1])
   proxy=sys.argv[2]
+  if proxy not in ['EL','LE','E']:
+	raise
+except:
+  print "Incorrect usage.\n Example: %s EL (or LE or E)\n Now exit."%sys.argv[0]
+  raise
 
+nbin=10
+binpar=[1.85,1.11] #m,c values to freeze the bins
 npart=1000 #number of particles
-nbin=10 #E and L bin, or nbin**2 for single proxies
 nx=20 #scan grid
-x=np.logspace(-0.2,0.2,nx)
+x=np.logspace(-0.5,0.5,nx)
+if proxy=='E':
+  nbinE=nbin*nbin
+  nbinL=1  
+  nbins=[nbinE]
+else:
+  nbinE=nbin
+  nbinL=nbin
+  nbins=[nbin,nbin]
 
-outdir=lib.rootdir+'/plots/scanMock%dZoom/'%npart
+outdir=lib.rootdir+'/plots/scanAqA4N%dZoom/'%npart
 if not os.path.exists(outdir):
   os.makedirs(outdir)
   
 name=lib.NameList[estimator]
 if proxy!='':
-  name+='|'+proxy
+  name+='|'+proxy+'fix_%.1f_%.1f'%tuple(binpar)
 outfile=outdir+name.replace('|','_')+'.hdf5'
 f=h5py.File(outfile,'w')
 mm=[m for m in x for c in x] #the first for is top layer, the second nested, so c varies first
@@ -34,9 +47,10 @@ f.create_dataset('/logm',data=mm)
 f.create_dataset('/logc',data=cc)
 
 lib.open()
-FullSample=Tracer('Mock')
+FullSample=Tracer('AqA4N',DynRMAX=100)
 Sample=FullSample.copy(0,npart)
-#Sample.radial_count(30)
+FullSample.clean()
+Sample.create_nested_views(binpar, proxy, nbins)
 
 def im_plot(mm,cc,y,nbin, name, flagsave=True):
   ''' nbin=nbinE*nbinL: total number of bins used '''
@@ -48,17 +62,10 @@ def im_plot(mm,cc,y,nbin, name, flagsave=True):
   cs=plt.contour(mm,cc,y)
   plt.clabel(cs, inline=1)
   percents=[0.683, 0.954, 0.997]
-  levels=chi2.ppf(percents, nbin)
-  try:
-	if name[0:4] in ['ADGE','ADNM','ADBN']:
-	  levels=chi2.ppf(percents, 2)
-	  y=y-y.min()
-	  print name
-  except:
-	pass
+  levels=chi2.ppf(percents, 2) #always use like-rat error def
+  y=y-y.min()
   cs=plt.contour(mm,cc,y, levels=levels, colors='r')
   plt.clabel(cs, inline=1, fmt={levels[0]:r'1$\sigma$', levels[1]:r'2$\sigma$', levels[2]:r'3$\sigma$'})
-  plt.contour(mm,cc,y, levels=[y.min()+0.1], colors='y')
   print y.argmin()
   print mm.ravel()[y.ravel().argmin()],cc.ravel()[y.ravel().argmin()]
   plt.plot(mm.ravel()[y.ravel().argmin()], cc.ravel()[y.ravel().argmin()],'ro') #this is slightly offset
@@ -67,33 +74,15 @@ def im_plot(mm,cc,y,nbin, name, flagsave=True):
   plt.ylabel(r'$\log(c/c_0)$')
   if flagsave:
 	plt.savefig(outdir+name.replace('|','_')+'.eps')
-			  
-if proxy=='':
-  nbinE=1
-  nbinL=1
-  y=[lib.like_to_chi2(Sample.freeze_and_like([m,c], estimator=estimator),estimator) for m in x for c in x]
-elif proxy=='E':
-  nbinE=nbin**2
-  nbinL=1  
-  y=[Sample.jointE_Flike([m,c], nbinE=nbinE, estimator=estimator) for m in x for c in x]  
-elif proxy=='L':
-  nbinE=1
-  nbinL=nbin**2  
-  y=[Sample.jointLE_Flike([m,c], nbinL=nbinL, nbinE=nbinE, estimator=estimator) for m in x for c in x]  
-elif proxy=='LE' or proxy=='EL':
-  nbinE=nbin
-  nbinL=nbin  
-  y=[Sample.jointLE_Flike([m,c], nbinL=nbinL, nbinE=nbinE, estimator=estimator) for m in x for c in x]
-else:
-  print "error: unknown proxy", proxy
-  raise proxy  
+
+y=[Sample.nested_views_Flike([m,c], estimator) for m in x for c in x]
 y=np.array(y).reshape([nx,nx], order="F")
 dset=f.create_dataset('/ts',data=y)
+dset.attrs['proxies']=proxy
 dset.attrs['nbinE']=nbinE
 dset.attrs['nbinL']=nbinL
 f.close()
 im_plot(mm,cc,y, nbinE*nbinL, name)
 
-FullSample.clean()
 Sample.clean()
 lib.close()

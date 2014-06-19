@@ -254,18 +254,23 @@ class Tracer(Tracer_t):
   def jointLE_Flike(self, pars=[1,1], estimator=10, nbinL=10, nbinE=10):
 	return lib.jointLE_Flike(lib.ParType(*pars), estimator, nbinL, nbinE, self._pointer)
 
-  def create_nested_views(self, pars=[1,1], nbin=[10,10], viewtypes='EL'):
+  def create_nested_views(self, pars=[1,1], viewtypes='EL', nbins=[10,10]):
 	try:
-	  nbin=list(nbin)
+	  nbins=list(nbins)
 	except:
-	  nbin=[nbin]
-	lib.create_nested_views(lib.ParType(*pars), (ctypes.c_int*(len(nbin)+1))(*nbin), ctypes.c_char_p(viewtypes), self._pointer)
+	  nbins=[nbins]
+	lib.create_nested_views(lib.ParType(*pars), (ctypes.c_int*(len(nbins)+1))(*nbins), ctypes.c_char_p(viewtypes), self._pointer)
   
   def nested_views_like(self, pars=[1,1], estimator=10):
 	return lib.nested_views_like(lib.ParType(*pars), estimator, self._pointer)
   
   def nested_views_Flike(self, pars=[1,1], estimator=10):
 	return lib.nested_views_Flike(lib.ParType(*pars), estimator, self._pointer)
+  
+  def joint_Flike(self, pars, estimator, viewtypes, nbins):
+	'''nestviews and like'''
+	self.create_nested_views(pars, viewtypes, nbins)
+	return self.nested_views_like(pars, estimator)
   
   def predict_radial_count(self, nbin=100):
 	n=np.empty(nbin,dtype='f8')
