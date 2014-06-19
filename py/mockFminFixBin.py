@@ -34,14 +34,15 @@ like= lambda x:Sample.jointLE_Flike(x, estimator, nbinL=nbins[0], nbinE=nbins[1]
 x=fmin(like, x0, xtol=0.001, ftol=1e-4)
 print x, Sample.joint_Flike(x, estimator, proxy, nbins)
 print '--------------iterative fit----------------------'
-like= lambda x:Sample.nested_views_Flike(x, estimator) #note: nested_views_like() does not work here.
+#like= lambda x:Sample.nested_views_Flike(x, estimator) #note: nested_views_like() does not work here.
   
-x=x0
+x=[1,1]
 x0=[x[0]+1,x[1]]
 while abs(x0[0]-x[0])>0.01:
   x0=x
   Sample.create_nested_views(x0, proxy, nbins)
-  x=fmin(like, x0, xtol=0.001, ftol=1e-4)
+  #x=fmin(like, x0, xtol=0.001, ftol=1e-4)
+  x=fmin(Sample.nested_views_Flike, x0, (estimator,), xtol=0.001, ftol=1e-4)
   print x, like(x)
   
 Sample.clean()

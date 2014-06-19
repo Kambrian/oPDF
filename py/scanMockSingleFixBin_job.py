@@ -17,9 +17,9 @@ except:
 
 nbin=10
 binpar=[1.85,1.11] #m,c values to freeze the bins
-npart=1000 #number of particles
-nx=20 #scan grid
-x=np.logspace(-0.5,0.5,nx)
+npart=10000 #number of particles
+nx=100 #scan grid
+x=np.logspace(-0.3,0.3,nx)
 if proxy=='E':
   nbinE=nbin*nbin
   nbinL=1  

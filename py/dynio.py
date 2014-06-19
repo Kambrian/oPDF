@@ -1,6 +1,9 @@
 from math import *
 import numpy as np
 import ctypes,os,ConfigParser,h5py
+from scipy.optimize import fmin
+from iminuit import Minuit
+from iminuit.ConsoleFrontend import ConsoleFrontend
 
 #=============C complex datatypes=====================
 class Particle_t(ctypes.Structure):
@@ -271,6 +274,64 @@ class Tracer(Tracer_t):
 	'''nestviews and like'''
 	self.create_nested_views(pars, viewtypes, nbins)
 	return self.nested_views_like(pars, estimator)
+  
+  def fmin_FixBinIter(self, estimator,proxy,nbins,x0=[1,1],tol=0.01):
+	x=x0
+	x0=[x[0]+1,x[1]]
+	while abs(x0[0]-x[0])>tol or abs(x0[1]-x[1])>tol:
+	  x0=x
+	  self.create_nested_views(x0, proxy, nbins)
+	  result=fmin(self.nested_views_Flike, x0, args=(estimator,), xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
+	  x=result[0]
+	  print result[0], result[1], result[-1]
+	return result
+  
+  def fmin_jointLE(self, estimator, nbinL, nbinE, x0=[1,1]):
+	return fmin(self.jointLE_Flike, x0, args=(estimator, nbinL, nbinE), xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
+  
+  def fmin_like(self, estimator, x0=[1,1]):
+	like=lambda x: lib.like_to_chi2(self.freeze_and_like(x, estimator), estimator) #the real likelihood prob
+	return fmin(like, x0, xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
+  
+  def minuit_like(self, estimator, x0=[1,1], minuittol=1):
+	"""too difficult for minuit to work. just use this to estimate the error matrix.
+	set a huge tol, say, 1e10, to avoid walking away"""
+	like=lambda m,c: lib.like_to_chi2(self.freeze_and_like([m,c], estimator),estimator)
+	#profilelikelihood ratio error-def: chi-square1
+	m=Minuit(like, m=x0[0], c=x0[1], print_level=0, pedantic=False, error_m=0.1, error_c=0.1, errordef=1, limit_m=[0.1,10],limit_c=[0.1,10],frontend=ConsoleFrontend())
+	m.tol=minuittol   #default convergence edm<1e-4*tol*errordef, but we do not need that high accuracy
+	result=m.migrad()
+	m.print_fmin()
+	m.print_matrix()
+	return result,m
+  
+  def minuit_jointLE(self, estimator, nbinL, nbinE, x0=[1,1], minuittol=1):
+	"""too difficult for minuit to work. just use this to estimate the error matrix.
+	set a huge tol, say, 1e10, to avoid walking away"""
+	like=lambda m,c: self.jointLE_Flike([m,c], estimator, nbinL, nbinE)
+	#profilelikelihood ratio error-def: chi-square1
+	m=Minuit(like, m=x0[0],c=x0[1], print_level=0, pedantic=False, error_m=0.1, error_c=0.1, errordef=1, limit_m=[0.1,10],limit_c=[0.1,10],frontend=ConsoleFrontend())
+	m.tol=minuittol   #default convergence edm<1e-4*tol*errordef, but we do not need that high accuracy
+	result=m.migrad()
+	m.print_fmin()
+	m.print_matrix()
+	return result,m
+  
+  def minuit_FixBinIter(self, estimator,proxy,nbins,x0=[1,1],tol=0.01, minuittol=1):
+	'''set tol and minuittol to 1e10 to only get error and avoid walking away'''
+	like= lambda m,c: self.nested_views_Flike([m,c], estimator) #note: nested_views_like() does not work here.
+	m=Minuit(like, m=x[0], c=x[1], print_level=0, pedantic=False, error_m=0.1, error_c=0.1, errordef=1, limit_m=[0.1,10],limit_c=[0.1,10],frontend=ConsoleFrontend())
+	m.tol=minuittol
+	x=x0
+	x0=[x[0]+1,x[1]]
+	while abs(x0[0]-x[0])>tol or abs(x0[1]-x[1])>tol:
+	  x0=x
+	  self.create_nested_views(x0, proxy, nbins)
+	  result=m.migrad()
+	  x=[m.values['m'],m.values['c']]
+	  m.print_fmin()
+	m.print_matrix()
+	return result,m
   
   def predict_radial_count(self, nbin=100):
 	n=np.empty(nbin,dtype='f8')
