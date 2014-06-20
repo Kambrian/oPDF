@@ -15,12 +15,40 @@
 	
 #define EPS 1e-16
 #define MODEL_MAX_INTVAL 1000
-double MODEL_TOL_BIN=1e-2, MODEL_TOL_BIN_ABS=1e-5, MODEL_TOL_REL=1e-3; //should be sufficient, good enough to constrain mass to 1% accuracy with 100000 particles
+int NumericalIntegralRoutines=GSL_INTEGRAL;
+double MODEL_TOL_BIN=1e-6, MODEL_TOL_BIN_ABS=1e-6, MODEL_TOL_REL=1e-3; //should be sufficient, good enough to constrain mass to 1% accuracy with 100000 particles
 //accuracy in theta and phase-TS are approximately MODEL_TOL_REL, independent of nP.
-//but it's still not accurate enough for minuit to work with the hessian; better use fmin()
+//but it's still not accurate enough for minuit to work with the hessian; better use fmin(). TODO: implement MINUIT2, use SET EPSMachine to handle floating point precision
+int RLimValConv=0; //convergence in value, not bin
+int RLimInnerVal=0; //Adopt inner estimate for bin
+// int NumericalIntegralRoutines=NR_INTEGRAL;
+// double MODEL_TOL_BIN=1e-5, MODEL_TOL_BIN_ABS=1e-8, MODEL_TOL_REL=1e-6;
+
 double HaloM0,HaloC0,HaloRhos0,HaloRs0,HaloZ0=0.;
 struct NFWParZ Halo;
 
+void choose_integral_routines(int type, int rlimvalconv, int rliminnerval)
+{
+  switch(type)
+  {
+	case NR_INTEGRAL:
+	  MODEL_TOL_BIN=1e-6;
+	  MODEL_TOL_BIN_ABS=1e-6;
+	  MODEL_TOL_REL=1e-6;
+	  break;
+	case GSL_INTEGRAL:
+	  MODEL_TOL_BIN=1e-6;//this is cheap
+	  MODEL_TOL_BIN_ABS=1e-6;
+	  MODEL_TOL_REL=1e-3;
+	  break;
+	default:
+	  fprintf(stderr, "Error: unknown NumericalIntegralRoutines type=%d. must be 1 or 2\n", type);
+	  exit(type);
+  }
+	NumericalIntegralRoutines=type;
+	RLimValConv=rlimvalconv;
+	RLimInnerVal=rliminnerval;
+}
 void define_halo(double pars[])
 { 
 #if FIT_PAR_TYPE==PAR_TYPE_M_C
@@ -75,8 +103,15 @@ void solve_radial_limits ( Particle_t *P, double rmin, double rmax)
 		lbin[0]=xmid;
 	  else
 		lbin[1]=xmid;
+	  if(RLimValConv){
+	  if (dx/lbin[0]<MODEL_TOL_BIN||dx<MODEL_TOL_BIN_ABS) break;
+	  }else{
 	  if (dx/( P->r-lbin[0])<MODEL_TOL_BIN||dx<MODEL_TOL_BIN_ABS) break;
+	  }
 	}
+	if(RLimInnerVal)//no good, abaddon this
+	P->rlim[0]=lbin[1];
+	else
 	P->rlim[0]=lbin[0];
   }
   if(!allow_right)//shrink right
@@ -92,8 +127,14 @@ void solve_radial_limits ( Particle_t *P, double rmin, double rmax)
 		rbin[1]=xmid;
 	  else
 		rbin[0]=xmid;
+	  if(RLimValConv){
+	  if ( dx/rbin[1] <MODEL_TOL_BIN||dx<MODEL_TOL_BIN_ABS ) break;
+	  }else
 	  if ( dx/(rbin[1]-P->r ) <MODEL_TOL_BIN||dx<MODEL_TOL_BIN_ABS ) break;
 	}
+	if(RLimInnerVal)
+	P->rlim[1]=rbin[0];
+	else
 	P->rlim[1]=rbin[1];
   }
 }
@@ -116,19 +157,19 @@ static double vr_inv_rfunc(double r, void *params)
   return vr_inv_part(r, ((OrbitPar *)params)->E, ((OrbitPar *)params)->L2);
 }
 // static gsl_integration_workspace * GSL_workspace;
-// #pragma omp threadprivate(GSL_workspaceC)
+// #pragma omp threadprivate(GSL_workspace)
 static gsl_integration_cquad_workspace * GSL_workspaceC;
 #pragma omp threadprivate(GSL_workspaceC)
 void alloc_integration_space()
 {//have to allocate two workspaces when evaluating double integral, to avoid entangling inner and outer workspaces.
 	#pragma omp parallel
-  {//GSL_workspace=gsl_integration_workspace_alloc(MODEL_MAX_INTVAL);
+  { //GSL_workspace=gsl_integration_workspace_alloc(MODEL_MAX_INTVAL);
 	GSL_workspaceC=gsl_integration_cquad_workspace_alloc(MODEL_MAX_INTVAL);}
 }
 void free_integration_space()
 {
 	#pragma omp parallel
-  {//gsl_integration_workspace_free (GSL_workspace);
+  { //gsl_integration_workspace_free (GSL_workspace);
     gsl_integration_cquad_workspace_free (GSL_workspaceC);}
 }
 void solve_radial_orbit(Particle_t *P, double rmin, double rmax, int estimator)//bottleneck in gsl_integration_cquad
@@ -146,20 +187,38 @@ void solve_radial_orbit(Particle_t *P, double rmin, double rmax, int estimator)/
   Fpar.L2=P->L2;
   F.function = &vr_inv_rfunc;
   F.params = &Fpar;
-  
   double error;
-  //   gsl_integration_qags (&F, xlim[0],xlim[1], 0, MODEL_TOL_REL, MODEL_MAX_INTVAL, //3, 
-  // 		       GSL_workspace, &result, &error);
   size_t neval;
-  gsl_integration_cquad (&F, P->rlim[0], P->rlim[1], 0, MODEL_TOL_REL, //3, 
-			 GSL_workspaceC, &(P->T), &error, &neval);
+  if(NumericalIntegralRoutines==NR_INTEGRAL)
+  {
+	double mid=P->rlim[0]+(P->rlim[1]-P->rlim[0])/2;
+	P->T=qromo_gsl(&F, P->rlim[0], mid , midsql_gsl, MODEL_TOL_REL)+qromo_gsl(&F, mid, P->rlim[1], midsqu_gsl, MODEL_TOL_REL);
+  }
+  else
+  {
+	gsl_integration_cquad (&F, P->rlim[0], P->rlim[1], 0, MODEL_TOL_REL, //3, 
+			  GSL_workspaceC, &(P->T), &error, &neval);
+  }
   if(P->T<=0||isnan(P->T)||P->T==INFINITY){ fprintf(stderr,"Warning: T=%g, reset to 1. [%g,%g]\n", P->T, P->rlim[0], P->rlim[1]);P->T=1.;}
   if(IS_PHASE_ESTIMATOR(estimator))
   {
   double t;
-  gsl_integration_cquad (&F, P->rlim[0],P->r, 0, MODEL_TOL_REL, //3, 
-			 GSL_workspaceC, &t, &error, &neval);
-#if PHASE_PERIOD==HALF_ORBIT_PERIOD
+  if(NumericalIntegralRoutines==NR_INTEGRAL)
+  { 
+	if(P->r<P->rlim[1])  
+	  t=qromo_gsl(&F, P->rlim[0], P->r , midsql_gsl, MODEL_TOL_REL);
+	else
+	  t=P->T;
+  }
+  else
+  {
+	if(P->r<P->rlim[1])  
+	gsl_integration_cquad (&F, P->rlim[0],P->r, MODEL_TOL_REL*P->T, MODEL_TOL_REL, //3, 
+			  GSL_workspaceC, &t, &error, &neval);
+	else
+	  t=P->T;
+  }
+  #if PHASE_PERIOD==HALF_ORBIT_PERIOD
   P->theta=t/P->T; //AD test is sensitive to tails. this definition suits it best.
 #elif PHASE_PERIOD==FULL_ORBIT_PERIOD //circular definition
   t=t/P->T/2.;
@@ -625,6 +684,7 @@ double like_to_chi2(double lnL, int estimator)
 	case RADIAL_PHASE_AD_GEV:
 	case RADIAL_PHASE_AD_BINORMAL:
 	case RADIAL_PHASE_AD_NORMAL:  
+	case MIXED_RADIAL_ESTIMATOR:
 	  return -2.*lnL; //simply 2*(the negative loglike), to make it comparable to chisquare; Note these could differ from the chi-2 by a constant.
 // 	case RADIAL_BIN_ESTIMATOR:
 // 	  return -lnL*2;  //simply 2*(the negative loglike), to make it comparable to chisquare

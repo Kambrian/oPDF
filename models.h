@@ -1,5 +1,10 @@
 #include "cosmology.h"
 
+#define NR_INTEGRAL 1
+#define GSL_INTEGRAL 2
+extern int NumericalIntegralRoutines, RLimValConv, RLimInnerVal;
+// #define NR_INTEGRAL //use NumericalRecipes integal instead of GSL.
+
 #define PAR_TYPE_M_C 0
 #define PAR_TYPE_RHOS_RS 1
 #define FIT_PAR_TYPE 0
@@ -10,26 +15,6 @@
 #define PHASE_PERIOD 1
 // #define SWAP_T
 
-// typedef enum
-// {
-//   EID_Radial=0,
-//   EID_RadialBin,
-//   EID_MixedRadial,
-//   EID_Entropy,
-//   EID_Iterative,
-//   EID_Phase=100,
-//   EID_PhaseAD,
-//   EID_PhaseADProb,
-//   EID_PhaseMean,
-//   EID_PhaseMeanRaw,
-//   EID_PhaseBin,
-//   EID_PhasePartition,
-//   EID_PhaseProcess,
-//   EID_PhaseKS,
-//   EID_PhaseKuiper,
-//   EID_PhaseResultant,
-//   EID_PhaseCosMean,
-// } Estimator_t;
 #define ENTROPY_ESTIMATOR 1 //conditional like; junk
 #define ITERATIVE_ESTIMATOR 2 //iterative entropy; still junk
 #define MIXED_RADIAL_ESTIMATOR 3
@@ -53,27 +38,9 @@
 #define LnAD_GEV_SIGMA 0.6335
 #define LnAD_GEV_MU (-0.4776)
 
-//#define ESTIMATOR 10  //this has been moved to makefile
-// #define RETURN_RAWMEAN 
 // #define RETURN_PROB //for KS and Kuiper
 
 #define IS_PHASE_ESTIMATOR(x) ((x)>=RADIAL_PHASE_BINNED)
-
-#ifndef PHASE_PERIOD
-  #if ESTIMATOR==RADIAL_PHASE_KUIPER||ESTIMATOR==RADIAL_PHASE_CMOMENT||ESTIMATOR==RADIAL_PHASE_COSMEAN //these two seems to be biased a bit when used with the half-period-phase
-    #ifndef SWAP_T 
-      #define PHASE_PERIOD FULL_ORBIT_PERIOD
-    #else //alternative period def
-      #define PHASE_PERIOD HALF_ORBIT_PERIOD
-    #endif
-  #else //below can be biased if used with the full-period-phase
-    #ifndef SWAP_T
-      #define PHASE_PERIOD HALF_ORBIT_PERIOD 
-    #else
-      #define PHASE_PERIOD FULL_ORBIT_PERIOD 
-    #endif
-  #endif
-#endif
 
 
 #define NUM_PAR_MAX 10
@@ -81,6 +48,7 @@ extern double MODEL_TOL_BIN, MODEL_TOL_BIN_ABS, MODEL_TOL_REL;
 extern double HaloM0,HaloC0,HaloRhos0,HaloRs0,HaloZ0; //to define the reference point (units) of the scan
 extern struct NFWParZ Halo;
 
+extern void choose_integral_routines(int type, int rlimvalconv, int rliminnerval);
 extern void alloc_integration_space();
 extern void free_integration_space();
 

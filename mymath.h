@@ -1,5 +1,7 @@
 #ifndef MYMATH_HEADER_INCLUDED
 
+#include "nr.h"
+
 #include <gsl/gsl_integration.h>
 #ifndef INFINITY
   #define INFINITY (1.0/0.0)
