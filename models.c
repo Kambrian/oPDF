@@ -21,7 +21,7 @@ double MODEL_TOL_BIN=1e-6, MODEL_TOL_BIN_ABS=1e-6, MODEL_TOL_REL=1e-3; //should 
 double HaloM0,HaloC0,HaloRhos0,HaloRs0,HaloZ0=0.;
 struct NFWParZ Halo;
 
-void define_halo(double pars[])
+void define_halo(const double pars[])
 { 
 #if FIT_PAR_TYPE==PAR_TYPE_M_C
   decode_NFWprof(HaloZ0,pars[0]*HaloM0,pars[1]*HaloC0,VIR_C200,&Halo);  
@@ -153,7 +153,8 @@ void solve_radial_orbit(Particle_t *P, double rmin, double rmax, int estimator)/
   size_t neval;
   gsl_integration_cquad (&F, P->rlim[0], P->rlim[1], 0, MODEL_TOL_REL, //3, 
 			 GSL_workspaceC, &(P->T), &error, &neval);
-  if(P->T<=0||isnan(P->T)||P->T==INFINITY){ fprintf(stderr,"Warning: T=%g, reset to 1. [%g,%g]\n", P->T, P->rlim[0], P->rlim[1]);P->T=1.;}
+  if(P->T<=0||isnan(P->T)||P->T==INFINITY){ 
+	fprintf(stderr,"Warning: T=%g, reset to 1. [%g,%g]\n", P->T, P->rlim[0], P->rlim[1]);P->T=1.;}
   if(IS_PHASE_ESTIMATOR(estimator))
   {
   double t;
@@ -526,21 +527,21 @@ double like_iterative_radial(Tracer_t *Sample)
     return lnL;
 }
 
-void like_init(double pars[], int estimator, Tracer_t *Sample)
+void like_init(const double pars[], int estimator, Tracer_t *Sample)
 {
   int i;
-  if(pars[0]<=0||pars[1]<=0) return;
+  if(pars[0]<=0||pars[1]<=0||isnan(pars[0])||isnan(pars[1])) return;
   define_halo(pars);
   
   #pragma omp parallel for
   for(i=0;i<Sample->nP;i++)
     solve_radial_orbit(Sample->P+i,Sample->rmin,Sample->rmax,estimator);
 }
-double like_eval(double pars[], int estimator,Tracer_t *Sample)
+double like_eval(const double pars[], int estimator,Tracer_t *Sample)
 {
   double lnL;
   
-  if(pars[0]<=0||pars[1]<=0) return -INFINITY;
+  if(pars[0]<=0||pars[1]<=0||isnan(pars[0])||isnan(pars[1])) return -INFINITY;
   switch(estimator)
   {
     case RADIAL_PHASE_BINNED:
@@ -599,7 +600,7 @@ double like_eval(double pars[], int estimator,Tracer_t *Sample)
   return lnL;
 }
 
-double likelihood(double pars[], int estimator, Tracer_t *Sample)
+double likelihood(const double pars[], int estimator, Tracer_t *Sample)
 {
 // 	time_t t1,t2,t3;
 // 	t1=time(NULL);
@@ -634,22 +635,24 @@ double like_to_chi2(double lnL, int estimator)
   }
 }
 
-void freeze_energy(double pars[], Tracer_t *Sample)
+void freeze_energy(const double pars[], Tracer_t *Sample)
 {//fix the energy parameter according to initial potential
   int i;
+  if(pars[0]<=0||pars[1]<=0||isnan(pars[0])||isnan(pars[1])) return;
   define_halo(pars);
   #pragma omp parallel for
   for(i=0;i<Sample->nP;i++)
       Sample->P[i].E=-(Sample->P[i].K+halo_pot(Sample->P[i].r));//differ from previous version
 }
 
-double freeze_and_like(double pars[], int estimator, Tracer_t *Sample)
+double freeze_and_like(const double pars[], int estimator, Tracer_t *Sample)
 {
+//   printf("%g,%g\n", pars[0], pars[1]);
   freeze_energy(pars, Sample);
   return likelihood(pars, estimator, Sample);
 }
 
-double jointLE_Flike(double pars[], int estimator, int nbinL, int nbinE, Tracer_t *Sample)
+double jointLE_Flike(const double pars[], int estimator, int nbinL, int nbinE, Tracer_t *Sample)
 {//automatically update views if needed; then freeze and like
   int i;
   double chi2;
@@ -659,7 +662,7 @@ double jointLE_Flike(double pars[], int estimator, int nbinL, int nbinE, Tracer_
 	chi2+=jointE_Flike(pars, estimator, nbinE, Sample->Views+i);
   return chi2;
 }
-double jointE_Flike(double pars[], int estimator, int nbin, Tracer_t *Sample)
+double jointE_Flike(const double pars[], int estimator, int nbin, Tracer_t *Sample)
 {//this does freeze_and_like
   int i;
   double lnL, chi2;
@@ -675,7 +678,7 @@ double jointE_Flike(double pars[], int estimator, int nbin, Tracer_t *Sample)
   free_tracer_views(Sample);
   return chi2;
 }
-void create_nested_views(double pars[], int nbin[], char ViewTypes[], Tracer_t *Sample)//iteratively: freeze, fit; then freeze, then fit.
+void create_nested_views(const double pars[], int nbin[], char ViewTypes[], Tracer_t *Sample)//iteratively: freeze, fit; then freeze, then fit.
 {//ViewTypes should be a non-empty string!
   //used to create static views (jointE, jointLE dynamically create views by themselves instead)
   //do not mix this with joint_like functions, since they destroy the views!
@@ -687,7 +690,7 @@ void create_nested_views(double pars[], int nbin[], char ViewTypes[], Tracer_t *
   for(i=0;i<nbin[0];i++)
 	create_nested_views(pars, nbin+1, ViewTypes+1, Sample->Views+i);//descend
 }
-double nested_views_like(double pars[], int estimator, Tracer_t *Sample)
+double nested_views_like(const double pars[], int estimator, Tracer_t *Sample)
 {//pure like, without freezing energy
   double lnL;
   if(!Sample->nView)
@@ -701,7 +704,7 @@ double nested_views_like(double pars[], int estimator, Tracer_t *Sample)
 	lnL+=nested_views_like(pars, estimator, Sample->Views+i);
   return lnL;
 }
-double nested_views_Flike(double pars[], int estimator, Tracer_t *Sample)
+double nested_views_Flike(const double pars[], int estimator, Tracer_t *Sample)
 {//freeze and like
   freeze_energy(pars, Sample);
   return nested_views_like(pars, estimator, Sample);

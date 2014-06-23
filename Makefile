@@ -89,12 +89,12 @@ OBJS= $(patsubst %.f90,%.f.o,$(SRC:%.c=%.o))
 default: scan
 all: $(EXEC)
 
-% : %.o $(OBJS_COMM)
-	$(CC) $^ $(LDFLAGS) -o $@
+#the default rule will handle the rest
+$(EXEC): $(OBJS_COMM) 
 
-%.o : %.c
-	$(CC) $< $(CFLAGS) -c -o $@
-
+# %.o : %.c
+# 	$(CC) $< $(CFLAGS) -c -o $@
+# 
 %.f.o : %.f90
 	$(FC) $< $(FFLAGS) -c -o $@
 	

@@ -89,12 +89,12 @@ OBJS= $(patsubst %.f90,%.f.o,$(SRC:%.c=%.o))
 default: scan
 all: $(EXEC)
 
-% : %.o $(OBJS_COMM)
-	$(CC) $^ $(LDFLAGS) -o $@
+#the default rule will handle the rest
+$(EXEC): $(OBJS_COMM) 
 
-%.o : %.c
-	$(CC) $< $(CFLAGS) -c -o $@
-
+# %.o : %.c
+# 	$(CC) $< $(CFLAGS) -c -o $@
+# 
 %.f.o : %.f90
 	$(FC) $< $(FFLAGS) -c -o $@
 	
@@ -148,11 +148,11 @@ clean:
 	rm -f $(OBJS) $(OBJS_COMM) $(OBJS_MAIN)
 	
 distclean: clean
-	rm -f $(EXEC) libdyn.so *~ *.pyc
+	rm -f $(EXEC) libdyn.so *~ *.pyc py/*.pyc
 #-----end--- auto dependencies below---------	
 # DO NOT DELETE
 
-io.o: mymath.h hdf_util.h io.h
+io.o: mymath.h hdf_util.h io.h models.h cosmology.h
 hdf_util.o: hdf_util.h mymath.h
 cosmology.o: mymath.h cosmology.h
 mymath.o: mymath.h
