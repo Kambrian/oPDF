@@ -15,7 +15,7 @@
 	
 #define EPS 1e-16
 #define MODEL_MAX_INTVAL 1000
-double MODEL_TOL_BIN=1e-2, MODEL_TOL_BIN_ABS=1e-5, MODEL_TOL_REL=1e-3; //should be sufficient, good enough to constrain mass to 1% accuracy with 100000 particles
+double MODEL_TOL_BIN=1e-6, MODEL_TOL_BIN_ABS=1e-6, MODEL_TOL_REL=1e-3; //should be sufficient, good enough to constrain mass to 1% accuracy with 100000 particles
 //accuracy in theta and phase-TS are approximately MODEL_TOL_REL, independent of nP.
 //but it's still not accurate enough for minuit to work with the hessian; better use fmin()
 double HaloM0,HaloC0,HaloRhos0,HaloRs0,HaloZ0=0.;
