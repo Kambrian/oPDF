@@ -1,6 +1,3 @@
-#ifndef DynIO_INCLUDED
-#define DynIO_INCLUDED
-  
 typedef struct
 {
   int flag; //will be assigned a binID for binned MinDist estimator
@@ -57,5 +54,3 @@ extern void free_tracer(Tracer_t *Sample);
 
 extern void init_tracer(Tracer_t *Sample);
 extern void make_sample(int offset, int samplesize, Tracer_t *Sample, Tracer_t *FullSample);
-
-#endif

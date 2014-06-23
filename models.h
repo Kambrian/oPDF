@@ -1,6 +1,3 @@
-#ifndef MODELS_HEADER_INCLUDED
-#define MODELS_HEADER_INCLUDED
-
 #include "cosmology.h"
 
 #define PAR_TYPE_M_C 0
@@ -87,7 +84,7 @@ extern struct NFWParZ Halo;
 extern void alloc_integration_space();
 extern void free_integration_space();
 
-extern void define_halo(const double pars[]);
+extern void define_halo(double pars[]);
 extern double halo_pot(double r);
 extern void solve_radial_limits ( Particle_t *P, double rmin, double rmax);
 extern double vr_inv_part(double r, double E, double L2);
@@ -103,19 +100,17 @@ views_like: likelihood on existing views
 views_Flike: freeze_and_like on existing views
 */
 
-extern void like_init(const double pars[], int estimator, Tracer_t *Sample); //define halo and prepare orbit
-extern double like_eval(const double pars[], int estimator,Tracer_t *Sample); 
-extern double likelihood(const double pars[], int estimator, Tracer_t *Sample); //init and eval
+extern void like_init(double pars[], int estimator, Tracer_t *Sample); //define halo and prepare orbit
+extern double like_eval(double pars[], int estimator,Tracer_t *Sample); 
+extern double likelihood(double pars[], int estimator, Tracer_t *Sample); //init and eval
 extern double like_to_chi2(double lnL, int estimator);
 
-extern void freeze_energy(const double pars[], Tracer_t *Sample);
-extern double freeze_and_like(const double pars[], int estimator, Tracer_t *Sample);
+extern void freeze_energy(double pars[], Tracer_t *Sample);
+extern double freeze_and_like(double pars[], int estimator, Tracer_t *Sample);
 
-extern double jointLE_Flike(const double pars[], int estimator, int nbinL, int nbinE, Tracer_t *Sample);
-extern double jointE_Flike(const double pars[], int estimator, int nbin, Tracer_t *Sample);
+extern double jointLE_Flike(double pars[], int estimator, int nbinL, int nbinE, Tracer_t *Sample);
+extern double jointE_Flike(double pars[], int estimator, int nbin, Tracer_t *Sample);
 
-extern void create_nested_views(const double pars[], int nbin[], char ViewTypes[], Tracer_t *Sample);
-extern double nested_views_like(const double pars[], int estimator, Tracer_t *Sample);
-extern double nested_views_Flike(const double pars[], int estimator, Tracer_t *Sample);
-
-#endif
+extern void create_nested_views(double pars[], int nbin[], char ViewTypes[], Tracer_t *Sample);
+extern double nested_views_like(double pars[], int estimator, Tracer_t *Sample);
+extern double nested_views_Flike(double pars[], int estimator, Tracer_t *Sample);

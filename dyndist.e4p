@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Project SYSTEM "Project-4.6.dtd">
+<!-- eric4 project file for project dyndist -->
+<!-- Saved: 2014-05-19, 14:46:23 -->
+<!-- Copyright (C) 2014 ,  -->
+<Project version="4.6">
+  <Language>en</Language>
+  <ProgLanguage mixed="1">Python</ProgLanguage>
+  <ProjectType>Console</ProjectType>
+  <Description></Description>
+  <Version>0.1</Version>
+  <Author></Author>
+  <Email></Email>
+  <Sources>
+    <Source>mockML.py</Source>
+    <Source>py/kuiper2.py</Source>
+    <Source>py/kuiper.py</Source>
+    <Source>TSmap.py</Source>
+    <Source>MCMCgen.py</Source>
+    <Source>fit_ADdist.py</Source>
+    <Source>plot.py</Source>
+    <Source>starlike.py</Source>
+    <Source>dynio.py</Source>
+    <Source>mockFmin.py</Source>
+    <Source>MCMC.py</Source>
+    <Source>myutils.py</Source>
+    <Source>ML.py</Source>
+    <Source>MLtest.py</Source>
+    <Source>mockScan.py</Source>
+    <Source>__init__.py</Source>
+  </Sources>
+  <Forms>
+  </Forms>
+  <Translations>
+  </Translations>
+  <Resources>
+  </Resources>
+  <Interfaces>
+  </Interfaces>
+  <Others>
+  </Others>
+  <Vcs>
+    <VcsType>None</VcsType>
+  </Vcs>
+  <FiletypeAssociations>
+    <FiletypeAssociation pattern="*.rb" type="SOURCES" />
+    <FiletypeAssociation pattern="*.idl" type="INTERFACES" />
+    <FiletypeAssociation pattern="*.py" type="SOURCES" />
+    <FiletypeAssociation pattern="*.ptl" type="SOURCES" />
+  </FiletypeAssociations>
+</Project>
