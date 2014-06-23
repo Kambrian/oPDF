@@ -62,8 +62,8 @@ ifeq ("$(ESTIMATOR)", "")
 ESTIMATOR=10
 endif
 
-CFLAGS += $(HDFINC) $(GSLINC) -DROOTDIR=$(ROOTDIR) $(OMPLIB) -Inr/
-LDFLAGS += $(HDFLIB) $(GSLLIB) $(OMPLIB) 
+CFLAGS += $(HDFINC) $(GSLINC) -DROOTDIR=$(ROOTDIR) -DESTIMATOR=$(ESTIMATOR) $(OMPLIB)
+LDFLAGS += $(HDFLIB) $(GSLLIB) $(OMPLIB)
 
 #~ ifeq ($(USER),kam)      #my laptop has hdf v1.6
 ifeq ($(shell uname -n),kam-laptop)
@@ -75,26 +75,22 @@ CFLAGS+= -g -Wall
 LDFLAGS+= -g
 endif
 
-VPATH=nr
-
 #-----File Dependencies----------------------
 SRC_MAIN=scan.c NumericalConvergence.c
 EXEC=$(basename $(SRC_MAIN))
 OBJS_MAIN=$(addsuffix .o, $(EXEC))
-SRC_COMM = io.c hdf_util.c cosmology.c mymath.c models.c midsqu_gsl.c midsql_gsl.c qromo_gsl.c polint.c
+SRC_COMM = io.c hdf_util.c cosmology.c mymath.c models.c
 OBJS_COMM = $(SRC_COMM:%.c=%.o)
 #any additional OBJS below:
 SRC = wenting.c wenting.f90
 OBJS= $(patsubst %.f90,%.f.o,$(SRC:%.c=%.o))
 
 #-----targets and common rules--------------------------------
-default: echo scan
+default: scan
 all: $(EXEC)
 
-echo:
-	@echo $(OBJS_COMM)
-
-$(EXEC) : $(OBJS_COMM) #the implicit rule will handle this
+% : %.o $(OBJS_COMM)
+	$(CC) $^ $(LDFLAGS) -o $@
 
 %.o : %.c
 	$(CC) $< $(CFLAGS) -c -o $@
@@ -156,10 +152,10 @@ distclean: clean
 #-----end--- auto dependencies below---------	
 # DO NOT DELETE
 
-io.o: mymath.h nr/nr.h hdf_util.h io.h models.h cosmology.h
-hdf_util.o: hdf_util.h mymath.h nr/nr.h
-cosmology.o: mymath.h nr/nr.h cosmology.h
-mymath.o: mymath.h nr/nr.h
-models.o: mymath.h nr/nr.h cosmology.h io.h models.h
-scan.o: mymath.h nr/nr.h cosmology.h io.h models.h
-NumericalConvergence.o: mymath.h nr/nr.h cosmology.h io.h models.h
+io.o: mymath.h hdf_util.h io.h models.h cosmology.h
+hdf_util.o: hdf_util.h mymath.h
+cosmology.o: mymath.h cosmology.h
+mymath.o: mymath.h
+models.o: mymath.h cosmology.h io.h models.h
+scan.o: mymath.h cosmology.h io.h models.h
+NumericalConvergence.o: mymath.h cosmology.h io.h models.h

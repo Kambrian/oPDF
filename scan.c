@@ -42,7 +42,7 @@ int main(int argc, char **argv)
   myfopen(fp,buf,"w");
   printf("%s (mid=%d): saving to %s...\n",argv[0],estimator,buf);fflush(stdout);
   
-  Tracer_t FullSample={}, Sample={};//have to initialize!
+  Tracer_t FullSample, Sample;
   init_tracer(&FullSample);
   make_sample(subsample_id*SubSampleSize, SubSampleSize, &Sample, &FullSample);
   free_tracer(&FullSample);
