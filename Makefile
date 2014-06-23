@@ -14,6 +14,7 @@ ifeq ($(Platform), COSMA)
 	HDFLIB= -lhdf5_hl -lhdf5
 	GSLLIB=-lgsl -lgslcblas
 	CC = icc
+	CXX= icc
 	FC = ifort
 	#CC=h5cc
 	MPICC=mpicc 	
@@ -27,6 +28,7 @@ ifeq ($(Platform), Bright)
 	GSLINC=-I/data/raid3/jxhan/opt/include #shao
 	GSLLIB=-L/data/raid3/jxhan/opt/lib -lgsl -lgslcblas #shao
 	CC = icc
+	CXX= icc
 	FC = ifort
 	MPICC:=mpicc -cc=$(CC)
 	ROOTDIR='"/data/raid3/jxhan/Lensing"'
@@ -37,9 +39,12 @@ ifeq ($(Platform), Medivh)
 	HDFINC= -I/usr/include/mpi
 	GSLLIB=-lgsl -lgslcblas
 	CC = icc
+	CXX= icc
 	FC = ifort
 	#CC=h5cc
 	MPICC=icc -lmpi
+	MINUITINC=-I/usr/local/include
+	MINUITLIB=-Wl,-rpath -Wl,/usr/local/lib -lMinuit2
 # 	LAPACKLIB=-mkl
 # 	LAPACKINC=-I$(MKLINCLUDE)
 	ROOTDIR='"/work/Projects/DynDistr"' 	
@@ -62,8 +67,8 @@ ifeq ("$(ESTIMATOR)", "")
 ESTIMATOR=10
 endif
 
-CFLAGS += $(HDFINC) $(GSLINC) -DROOTDIR=$(ROOTDIR) -DESTIMATOR=$(ESTIMATOR) $(OMPLIB)
-LDFLAGS += $(HDFLIB) $(GSLLIB) $(OMPLIB)
+CFLAGS += $(HDFINC) $(GSLINC) $(MINUITINC) -DROOTDIR=$(ROOTDIR) $(OMPLIB)
+LDFLAGS += $(HDFLIB) $(GSLLIB) $(MINUITLIB) $(OMPLIB)
 
 #~ ifeq ($(USER),kam)      #my laptop has hdf v1.6
 ifeq ($(shell uname -n),kam-laptop)
@@ -75,22 +80,26 @@ CFLAGS+= -g -Wall
 LDFLAGS+= -g
 endif
 
+VPATH=nr
+
 #-----File Dependencies----------------------
-SRC_MAIN=scan.c NumericalConvergence.c
+SRC_MAIN=scan.c NumericalConvergence.c TracerMinuit.cpp
 EXEC=$(basename $(SRC_MAIN))
 OBJS_MAIN=$(addsuffix .o, $(EXEC))
-SRC_COMM = io.c hdf_util.c cosmology.c mymath.c models.c
+SRC_COMM = io.c hdf_util.c cosmology.c mymath.c models.c 
 OBJS_COMM = $(SRC_COMM:%.c=%.o)
 #any additional OBJS below:
 SRC = wenting.c wenting.f90
 OBJS= $(patsubst %.f90,%.f.o,$(SRC:%.c=%.o))
 
 #-----targets and common rules--------------------------------
-default: scan
+default: echo scan
 all: $(EXEC)
 
-% : %.o $(OBJS_COMM)
-	$(CC) $^ $(LDFLAGS) -o $@
+echo:
+	@echo $(OBJS_COMM)
+
+$(EXEC) : $(OBJS_COMM) #the implicit rule will handle this
 
 %.o : %.c
 	$(CC) $< $(CFLAGS) -c -o $@
@@ -159,3 +168,4 @@ mymath.o: mymath.h
 models.o: mymath.h cosmology.h io.h models.h
 scan.o: mymath.h cosmology.h io.h models.h
 NumericalConvergence.o: mymath.h cosmology.h io.h models.h
+TracerMinuit.o: TracerMinuit.h io.h models.h cosmology.h
