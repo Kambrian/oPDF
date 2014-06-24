@@ -11,12 +11,13 @@ proxy='' #one of '','E','L','LE'
 if len(sys.argv)==3:
   proxy=sys.argv[2]
 
+halo='Mock'
 npart=1000 #number of particles
 nbin=10 #E and L bin, or nbin**2 for single proxies
 nx=20 #scan grid
 x=np.logspace(-0.2,0.2,nx)
 
-outdir=lib.rootdir+'/plots/scanMock%dZoom/'%npart
+outdir=lib.rootdir+'/plots/scan'+halo+'%dZoom/'%npart
 if not os.path.exists(outdir):
   os.makedirs(outdir)
   
@@ -34,7 +35,7 @@ f.create_dataset('/logm',data=mm)
 f.create_dataset('/logc',data=cc)
 
 lib.open()
-FullSample=Tracer('Mock')
+FullSample=Tracer(halo)
 Sample=FullSample.copy(0,npart)
 #Sample.radial_count(30)
 

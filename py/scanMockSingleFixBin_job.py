@@ -7,7 +7,7 @@ import h5py,os,sys
 from scipy.stats import chi2
 
 try: 
-  estimator=int(sys.argv[1])
+  estimator=int(sys.argv[1]) #use 10 or 16
   proxy=sys.argv[2]
   if proxy not in ['EL','LE','E']:
 	raise
@@ -15,10 +15,11 @@ except:
   print "Incorrect usage.\n Example: %s EL (or LE or E)\n Now exit."%sys.argv[0]
   raise
 
+halo='Mock'
 nbin=10
-binpar=[1.85,1.11] #m,c values to freeze the bins
-npart=10000 #number of particles
-nx=100 #scan grid
+binpar=[1.,1.] #m,c values to freeze the bins
+npart=1000 #number of particles
+nx=20 #scan grid
 x=np.logspace(-0.3,0.3,nx)
 if proxy=='E':
   nbinE=nbin*nbin
@@ -29,7 +30,7 @@ else:
   nbinL=nbin
   nbins=[nbin,nbin]
 
-outdir=lib.rootdir+'/plots/scanAqA4N%dZoom/'%npart
+outdir=lib.rootdir+'/plots/scan'+halo+'%dZoom/'%npart
 if not os.path.exists(outdir):
   os.makedirs(outdir)
   
@@ -47,7 +48,7 @@ f.create_dataset('/logm',data=mm)
 f.create_dataset('/logc',data=cc)
 
 lib.open()
-FullSample=Tracer('AqA4N',DynRMAX=100)
+FullSample=Tracer(halo)
 Sample=FullSample.copy(0,npart)
 FullSample.clean()
 Sample.create_nested_views(binpar, proxy, nbins)

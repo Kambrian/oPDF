@@ -294,7 +294,7 @@ class Tracer(Tracer_t):
 	return fmin(like, x0, xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
   
   def minuit_like(self, estimator, x0=[1,1], minuittol=1):
-	"""too difficult for minuit to work. just use this to estimate the error matrix.
+	"""too difficult for minuit to work. just use this to estimate the error matrix? still just fantasy. discard it.
 	set a huge tol, say, 1e10, to avoid walking away"""
 	like=lambda m,c: lib.like_to_chi2(self.freeze_and_like([m,c], estimator),estimator)
 	#profilelikelihood ratio error-def: chi-square1
