@@ -611,6 +611,25 @@ double likelihood(const double pars[], int estimator, Tracer_t *Sample)
 //   printf("Time: %ld,%ld, %ld,%ld,%ld\n", t2-t1, t3-t2, t1,t2,t3);
   return lnL;
 }
+double wenting_like(const double pars[], Tracer_t *Sample)
+{//pars in units of real parameters.
+  int i;
+  if(pars[0]<=0||pars[1]<=0||isnan(pars[0])||isnan(pars[1])) return -INFINITY;
+  define_halo(pars);
+  
+  double wpar[NUM_PAR_MAX],lnL=0.;
+  wpar[0]=Halo.Rhos*1e10; //mass unit Msun
+  wpar[1]=Halo.Rs;
+  wpar[2]=pars[2]*0.715;
+  wpar[3]=pars[3]*69.014;
+  wpar[4]=pars[4]*2.301;
+  wpar[5]=pars[5]*7.467;
+  #pragma omp parallel for reduction(+:lnL) 
+  for(i=0;i<Sample->nP;i++)
+	lnL+=dataprob_model(Sample->P[i].r,Sample->P[i].vr,sqrt(Sample->P[i].L2)/Sample->P[i].r, wpar);
+//   printf("%g,%g,%g,%g,%g,%g: %g\n", pars[0],pars[1],pars[2],pars[3],pars[4],pars[5],lnL);
+  return lnL;
+}
 
 double like_to_chi2(double lnL, int estimator)
 {//convert likelihood() values to a chi-square measure

@@ -25,10 +25,14 @@ if proxy=='E':
   nbinE=nbin*nbin
   nbinL=1  
   nbins=[nbinE]
-else:
+elif proxy=='LE':
   nbinE=nbin
   nbinL=nbin
-  nbins=[nbin,nbin]
+  nbins=[nbinL,nbinE]
+elif proxy=='EL':
+  nbinL=nbin
+  nbinE=nbin
+  nbins=[nbinE,nbinL]
 
 outdir=lib.rootdir+'/plots/scan'+halo+'%dZoom/'%npart
 if not os.path.exists(outdir):

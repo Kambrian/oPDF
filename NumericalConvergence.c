@@ -11,6 +11,7 @@
 #include "cosmology.h"
 #include "io.h"
 #include "models.h"
+// #include "wenting.h"
 
 void test_scan(double tol_bin, double tol_rel, int estimator, Tracer_t *Sample)
 {
@@ -28,7 +29,7 @@ int main(int argc, char **argv)
 {
   FILE *fp;
   char buf[1024],outdir[1024];
-  double pars[NUM_PAR_MAX]={1.,1.};
+  double pars[NUM_PAR_MAX]={1.,1.,1,1,1,1};
   int estimator=10,samplesize=10000,i; 
   if(argc!=3)
   {
@@ -42,6 +43,9 @@ int main(int argc, char **argv)
   init_tracer(&FullSample);
   make_sample(0, samplesize, &Sample, &FullSample);
   free_tracer(&FullSample);
+  
+//   dataprob_model(1,1,1, pars);
+//   wenting_like(pars, &Sample);
   
   alloc_integration_space();
   

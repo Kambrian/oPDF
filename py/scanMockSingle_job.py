@@ -51,7 +51,7 @@ def im_plot(mm,cc,y,nbin, name, flagsave=True):
   percents=[0.683, 0.954, 0.997]
   levels=chi2.ppf(percents, nbin)
   try:
-	if name[0:4] in ['ADGE','ADNM','ADBN']:
+	if name[0:4] in ['ADGE','ADNM','ADBN','f(E,']:
 	  levels=chi2.ppf(percents, 2)
 	  y=y-y.min()
 	  print name
@@ -72,14 +72,17 @@ def im_plot(mm,cc,y,nbin, name, flagsave=True):
 if proxy=='':
   nbinE=1
   nbinL=1
-  y=[lib.like_to_chi2(Sample.freeze_and_like([m,c], estimator=estimator),estimator) for m in x for c in x]
+  if estimator==0:
+	y=[-2.*Sample.wenting_like_conditional([m,c]) for m in x for c in x]
+  else:
+	y=[lib.like_to_chi2(Sample.freeze_and_like([m,c], estimator=estimator),estimator) for m in x for c in x]
 elif proxy=='E':
   nbinE=nbin**2
   nbinL=1  
   y=[Sample.jointE_Flike([m,c], nbinE=nbinE, estimator=estimator) for m in x for c in x]  
 elif proxy=='L':
   nbinE=1
-  nbinL=nbin**2  
+  nbinL=nbin*nbin  
   y=[Sample.jointLE_Flike([m,c], nbinL=nbinL, nbinE=nbinE, estimator=estimator) for m in x for c in x]  
 elif proxy=='LE' or proxy=='EL':
   nbinE=nbin

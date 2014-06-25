@@ -2,6 +2,7 @@
 #define MODELS_HEADER_INCLUDED
 
 #include "cosmology.h"
+#include "wenting.h"
 
 #define PAR_TYPE_M_C 0
 #define PAR_TYPE_RHOS_RS 1
@@ -106,6 +107,7 @@ views_Flike: freeze_and_like on existing views
 extern void like_init(const double pars[], int estimator, Tracer_t *Sample); //define halo and prepare orbit
 extern double like_eval(const double pars[], int estimator,Tracer_t *Sample); 
 extern double likelihood(const double pars[], int estimator, Tracer_t *Sample); //init and eval
+extern double wenting_like(const double pars[], Tracer_t *Sample);
 extern double like_to_chi2(double lnL, int estimator);
 
 extern void freeze_energy(const double pars[], Tracer_t *Sample);

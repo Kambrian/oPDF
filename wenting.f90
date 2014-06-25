@@ -1,22 +1,33 @@
-      function func(r,vr,vt)
+function func(r,vr,vt)
+		implicit none
+		real*8::func,r,vr,vt
+		real(kind=8),external::func_model
+		integer*4, parameter:: MaxNumPars=10
+		real*8::pars(MaxNumPars)=(/10.**7.34d0,15.2d0,0.715d0,69.014d0,2.301d0,7.467d0,0.d0, 0.d0, 0.d0, 0.d0/)
+		func=func_model(r,vr,vt,pars)
+end function 
+      
+function func_model(r,vr,vt, pars)
         implicit none
         integer(kind=8)::i,tag 
-        real(kind=8)::beta,rs,r,vr,vt,gamma1,gamma2,CC,rou0,func,pi,G,coeff,epsilon,term2,term2a,term2b,rm,rmtmp,rmtmp2,tmp
+        real(kind=8)::beta,rs,r,vr,vt,gamma1,gamma2,CC,rou0,func_model,pi,G,coeff,epsilon,term2,term2a,term2b,rm,rmtmp,rmtmp2,tmp
         real(kind=8),external::func2,midsql,midsqu,midinf
+		integer*4, parameter:: MaxNumPars=10
+		real*8,intent(in)::pars(MaxNumPars)
 	integer istat
 	
-	if(r<1 .or. r>500)then
-	  func=0.
+	if(r<1. .or. r>1000.)then
+	  func_model=0.
 	  return
 	end if
 	
-        gamma1=2.301d0
-        gamma2=7.467d0
-        CC=69.014d0
-        rs=15.2d0
-        rou0=10.**7.34d0
-        beta=0.715d0
-
+		rou0=pars(1)
+		rs=pars(2)
+		beta=pars(3)
+		CC=pars(4)
+		gamma1=pars(5)
+		gamma2=pars(6)
+! 		write(*,*) rou0,rs,beta,CC,gamma1,gamma2
         pi=acos(-1.)
         G=4.3007*10.**(-6)
 
@@ -28,14 +39,14 @@
            tag=0
            rmtmp=1.
            rmtmp2=2000.
-           do while(abs(rmtmp2-rmtmp)/rmtmp>0.00000001d0)
+           do while(abs(rmtmp2-rmtmp)/rmtmp>0.0000001d0)
               tag=tag+1
               rmtmp=rmtmp2
               rmtmp2=log(1.+rmtmp)/epsilon
               if(tag>5000)then
-                 write(*,*)'warning: reaching maximum step of iteration2! for (r,vr,vt, epsilon, rmtmp)=', r,vr,vt, epsilon, rmtmp
-                 !func=0.
-                 !return
+!                  write(*,*)'warning: reaching maximum step of iteration2! for (r,vr,vt, epsilon, rmtmp)=', r,vr,vt, epsilon, rmtmp
+!                  func_model=0.
+!                  return
                  exit
               end if
            end do
@@ -43,24 +54,24 @@
 
            tmp=10.d0*rm
            call qromo(func2,rm,tmp,term2a,midsql,beta,rs,gamma1,gamma2,CC,epsilon,istat)
-           if(istat==0)then
-	      write(*,*) 'at ', r,vr,vt
-! 	      func=0.
+!            if(istat==0)then
+! 	      write(*,*) 'at ', r,vr,vt
+! 	      func_model=0.
 ! 	      return
-           end if
+!            end if
            call qromo(func2,tmp,10.d0**60,term2b,midinf,beta,rs,gamma1,gamma2,CC,epsilon,istat)
-           if(istat==0)then
-	      write(*,*) 'at2 ', r,vr,vt
-! 	      func=0.
+!            if(istat==0)then
+! 	      write(*,*) 'at2 ', r,vr,vt
+! 	      func_model=0.
 ! 	      return
-           end if
+!            end if
            term2=term2a+term2b
         else
            term2=0.
         end if
-        func=coeff*term2
+        func_model=coeff*term2
 	
-! 	write(*,*) r,vr,vt,log(func)
+! 	write(*,*) r,vr,vt,log(func_model)
       end
 
       function func2(x,beta,rs,gamma1,gamma2,CC,epsilon)
@@ -206,7 +217,7 @@
         h(j+1)=h(j)/9.
 11    continue
       istat=0
-      write(*,*) 'too many steps in qromo'
+!       write(*,*) 'too many steps in qromo'
       END
 
 

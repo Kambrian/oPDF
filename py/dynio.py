@@ -94,6 +94,8 @@ lib.like_eval.restype=ctypes.c_double
 lib.like_eval.argtypes=[lib.ParType, ctypes.c_int, Tracer_p]
 lib.likelihood.restype=ctypes.c_double
 lib.likelihood.argtypes=[lib.ParType, ctypes.c_int, Tracer_p]
+lib.wenting_like.restype=ctypes.c_double
+lib.wenting_like.argtypes=[lib.ParType, Tracer_p]
 lib.freeze_energy.restype=None
 lib.freeze_energy.argtypes=[lib.ParType, Tracer_p]
 lib.freeze_and_like.restype=ctypes.c_double
@@ -241,7 +243,24 @@ class Tracer(Tracer_t):
 	print '-----------'
 	lib.print_tracer_particle(self._pointer, i)
 	print '============='
-	
+
+  def wenting_like_conditional(self, pars=[1,1]):
+	"wenting's likelihood for the mocks, with other parameters conditioned at true values"
+	lnL=lib.wenting_like(lib.ParType(pars[0],pars[1],1,1,1,1), self._pointer)
+	#print pars, lnL
+	return lnL
+  
+  def wenting_like_marginal(self, pars=[1,1]):
+	'''wenting's likelihood for the mocks, with other parameters marginalized.
+	this is too slow to use...'''
+	like=lambda c,d,e,f: -lib.wenting_like(lib.ParType(pars[0],pars[1],c,d,e,f), self._pointer)
+	m=Minuit(like, c=1,d=1,e=1,f=1, fix_d=False, fix_e=0, fix_f=0, limit_c=[-0.7,1.4], limit_d=[0.1,2], limit_e=[0.1,10], limit_f=[0.1,10], print_level=3, pedantic=False, errordef=1, frontend=ConsoleFrontend())
+	#m.set_strategy(0)
+	m.tol=10   #default convergence edm<1e-4*tol*errordef, but we do not need that high accuracy
+	m.migrad()
+	print pars, -m.fval
+	return -m.fval
+  
   def freeze_energy(self, pars=[1,1]):
 	lib.freeze_energy(lib.ParType(*pars), self._pointer)
 

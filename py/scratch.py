@@ -10,7 +10,7 @@ from scipy.stats import chi2
 estimator=8
 proxy='LE'
 nbins=[10,10]
-npart=1000
+npart=100
 
 lib.open()
 FullSample=Tracer('Mock')
@@ -18,14 +18,15 @@ FullSample=Tracer('Mock')
 Sample=FullSample.copy(0,npart)
 FullSample.clean()
 
-from scipy.optimize import *
+Sample.wenting_like_marginal([1,1])
+#from scipy.optimize import *
 #x0=10**((np.random.rand(2)-0.5)*2)
-x0=[2,1]
-print 'Initial: ', x0
-print '-------------raw est---------------'
-like= lambda x: -Sample.freeze_and_like(x,estimator)
-x=fmin(like, x0, xtol=0.001, ftol=1e-4)
-print x,-Sample.freeze_and_like(x,estimator)
+#x0=[2,1]
+#print 'Initial: ', x0
+#print '-------------raw est---------------'
+#like= lambda x: -Sample.freeze_and_like(x,estimator)
+#x=fmin(like, x0, xtol=0.001, ftol=1e-4)
+#print x,-Sample.freeze_and_like(x,estimator)
 
   
 #Sample.clean()

@@ -63,7 +63,8 @@ ESTIMATOR=10
 endif
 
 CFLAGS += $(HDFINC) $(GSLINC) -DROOTDIR=$(ROOTDIR) -DESTIMATOR=$(ESTIMATOR) $(OMPLIB)
-LDFLAGS += $(HDFLIB) $(GSLLIB) $(OMPLIB)
+LDFLAGS += $(HDFLIB) $(GSLLIB) $(OMPLIB) -lifport -lifcore -lirc
+FFLAGS+=$(OMPLIB) #essential! to make it thread-safe!
 
 #~ ifeq ($(USER),kam)      #my laptop has hdf v1.6
 ifeq ($(shell uname -n),kam-laptop)
@@ -79,11 +80,12 @@ endif
 SRC_MAIN=scan.c NumericalConvergence.c
 EXEC=$(basename $(SRC_MAIN))
 OBJS_MAIN=$(addsuffix .o, $(EXEC))
-SRC_COMM = io.c hdf_util.c cosmology.c mymath.c models.c
-OBJS_COMM = $(SRC_COMM:%.c=%.o)
+SRC_COMM = io.c hdf_util.c cosmology.c mymath.c models.c wenting.c wenting.f90
+OBJS_COMM= $(patsubst %.f90,%.f.o,$(SRC_COMM:%.c=%.o))
+# OBJS_COMM = $(SRC_COMM:%.c=%.o)
 #any additional OBJS below:
-SRC = wenting.c wenting.f90
-OBJS= $(patsubst %.f90,%.f.o,$(SRC:%.c=%.o))
+# SRC = wenting.c wenting.f90
+# OBJS= $(patsubst %.f90,%.f.o,$(SRC:%.c=%.o))
 
 #-----targets and common rules--------------------------------
 default: scan
@@ -152,10 +154,10 @@ distclean: clean
 #-----end--- auto dependencies below---------	
 # DO NOT DELETE
 
-io.o: mymath.h hdf_util.h io.h models.h cosmology.h
+io.o: mymath.h hdf_util.h io.h models.h cosmology.h wenting.h
 hdf_util.o: hdf_util.h mymath.h
 cosmology.o: mymath.h cosmology.h
 mymath.o: mymath.h
-models.o: mymath.h cosmology.h io.h models.h
-scan.o: mymath.h cosmology.h io.h models.h
-NumericalConvergence.o: mymath.h cosmology.h io.h models.h
+models.o: mymath.h cosmology.h io.h models.h wenting.h
+scan.o: mymath.h cosmology.h io.h models.h wenting.h
+NumericalConvergence.o: mymath.h cosmology.h io.h models.h wenting.h
