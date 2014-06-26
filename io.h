@@ -22,6 +22,7 @@ struct Tracer
   int nP;
   Particle_t *P;
   int nbin_r; //never set this manually. only modify it via count_tracer_radial()
+  int FlagRLogBin;
   int *RadialCount;
   double rmin, rmax;
   int nView;
@@ -41,7 +42,7 @@ extern void free_tracer_particles(Tracer_t *Sample);
 extern void copy_tracer_particles(int offset, int sample_size, Tracer_t *Sample, Tracer_t *FullSample);
 extern void resample_tracer_particles(unsigned long int seed, Tracer_t *ReSample, Tracer_t *Sample);
 
-extern void count_tracer_radial(Tracer_t *Sample, int nbin);
+extern void count_tracer_radial(Tracer_t *Sample, int nbin, int FlagRLogBin);
 extern void free_tracer_rcounts(Tracer_t * Views);
 
 extern void sort_part_flag(Particle_t *P, int nP);

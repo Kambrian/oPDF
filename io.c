@@ -335,25 +335,36 @@ void free_tracer_rcounts(Tracer_t *Sample)
 	Sample->nbin_r=0;
   }
 }
-void count_tracer_radial(Tracer_t *Sample, int nbin)
+
+void count_tracer_radial(Tracer_t *Sample, int nbin, int FlagRLogBin)
 {//count inside linear radial bins
   //init rmin-rmax before calling.
   int i,j;
-  double dr;
+  double dr,logRmin;
   if(Sample->rmax==0) {fprintf(stderr, "Error: cut particles or assign rmin/rmax first\n"); exit(1);}
   if(Sample->nbin_r!=nbin) //need to realloc
 	free_tracer_rcounts(Sample);
+  Sample->FlagRLogBin=FlagRLogBin;
   Sample->nbin_r=nbin;
   Sample->RadialCount=calloc(Sample->nbin_r, sizeof(int));
-  dr=(Sample->rmax-Sample->rmin)/Sample->nbin_r;
+  if(Sample->FlagRLogBin)
+  {
+	logRmin=log(Sample->rmin);
+	dr=(log(Sample->rmax)-logRmin)/Sample->nbin_r;
+  }
+  else
+	dr=(Sample->rmax-Sample->rmin)/Sample->nbin_r;
   #pragma omp parallel
   {
 	int *bincount;
 	bincount=calloc(Sample->nbin_r, sizeof(int));
     #pragma omp for private(j)
     for(i=0;i<Sample->nP;i++)
-    {  
-      j=floor((Sample->P[i].r-Sample->rmin)/dr);
+    { 
+	  if(Sample->FlagRLogBin)
+		j=floor((log(Sample->P[i].r)-logRmin)/dr);
+	  else
+		j=floor((Sample->P[i].r-Sample->rmin)/dr);
       if(j<0) j=0;
       if(j>=Sample->nbin_r) j=Sample->nbin_r-1;
       bincount[j]++;
@@ -399,10 +410,10 @@ void init_tracer(Tracer_t *Sample)
   load_tracer_particles(datafile, Sample);
   cut_tracer_particles(Sample,Sample->rmin,Sample->rmax);
   shuffle_tracer_particles(100,Sample);
-  count_tracer_radial(Sample, NumRadialCountBin);
+  count_tracer_radial(Sample, NumRadialCountBin, 1);
 }
 void make_sample(int offset, int samplesize, Tracer_t *Sample, Tracer_t *FullSample)
 {//make a subsample
   copy_tracer_particles(offset, samplesize, Sample, FullSample);
-  count_tracer_radial(Sample, NumRadialCountBin);
+  count_tracer_radial(Sample, NumRadialCountBin, 1);
 }

@@ -2,8 +2,8 @@ import sys,os
 from dynio import *
 os.environ['OMP_NUM_THREADS']='32'
 
-from matplotlib.pyplot import *
-import matplotlib.pyplot as plt
+#from matplotlib.pyplot import *
+#import matplotlib.pyplot as plt
 from numpy import *
 from scipy.stats import chi2,norm
 from myutils import *
@@ -11,8 +11,180 @@ import triangle
 import glob,itertools
 import h5py
 
-ion()
-        
+plt.ion()
+
+def fig_DegeneracyDistributionRad(nbin=50, logscale=True, cumulative=False, flagsave=False):
+  npart=1000
+  lib.open()
+  FullSample=Tracer('Mock')
+  Sample=FullSample.copy(5000,npart)
+  FullSample.clean()
+  if logscale:
+	xbin=np.logspace(np.log10(Sample.rmin), np.log10(Sample.rmax), nbin+1)
+  else:
+	xbin=np.linspace(Sample.rmin, Sample.rmax, nbin+1)
+  count,tmp=np.histogram(Sample.data['r'], xbin)
+  
+  plt.figure()
+  pars=[1,1]
+  Sample.freeze_energy(pars)
+  Sample.like_init(pars)
+  pred=Sample.predict_radial_count(nbin, logscale)
+  if cumulative:
+	plt.plot(xbin, np.hstack((0.,pred)).cumsum()/Sample.nP, 'r-')
+  else:
+	plt.step(xbin,hstack((pred,nan)), where='post', color='r')
+	
+  #pars=[ 0.82423562, 1.28484559]
+  pars=[0.6013295 ,  2.22171445]
+  Sample.freeze_energy(pars)
+  Sample.like_init(pars)
+  pred=Sample.predict_radial_count(nbin, logscale)
+  if cumulative:
+	plt.plot(xbin, np.hstack((0.,pred)).cumsum()/Sample.nP, 'g-')
+  else:
+	plt.step(xbin,hstack((pred,nan)), where='post', color='g')
+  
+  if cumulative:
+	plt.plot(xbin, np.hstack((0.,count)).cumsum()/Sample.nP, 'k--')
+	plt.ylabel(r'$P(<r)$')
+	plt.legend((r'$M_{\rm true},\, c_{\rm true}$', r'$0.6 M_{\rm true},\, 2.2 c_{\rm true}$', 'Data'),loc='lower right')
+	plt.ylim([0,1])
+  else:
+	plt.step(xbin,hstack((count,nan)), where='post', color='k', linestyle='--', linewidth=2)
+	plt.ylabel('Counts')
+	plt.legend((r'$M_{\rm true},\, c_{\rm true}$', r'$0.6 M_{\rm true},\, 2.2 c_{\rm true}$', 'Data'),loc='upper right')
+	
+  if logscale:
+	  plt.xscale('log')
+  
+  plt.xlabel(r'$r/kpc$')
+ 
+  Sample.clean()
+  lib.close()
+  if flagsave:
+	plt.savefig(lib.rootdir+'/plots/paper/DegeneracyDistributionRad.eps')
+	
+def fig_DegeneracyDistribution(nbin=50, cumulative=True, flagsave=False):
+  npart=1000
+  lib.open()
+  FullSample=Tracer('Mock')
+  Sample=FullSample.copy(5000,npart)
+  FullSample.clean()
+  plt.figure()
+  pars=[1,1]
+  Sample.freeze_energy(pars)
+  Sample.like_init(pars)
+  if cumulative:
+	t=Sample.data['theta'][...]
+	t.sort()
+	plt.plot(t, (np.arange(Sample.nP)+1.)/Sample.nP, 'b-')
+  else:
+	plt.hist(Sample.data['theta'], nbin, normed=True, histtype='step', color='b')
+	
+  #pars=[ 0.82423562, 1.28484559]
+  pars=[0.6013295 ,  2.22171445]
+  Sample.freeze_energy(pars)
+  Sample.like_init(pars)
+  if cumulative:
+	t=Sample.data['theta'][...]
+	t.sort()
+	plt.plot(t, (np.arange(Sample.nP)+1.)/Sample.nP, 'r-')
+  else:
+	plt.hist(Sample.data['theta'], nbin, normed=True, histtype='step', color='r')
+  
+  plt.legend((r'$M_{\rm true},\, c_{\rm true}$', r'$0.6 M_{\rm true},\, 2.2 c_{\rm true}$'),loc='upper left')
+  if cumulative:
+	plt.plot([0,1],[0,1],'k:')
+	plt.ylabel(r'$P(<\theta)$')
+	plt.axis([0,1,0,1])
+  else:
+	plt.plot([0,1],[1,1],'k:')
+	plt.ylabel(r'$dP/d\theta$')
+  plt.xlabel(r'$\theta$')
+  
+  Sample.clean()
+  lib.close()
+  if flagsave:
+	plt.savefig(lib.rootdir+'/plots/paper/DegeneracyDistribution.eps')
+  
+  
+def fig_MinDistContour(flagsave=False):
+  f1=h5py.File(lib.rootdir+'/plots/paper/raw/ADDist.hdf5','r')
+  mm=f1['/logm']
+  cc=f1['/logc']
+  sig=f1['/sig_dist']
+  x=f1['/sig_dist'].attrs['xmin']
+  print 10**x
+  cs=plt.contour(mm,cc,sig, levels=[1,3], linestyles='solid')
+  #plt.clabel(cs, inline=1, fmt={1:'',2:'AD'})
+  h1=Ellipse((0,0),0,0,fill=False, linestyle='solid')
+  #x1=np.log10(np.array([0.80234718,  1.09236641])) #initial value [1,1]
+  #x2=np.log10(np.array([ 0.65940932,  1.49481424])) #initial value [1.5,1.5]
+  #plt.plot(x[0],x[1],'ro',markersize=10)
+  #plt.plot(x2[0],x2[1],'gs',markersize=10)
+  f2=h5py.File(lib.rootdir+'/plots/paper/raw/MeanDist.hdf5','r')
+  mm=f2['/logm']
+  cc=f2['/logc']
+  sig=f2['/sig_dist']
+  x=f2['/sig_dist'].attrs['xmin']
+  cs=plt.contour(mm,cc,sig, levels=[1,3], linestyles='dashed')
+  h2=Ellipse((0,0),0,0,fill=False, linestyle='dashed')
+  #x1=np.log10(np.array([ 0.95707194,  1.0434845])) #initial value [1,1]
+  x2=np.log10(np.array([ 0.6013295 ,  2.22171445])) #initial value [2,2]
+  #plt.plot(x1[0],x1[1],'gx',markersize=10)
+  plt.plot(x2[0],x2[1],'gx',markersize=10)
+  #plt.clabel(cs, inline=1, fmt={1:'',2:'Mean'})
+  #plt.plot(x[0],x[1],'g+',markersize=10)
+  #plt.xlim([-0.3,0.8])
+  #plt.ylim([-0.8,0.8])
+  plt.plot(plt.xlim(),[0,0],'k:',[0,0],plt.ylim(),'k:')
+  plt.xlabel(r'$\log(M/M_{\rm true})$')
+  plt.ylabel(r'$\log(c/c_{\rm true})$')
+  plt.legend((h1,h2),('AD','Mean'))
+  if flagsave:
+	plt.savefig(lib.rootdir+'/plots/paper/MinDistContour.eps')
+
+def fig_MaxLikeContour(flagsave=False):
+  def plot_siglike(name, color):
+	f=h5py.File(lib.rootdir+'/plots/paper/raw/'+name+'.hdf5','r')
+	cs=plt.contour(f['/logm'],f['/logc'],f['/sig_like'], levels=[1,], colors=color)
+	h=Ellipse((0,0),0,0,fill=False, color=color)
+	x=f['/sig_like'].attrs['xmin']
+	print 10**x
+	plt.plot(x[0],x[1],'o',color=color,markersize=10)
+	f.close()
+	return h
+  plt.figure()
+  h1=plot_siglike('f(E,L)_condition','r')
+  h2=plot_siglike('RBinLog30','g')
+  h3=plot_siglike('Mean_L','b')
+  h4=plot_siglike('ADBN_L','c')
+  f=h5py.File(lib.rootdir+'/plots/paper/raw/ADDist.hdf5','r')
+  plt.contour(f['/logm'],f['/logc'],f['/sig_dist'], levels=[1,], colors='m')
+  h5=Ellipse((0,0),0,0,fill=False, color='m')
+  f.close()
+  f=h5py.File(lib.rootdir+'/plots/paper/raw/MeanDist.hdf5','r')
+  plt.contour(f['/logm'],f['/logc'],f['/sig_dist'], levels=[1,], colors='y')
+  h6=Ellipse((0,0),0,0,fill=False, color='y')
+  f.close()
+
+  plt.axis([-0.4,0.6, -0.6,0.4])
+  plt.plot(plt.xlim(),[0,0],'k:',[0,0],plt.ylim(),'k:')
+  plt.xlabel(r'$\log(M/M_{\rm true})$')
+  plt.ylabel(r'$\log(c/c_{\rm true})$')
+  plt.legend((h1,h2,h3,h4,h5,h6),('f(E,L)','RBin','Mean|L','AD|L','AD','Mean'))
+  if flagsave:
+	plt.savefig(lib.rootdir+'/plots/paper/MaxLikeContour.eps')
+	
+def plot_pot(pars, linestyle='-'):
+  print pars
+  r=np.logspace(0,2,20)
+  Halo=NFWHalo()
+  Halo.define_halo(pars)
+  y=-np.array(map(Halo.pot, r))
+  plt.loglog(r/Halo.halo.Rs,y, linestyle)
+  
 def show_legend():
     a=[x for x in gca().get_children() if isinstance(x,matplotlib.patches.Ellipse)]
     l=[getp(x,'label') for x in a]

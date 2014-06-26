@@ -94,14 +94,15 @@ extern void solve_radial_limits ( Particle_t *P, double rmin, double rmax);
 extern double vr_inv_part(double r, double E, double L2);
 extern void solve_radial_orbit(Particle_t *P, double rmin, double rmax, int estimator);
 
-extern void predict_radial_count (double RadialCountPred[], int nbin, Tracer_t *Sample);
+extern void predict_radial_count (double RadialCountPred[], int nbin, int FlagRLogBin, Tracer_t *Sample);
 
 /* --types of likelihood:
 likelihood: elemetary likelihood evaluation =(init+eval)
 freeze_and_like: freeze energy and calc like =(freeze_energy+likelihood)
-joint_Flike: automatically create/manage views, freeze energy, and likelihood
-views_like: likelihood on existing views
-views_Flike: freeze_and_like on existing views
+joint_FChi2: automatically create/manage views, freeze energy, and likelihood
+views_Chi2: likelihood on existing views
+views_FChi2: freeze_and_like on existing views
+**_Chi2 functions returns -2*log(like).
 */
 
 extern void like_init(const double pars[], int estimator, Tracer_t *Sample); //define halo and prepare orbit
@@ -113,11 +114,11 @@ extern double like_to_chi2(double lnL, int estimator);
 extern void freeze_energy(const double pars[], Tracer_t *Sample);
 extern double freeze_and_like(const double pars[], int estimator, Tracer_t *Sample);
 
-extern double jointLE_Flike(const double pars[], int estimator, int nbinL, int nbinE, Tracer_t *Sample);
-extern double jointE_Flike(const double pars[], int estimator, int nbin, Tracer_t *Sample);
+extern double jointLE_FChi2(const double pars[], int estimator, int nbinL, int nbinE, Tracer_t *Sample);
+extern double jointE_FChi2(const double pars[], int estimator, int nbin, Tracer_t *Sample);
 
 extern void create_nested_views(const double pars[], int nbin[], char ViewTypes[], Tracer_t *Sample);
-extern double nested_views_like(const double pars[], int estimator, Tracer_t *Sample);
-extern double nested_views_Flike(const double pars[], int estimator, Tracer_t *Sample);
+extern double nested_views_Chi2(const double pars[], int estimator, Tracer_t *Sample);
+extern double nested_views_FChi2(const double pars[], int estimator, Tracer_t *Sample);
 
 #endif

@@ -2,6 +2,7 @@ from math import *
 import numpy as np
 import ctypes,os,ConfigParser,h5py
 from scipy.optimize import fmin
+from scipy.stats import norm,chi2
 from iminuit import Minuit
 from iminuit.ConsoleFrontend import ConsoleFrontend
 
@@ -27,6 +28,7 @@ Tracer_p=ctypes.POINTER(Tracer_t)
 Tracer_t._fields_=[('nP', ctypes.c_int),
 				   ('P', Particle_p),
 				   ('nbin_r', ctypes.c_int),
+				   ('FlagRLogBin', ctypes.c_int),
 				   ('RadialCount', ctypes.POINTER(ctypes.c_int)),
 				   ('rmin', ctypes.c_double),
 				   ('rmax', ctypes.c_double),
@@ -34,7 +36,7 @@ Tracer_t._fields_=[('nP', ctypes.c_int),
 				   ('ViewType', ctypes.c_char),
 				   ('Views', Tracer_p)
 				  ]
-
+	
 class NFWHalo_t(ctypes.Structure):
   """all properties are physical"""
   _fields_=[('z', ctypes.c_double),
@@ -100,23 +102,23 @@ lib.freeze_energy.restype=None
 lib.freeze_energy.argtypes=[lib.ParType, Tracer_p]
 lib.freeze_and_like.restype=ctypes.c_double
 lib.freeze_and_like.argtypes=[lib.ParType, ctypes.c_int, Tracer_p]
-lib.jointLE_Flike.restype=ctypes.c_double
-lib.jointLE_Flike.argtypes=[lib.ParType, ctypes.c_int, ctypes.c_int, ctypes.c_int, Tracer_p]
+lib.jointLE_FChi2.restype=ctypes.c_double
+lib.jointLE_FChi2.argtypes=[lib.ParType, ctypes.c_int, ctypes.c_int, ctypes.c_int, Tracer_p]
 #extern double jointE_like(double pars[], int estimator, int nbin, Tracer_t *Sample);
-lib.jointE_Flike.restype=ctypes.c_double
-lib.jointE_Flike.argtypes=[lib.ParType, ctypes.c_int, ctypes.c_int, Tracer_p]
+lib.jointE_FChi2.restype=ctypes.c_double
+lib.jointE_FChi2.argtypes=[lib.ParType, ctypes.c_int, ctypes.c_int, Tracer_p]
 lib.create_nested_views.restype=None
 lib.create_nested_views.argtypes=[lib.ParType, ctypes.POINTER(ctypes.c_int), ctypes.c_char_p, Tracer_p];
-lib.nested_views_like.restype=ctypes.c_double
-lib.nested_views_like.argtypes=[lib.ParType, ctypes.c_int, Tracer_p]
-lib.nested_views_Flike.restype=ctypes.c_double
-lib.nested_views_Flike.argtypes=[lib.ParType, ctypes.c_int, Tracer_p]
+lib.nested_views_Chi2.restype=ctypes.c_double
+lib.nested_views_Chi2.argtypes=[lib.ParType, ctypes.c_int, Tracer_p]
+lib.nested_views_FChi2.restype=ctypes.c_double
+lib.nested_views_FChi2.argtypes=[lib.ParType, ctypes.c_int, Tracer_p]
 lib.predict_radial_count.restype=None
-lib.predict_radial_count.argtypes=[ctypes.POINTER(ctypes.c_double), ctypes.c_int, Tracer_p]
+lib.predict_radial_count.argtypes=[ctypes.POINTER(ctypes.c_double), ctypes.c_int, ctypes.c_int, Tracer_p]
 #halos
 lib.define_halo.restype=None
 lib.define_halo.argtypes=[lib.ParType]
-lib.halo_pot.restype=None
+lib.halo_pot.restype=ctypes.c_double
 lib.halo_pot.argtypes=[ctypes.c_double]
 lib.comoving_virial_radius.argtypes=[ctypes.c_double, ctypes.c_double, ctypes.c_int]
 lib.comoving_virial_radius.restype=ctypes.c_double
@@ -141,7 +143,7 @@ lib.resample_tracer_particles.argtypes=[ctypes.c_ulong, Tracer_p, Tracer_p]
 lib.copy_tracer_particles.restype=None
 lib.copy_tracer_particles.argtypes=[ctypes.c_int, ctypes.c_int, Tracer_p, Tracer_p]
 lib.count_tracer_radial.restype=None
-lib.count_tracer_radial.argtypes=[Tracer_p, ctypes.c_int]
+lib.count_tracer_radial.argtypes=[Tracer_p, ctypes.c_int, ctypes.c_int]
 #extern void count_tracer_radial(Tracer_t *Sample, int nbin);
 lib.free_tracer_rcounts.restype=None
 lib.free_tracer_rcounts.argtypes=[Tracer_p]
@@ -181,13 +183,13 @@ lib.dataprob6d=prototype(("dataprob6d",lib))
 #====================python wrapper classes=========================================
 
 class NFWHalo(object):
-  '''halo related functions and variables'''
+  '''halo related functions and variables''' 
   def __init__(self):
-	halo=NFWHalo_t.in_dll(lib, 'Halo')
-	M0=ctypes.c_double.in_dll(lib, 'M0')
-	C0=ctypes.c_double.in_dll(lib, 'C0')
-	Rhos0=ctypes.c_double.in_dll(lib, 'Rhos0')
-	Rs0=ctypes.c_double.in_dll(lib, 'Rs0')
+	self.halo=NFWHalo_t.in_dll(lib, 'Halo')
+	self.M0=ctypes.c_double.in_dll(lib, 'HaloM0')
+	self.C0=ctypes.c_double.in_dll(lib, 'HaloC0')
+	self.Rhos0=ctypes.c_double.in_dll(lib, 'HaloRhos0')
+	self.Rs0=ctypes.c_double.in_dll(lib, 'HaloRs0')
 	
   def define_halo(self, pars):
 	lib.define_halo(lib.ParType(*pars))
@@ -267,14 +269,17 @@ class Tracer(Tracer_t):
   def likelihood(self, pars=[1,1], estimator=10):
 	return lib.likelihood(lib.ParType(*pars), estimator, self._pointer)
   
+  def like_init(self, pars=[1,1], estimator=10):
+	lib.like_init(lib.ParType(*pars), estimator, self._pointer)
+	
   def freeze_and_like(self, pars=[1,1], estimator=10):
 	return lib.freeze_and_like(lib.ParType(*pars), estimator, self._pointer)
   
-  def jointE_Flike(self, pars=[1,1], estimator=10, nbinE=10):
-	return lib.jointE_Flike(lib.ParType(*pars), estimator, nbinE, self._pointer)
+  def jointE_FChi2(self, pars=[1,1], estimator=10, nbinE=10):
+	return lib.jointE_FChi2(lib.ParType(*pars), estimator, nbinE, self._pointer)
 	
-  def jointLE_Flike(self, pars=[1,1], estimator=10, nbinL=10, nbinE=10):
-	return lib.jointLE_Flike(lib.ParType(*pars), estimator, nbinL, nbinE, self._pointer)
+  def jointLE_FChi2(self, pars=[1,1], estimator=10, nbinL=10, nbinE=10):
+	return lib.jointLE_FChi2(lib.ParType(*pars), estimator, nbinL, nbinE, self._pointer)
 
   def create_nested_views(self, pars=[1,1], viewtypes='EL', nbins=[10,10]):
 	try:
@@ -283,16 +288,16 @@ class Tracer(Tracer_t):
 	  nbins=[nbins]
 	lib.create_nested_views(lib.ParType(*pars), (ctypes.c_int*(len(nbins)+1))(*nbins), ctypes.c_char_p(viewtypes), self._pointer)
   
-  def nested_views_like(self, pars=[1,1], estimator=10):
-	return lib.nested_views_like(lib.ParType(*pars), estimator, self._pointer)
+  def nested_views_Chi2(self, pars=[1,1], estimator=10):
+	return lib.nested_views_Chi2(lib.ParType(*pars), estimator, self._pointer)
   
-  def nested_views_Flike(self, pars=[1,1], estimator=10):
-	return lib.nested_views_Flike(lib.ParType(*pars), estimator, self._pointer)
+  def nested_views_FChi2(self, pars=[1,1], estimator=10):
+	return lib.nested_views_FChi2(lib.ParType(*pars), estimator, self._pointer)
   
-  def joint_Flike(self, pars, estimator, viewtypes, nbins):
+  def joint_FChi2(self, pars, estimator, viewtypes, nbins):
 	'''nestviews and like'''
 	self.create_nested_views(pars, viewtypes, nbins)
-	return self.nested_views_like(pars, estimator)
+	return self.nested_views_Chi2(pars, estimator)
   
   def fmin_FixBinIter(self, estimator,proxy,nbins,x0=[1,1],tol=0.01):
 	x=x0
@@ -300,16 +305,20 @@ class Tracer(Tracer_t):
 	while abs(x0[0]-x[0])>tol or abs(x0[1]-x[1])>tol:
 	  x0=x
 	  self.create_nested_views(x0, proxy, nbins)
-	  result=fmin(self.nested_views_Flike, x0, args=(estimator,), xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
+	  result=fmin(self.nested_views_FChi2, x0, args=(estimator,), xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
 	  x=result[0]
 	  print result[0], result[1], result[-1]
 	return result
   
   def fmin_jointLE(self, estimator, nbinL, nbinE, x0=[1,1]):
-	return fmin(self.jointLE_Flike, x0, args=(estimator, nbinL, nbinE), xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
+	return fmin(self.jointLE_FChi2, x0, args=(estimator, nbinL, nbinE), xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
   
   def fmin_like(self, estimator, x0=[1,1]):
 	like=lambda x: lib.like_to_chi2(self.freeze_and_like(x, estimator), estimator) #the real likelihood prob
+	return fmin(like, x0, xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
+  
+  def fmin_dist(self, estimator, x0=[1,1]):
+	like=lambda x: -self.freeze_and_like(x, estimator) #distance
 	return fmin(like, x0, xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
   
   def minuit_like(self, estimator, x0=[1,1], minuittol=1):
@@ -327,7 +336,7 @@ class Tracer(Tracer_t):
   def minuit_jointLE(self, estimator, nbinL, nbinE, x0=[1,1], minuittol=1):
 	"""too difficult for minuit to work. just use this to estimate the error matrix.
 	set a huge tol, say, 1e10, to avoid walking away"""
-	like=lambda m,c: self.jointLE_Flike([m,c], estimator, nbinL, nbinE)
+	like=lambda m,c: self.jointLE_FChi2([m,c], estimator, nbinL, nbinE)
 	#profilelikelihood ratio error-def: chi-square1
 	m=Minuit(like, m=x0[0],c=x0[1], print_level=0, pedantic=False, error_m=0.1, error_c=0.1, errordef=1, limit_m=[0.1,10],limit_c=[0.1,10],frontend=ConsoleFrontend())
 	m.tol=minuittol   #default convergence edm<1e-4*tol*errordef, but we do not need that high accuracy
@@ -338,7 +347,7 @@ class Tracer(Tracer_t):
   
   def minuit_FixBinIter(self, estimator,proxy,nbins,x0=[1,1],tol=0.01, minuittol=1):
 	'''set tol and minuittol to 1e10 to only get error and avoid walking away'''
-	like= lambda m,c: self.nested_views_Flike([m,c], estimator) #note: nested_views_like() does not work here.
+	like= lambda m,c: self.nested_views_FChi2([m,c], estimator) #note: nested_views_Chi2() does not work here.
 	m=Minuit(like, m=x[0], c=x[1], print_level=0, pedantic=False, error_m=0.1, error_c=0.1, errordef=1, limit_m=[0.1,10],limit_c=[0.1,10],frontend=ConsoleFrontend())
 	m.tol=minuittol
 	x=x0
@@ -352,9 +361,9 @@ class Tracer(Tracer_t):
 	m.print_matrix()
 	return result,m
   
-  def predict_radial_count(self, nbin=100):
+  def predict_radial_count(self, nbin=100, logscale=True):
 	n=np.empty(nbin,dtype='f8')
-	lib.predict_radial_count(n.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), nbin)
+	lib.predict_radial_count(n.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), nbin, logscale, self._pointer)
 	#lib.predict_radial_count(n.ctypes.data, nbin) //also work?
 	return n
   
@@ -391,10 +400,10 @@ class Tracer(Tracer_t):
 	lib.squeeze_tracer_particles(self._pointer)
 	self.__update_array()
 	
-  def radial_count(self, nbin=None):
+  def radial_count(self, nbin=None, logscale=True):
 	if nbin is None:
 	  nbin=lib.NumRadialCountBin
-	lib.count_tracer_radial(self._pointer, nbin)
+	lib.count_tracer_radial(self._pointer, nbin, logscale)
 	  
   def sort(self, proxy, offset=0,n=0):
 	if n==0:

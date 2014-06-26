@@ -68,7 +68,11 @@ def plot_circle(cen=[0,0], r=1, **kwargs):
 	return h
 	
 def ADSurvFunc(AD):
-  return 1-norm.cdf(np.log(AD),loc=-0.22,scale=0.66);
+  gpar=[[0.569,   -0.570,    0.511], [ 0.431,    0.227,    0.569]] #w, mu, sigma, bi-normal fit
+  lnAD=np.log(AD)
+  p=gpar[0][0]*norm.sf(lnAD,gpar[0][1],gpar[0][2])+gpar[1][0]*norm.sf(lnAD, gpar[1][1], gpar[1][2])
+  return p
+  #return norm.sf(np.log(AD),loc=-0.22,scale=0.66);
 
 def P2Sig(pval):
   """convert pval to sigma"""
@@ -78,7 +82,7 @@ def AD2Sig(AD):
   """convert AndersonDarling TS to sigma"""
   AD=np.array(AD)
   sig=P2Sig(ADSurvFunc(AD))
-  sig[AD>5]=(np.log(AD[AD>5])+0.22)/0.66
+  #sig[AD>5]=(np.log(AD[AD>5])+0.22)/0.66
   return sig
   
 class ProgressMonitor:
@@ -139,7 +143,7 @@ def percentile_contour(data, nbin=100, percents=0.683, color=None, logscale=Fals
       plt.loglog()
     else:
       h0=plt.contour(X,Y,Z,lvls, colors=color, **kwargs)
-    h=plt.Ellipse((0,0),0,0,fill=False, color=color, **kwargs)
+    h=Ellipse((0,0),0,0,fill=False, color=color, **kwargs)
     return h,h0
   
 def plot_cov_ellipse(cov, pos, nstd=1, ax=None, **kwargs):

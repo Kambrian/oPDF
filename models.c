@@ -333,19 +333,19 @@ double AndersonDarlingTest(Tracer_t *Sample)
   lnL=lnL/Sample->nP-Sample->nP; 
   return -lnL; //differ by -1, to make it comparable to a loglike
 }
+static double ADgpar[2][3]={{0.569,   -0.570,    0.511}, { 0.431,    0.227,    0.569}}; //w, mu, sigma
 double AndersonDarlingLike(Tracer_t *Sample, int estimator)
 {/* adopting a PDF fit of ln(AD),
     return the log(Prob), the real likelihood (posterior probability)
     */
     double lnAD=log(-AndersonDarlingTest(Sample));
-	static double gpar[2][3]={{0.569,   -0.570,    0.511}, { 0.431,    0.227,    0.569}}; //w, mu, sigma
 	switch(estimator)
 	{
 	  case RADIAL_PHASE_AD_GEV:
 		return log(GeneralizedExtremeValuePDF(lnAD, LnAD_GEV_MU, LnAD_GEV_SIGMA, LnAD_GEV_K)); //loglikelihood
 	  case RADIAL_PHASE_AD_BINORMAL:
-		return log(gpar[0][0]*NormPDF(lnAD, gpar[0][1], gpar[0][2])
-				  +gpar[1][0]*NormPDF(lnAD, gpar[1][1], gpar[1][2]));
+		return log(ADgpar[0][0]*NormPDF(lnAD, ADgpar[0][1], ADgpar[0][2])
+				  +ADgpar[1][0]*NormPDF(lnAD, ADgpar[1][1], ADgpar[1][2]));
 	  case RADIAL_PHASE_AD_NORMAL:
 		lnAD=(lnAD-LnADMean)/LnADSig;
 		return -lnAD*lnAD/2.; //loglike, subject to a const difference
@@ -424,15 +424,32 @@ double like_phase_process(Tracer_t *Sample)
   return lnL;
 }
 
-void predict_radial_count (double RadialCountPred[], int nbin, Tracer_t *Sample)
+void predict_radial_count (double RadialCountPred[], int nbin, int FlagRLogBin, Tracer_t *Sample)
 {
     int i,j;
-    double dr= ( Sample->rmax-Sample->rmin ) /nbin;
+	double dr, logRmin, factor;
+// 	printf("Log=%d\n",FlagRLogBin);
+	if(FlagRLogBin)
+	{
+	  logRmin=log(Sample->rmin);
+	  dr=(log(Sample->rmax)-logRmin)/nbin;
+	  factor=exp(dr);
+	}
+	else
+	  dr=(Sample->rmax-Sample->rmin)/nbin;
 
     for ( i=0; i<nbin; i++ ) {
         double rbin[2];
+		if(FlagRLogBin)
+	  {
+		rbin[0]=exp(logRmin+dr*i);
+		rbin[1]=rbin[0]*factor;
+	  }
+	  else
+	  {
         rbin[0]=Sample->rmin+dr*i;
         rbin[1]=rbin[0]+dr;
+	  }
         gsl_function F;
         F.function = &vr_inv_rfunc;
         double error,t;
@@ -456,7 +473,15 @@ void predict_radial_count (double RadialCountPred[], int nbin, Tracer_t *Sample)
 double like_radial_bin(Tracer_t *Sample)
 {
   int i;
-  double lnL=0., dr=(Sample->rmax-Sample->rmin)/Sample->nbin_r;
+  double lnL=0., dr, logRmin, factor;
+  if(Sample->FlagRLogBin)
+  {
+	logRmin=log(Sample->rmin);
+	dr=(log(Sample->rmax)-logRmin)/Sample->nbin_r;
+	factor=exp(dr);
+  }
+  else
+	dr=(Sample->rmax-Sample->rmin)/Sample->nbin_r;
   
     #pragma omp parallel for reduction(+:lnL)
     for(i=0;i<Sample->nbin_r;i++)
@@ -473,7 +498,17 @@ double like_radial_bin(Tracer_t *Sample)
 //       }
 //       p*=dr;
       //more proper way is to integrate inside bin
-      double rbin[2]; rbin[0]=Sample->rmin+dr*i;rbin[1]=rbin[0]+dr;
+      double rbin[2];
+	  if(Sample->FlagRLogBin)
+	  {
+		rbin[0]=exp(logRmin+dr*i);
+		rbin[1]=rbin[0]*factor;
+	  }
+	  else
+	  {
+		rbin[0]=Sample->rmin+dr*i;
+		rbin[1]=rbin[0]+dr;
+	  }
       gsl_function F; F.function = &vr_inv_rfunc; 
 	  OrbitPar Fpar;
       double error,t; size_t neval;
@@ -628,11 +663,12 @@ double wenting_like(const double pars[], Tracer_t *Sample)
   for(i=0;i<Sample->nP;i++)
 	lnL+=dataprob_model(Sample->P[i].r,Sample->P[i].vr,sqrt(Sample->P[i].L2)/Sample->P[i].r, wpar);
 //   printf("%g,%g,%g,%g,%g,%g: %g\n", pars[0],pars[1],pars[2],pars[3],pars[4],pars[5],lnL);
-  return lnL;
+  return lnL; //loglikelihood
 }
 
 double like_to_chi2(double lnL, int estimator)
 {//convert likelihood() values to a chi-square measure
+  double lnAD;
   switch(estimator)
   {
 	case RADIAL_PHASE_LMEANRAW:
@@ -640,14 +676,16 @@ double like_to_chi2(double lnL, int estimator)
 	case RADIAL_PHASE_LMOMENT:
 	  return -lnL;
 	case RADIAL_PHASE_ROULETTE:
-	  lnL=(log(-lnL)-LnADMean)/LnADSig;
-	  return lnL*lnL;
+	  lnAD=log(-lnL);
+	  return  -2.*log(ADgpar[0][0]*NormPDF(lnAD, ADgpar[0][1], ADgpar[0][2])
+				  +ADgpar[1][0]*NormPDF(lnAD, ADgpar[1][1], ADgpar[1][2]));
+// 	  lnL=(log(-lnL)-LnADMean)/LnADSig;
+// 	  return lnL*lnL;
 	case RADIAL_PHASE_AD_GEV:
 	case RADIAL_PHASE_AD_BINORMAL:
 	case RADIAL_PHASE_AD_NORMAL:  
+	case RADIAL_BIN_ESTIMATOR:
 	  return -2.*lnL; //simply 2*(the negative loglike), to make it comparable to chisquare; Note these could differ from the chi-2 by a constant.
-// 	case RADIAL_BIN_ESTIMATOR:
-// 	  return -lnL*2;  //simply 2*(the negative loglike), to make it comparable to chisquare
 	default:
 	  fprintf(stderr, "Error: like_to_chi2() not implemented for estimator=%d yet\n", estimator);
 	  exit(1);
@@ -671,17 +709,17 @@ double freeze_and_like(const double pars[], int estimator, Tracer_t *Sample)
   return likelihood(pars, estimator, Sample);
 }
 
-double jointLE_Flike(const double pars[], int estimator, int nbinL, int nbinE, Tracer_t *Sample)
+double jointLE_FChi2(const double pars[], int estimator, int nbinL, int nbinE, Tracer_t *Sample)
 {//automatically update views if needed; then freeze and like
   int i;
   double chi2;
   if(Sample->nView!=nbinL||Sample->ViewType!='L') //already allocated
 	create_tracer_views(Sample, nbinL, 'L');
   for(i=0,chi2=0;i<nbinL;i++)
-	chi2+=jointE_Flike(pars, estimator, nbinE, Sample->Views+i);
+	chi2+=jointE_FChi2(pars, estimator, nbinE, Sample->Views+i);
   return chi2;
 }
-double jointE_Flike(const double pars[], int estimator, int nbin, Tracer_t *Sample)
+double jointE_FChi2(const double pars[], int estimator, int nbin, Tracer_t *Sample)
 {//this does freeze_and_like
   int i;
   double lnL, chi2;
@@ -709,7 +747,7 @@ void create_nested_views(const double pars[], int nbin[], char ViewTypes[], Trac
   for(i=0;i<nbin[0];i++)
 	create_nested_views(pars, nbin+1, ViewTypes+1, Sample->Views+i);//descend
 }
-double nested_views_like(const double pars[], int estimator, Tracer_t *Sample)
+double nested_views_Chi2(const double pars[], int estimator, Tracer_t *Sample)
 {//pure like, without freezing energy
   double lnL;
   if(!Sample->nView)
@@ -720,11 +758,11 @@ double nested_views_like(const double pars[], int estimator, Tracer_t *Sample)
   
   int i;
   for(i=0,lnL=0.;i<Sample->nView;i++)
-	lnL+=nested_views_like(pars, estimator, Sample->Views+i);
+	lnL+=nested_views_Chi2(pars, estimator, Sample->Views+i);
   return lnL;
 }
-double nested_views_Flike(const double pars[], int estimator, Tracer_t *Sample)
+double nested_views_FChi2(const double pars[], int estimator, Tracer_t *Sample)
 {//freeze and like
   freeze_energy(pars, Sample);
-  return nested_views_like(pars, estimator, Sample);
+  return nested_views_Chi2(pars, estimator, Sample);
 }
