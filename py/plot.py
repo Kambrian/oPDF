@@ -145,37 +145,55 @@ def fig_MinDistContour(flagsave=False):
   if flagsave:
 	plt.savefig(lib.rootdir+'/plots/paper/MinDistContour.eps')
 
-def fig_MaxLikeContour(flagsave=False):
-  def plot_siglike(name, color):
+def fig_MaxLikeContour(estimator='Mean',flagsave=False):
+  '''estimator in 'AD' or 'Mean' '''
+  def plot_siglike(name, color, linestyle='solid'):
+	marker='o' #{'solid':'s','dashed':'d','dotted':'o','dashdot':'x'}[linestyle]
 	f=h5py.File(lib.rootdir+'/plots/paper/raw/'+name+'.hdf5','r')
-	cs=plt.contour(f['/logm'],f['/logc'],f['/sig_like'], levels=[1,], colors=color)
-	h=Ellipse((0,0),0,0,fill=False, color=color)
+	cs=plt.contour(f['/logm'],f['/logc'],f['/sig_like'], levels=[1,], colors=color, linestyles=linestyle)
+	h=Ellipse((0,0),0,0,fill=False, color=color, linestyle=linestyle)
 	x=f['/sig_like'].attrs['xmin']
 	print 10**x
-	plt.plot(x[0],x[1],'o',color=color,markersize=10)
+	plt.plot(x[0],x[1],marker,color=color,markersize=6)
 	f.close()
 	return h
   plt.figure()
+  f=h5py.File(lib.rootdir+'/plots/paper/raw/MeanDist.hdf5','r')
+  plt.contourf(f['/logm'],f['/logc'],f['/sig_dist'], levels=[0,1], colors=((0.8,0.8,0.8),))
+  #plt.contour(f['/logm'],f['/logc'],f['/sig_dist'], levels=[3], linestyles='dashed', colors=((0.2,0.2,0.2),))
+  #h6=Ellipse((0,0),0,0,fill=False, color='y')
+  f.close()
+  f=h5py.File(lib.rootdir+'/plots/paper/raw/ADDist.hdf5','r')
+  plt.contourf(f['/logm'],f['/logc'],f['/sig_dist'], levels=[0,1], colors=((0.7,0.7,0.7),)) #colors='k', alpha=0.2
+  #h5=Ellipse((0,0),0,0,fill=False, color='m')
+  f.close()
+  #data=np.loadtxt(lib.rootdir+'/plots/paper/raw/f(E,L)_marginal.dat', usecols=[0,1,6])
+  #n=sqrt(data.shape[0])
+  #m=np.log10(data[:,0].reshape([n,n], order='F')/1.873)
+  #c=np.log10(data[:,1].reshape([n,n], order='F')/16.3349)
+  #l=data[:,2].reshape([n,n], order='F')
+  #sig=P2Sig(chi2.sf(2*(l-l.ravel().min()),2))
+  #plt.contour(m,c,sig, levels=[1,], colors='k')
+  #h0=Ellipse((0,0),0,0,fill=False, color='k')
+  #plt.plot(m.ravel()[l.argmin()], c.ravel()[l.argmin()], 'ko')
   h1=plot_siglike('f(E,L)_condition','r')
   h2=plot_siglike('RBinLog30','g')
-  h3=plot_siglike('Mean_L','b')
-  h4=plot_siglike('ADBN_L','c')
-  f=h5py.File(lib.rootdir+'/plots/paper/raw/ADDist.hdf5','r')
-  plt.contour(f['/logm'],f['/logc'],f['/sig_dist'], levels=[1,], colors='m')
-  h5=Ellipse((0,0),0,0,fill=False, color='m')
-  f.close()
-  f=h5py.File(lib.rootdir+'/plots/paper/raw/MeanDist.hdf5','r')
-  plt.contour(f['/logm'],f['/logc'],f['/sig_dist'], levels=[1,], colors='y')
-  h6=Ellipse((0,0),0,0,fill=False, color='y')
-  f.close()
-
-  plt.axis([-0.4,0.6, -0.6,0.4])
+  name={'Mean':'Mean', 'AD':'ADBN'}[estimator]
+  h3=plot_siglike(name+'_L','b') 
+  h4=plot_siglike(name+'Iter_E','c','dashed')
+  h5=plot_siglike(name+'Iter_LE','m','dashed')
+  h6=plot_siglike(name+'Iter_EL','y','dashed')
+  
+  if estimator=='Mean':
+	plt.axis([-0.3,0.3, -0.3,0.3])
+  else:
+	plt.axis([-0.4,0.5, -0.5, 0.4])
   plt.plot(plt.xlim(),[0,0],'k:',[0,0],plt.ylim(),'k:')
   plt.xlabel(r'$\log(M/M_{\rm true})$')
   plt.ylabel(r'$\log(c/c_{\rm true})$')
-  plt.legend((h1,h2,h3,h4,h5,h6),('f(E,L)','RBin','Mean|L','AD|L','AD','Mean'))
+  plt.legend((h1,h2,h3,h4,h5,h6),('f(E,L)|','RBin',estimator+'|L',estimator+'|E',estimator+'|LE',estimator+'|EL'))
   if flagsave:
-	plt.savefig(lib.rootdir+'/plots/paper/MaxLikeContour.eps')
+	plt.savefig(lib.rootdir+'/plots/paper/MaxLikeContour'+estimator+'.eps') #rasterize=True, dpi=300
 	
 def plot_pot(pars, linestyle='-'):
   print pars
@@ -496,9 +514,9 @@ def normfit(data,nbin=50):
   hold('on')
   x=h1[1]
   #x=arange(3*mean(TS))
-  h2,=plot(x,norm.pdf(x),'r')
+  h2,=plot(x,norm.eps(x),'r')
   par=norm.fit(data)
-  h3,=plot(x,norm.pdf(x,loc=par[0],scale=par[1]),'k')
+  h3,=plot(x,norm.eps(x,loc=par[0],scale=par[1]),'k')
   rc('text', usetex=True)
   legend((h1[2][0],h2,h3),('data','Normal(0,1)',r'Normal$(%.3f,%.3f)$'%(par[0],par[1])))
   #ylim(0,max(h1[0])*1.2)

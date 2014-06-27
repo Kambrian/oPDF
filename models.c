@@ -676,9 +676,10 @@ double like_to_chi2(double lnL, int estimator)
 	case RADIAL_PHASE_LMOMENT:
 	  return -lnL;
 	case RADIAL_PHASE_ROULETTE:
-	  lnAD=log(-lnL);
-	  return  -2.*log(ADgpar[0][0]*NormPDF(lnAD, ADgpar[0][1], ADgpar[0][2])
-				  +ADgpar[1][0]*NormPDF(lnAD, ADgpar[1][1], ADgpar[1][2]));
+	  return -lnL; //directly use AD as a chi-2
+// 	  lnAD=log(-lnL);
+// 	  return  -2.*log(ADgpar[0][0]*NormPDF(lnAD, ADgpar[0][1], ADgpar[0][2])
+// 				  +ADgpar[1][0]*NormPDF(lnAD, ADgpar[1][1], ADgpar[1][2]));
 // 	  lnL=(log(-lnL)-LnADMean)/LnADSig;
 // 	  return lnL*lnL;
 	case RADIAL_PHASE_AD_GEV:

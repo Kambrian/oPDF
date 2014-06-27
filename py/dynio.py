@@ -299,16 +299,23 @@ class Tracer(Tracer_t):
 	self.create_nested_views(pars, viewtypes, nbins)
 	return self.nested_views_Chi2(pars, estimator)
   
-  def fmin_FixBinIter(self, estimator,proxy,nbins,x0=[1,1],tol=0.01):
+  def fmin_FixBinIter(self, estimator,proxy,nbins,x0=[1,1],tol=0.01, maxiter=50):
 	x=x0
 	x0=[x[0]+1,x[1]]
+	iter=0
 	while abs(x0[0]-x[0])>tol or abs(x0[1]-x[1])>tol:
 	  x0=x
 	  self.create_nested_views(x0, proxy, nbins)
 	  result=fmin(self.nested_views_FChi2, x0, args=(estimator,), xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
 	  x=result[0]
 	  print result[0], result[1], result[-1]
-	return result
+	  iter+=1
+	  if iter>maxiter:
+		print "Warning: maxiter=%d reached in fmin_FixBinIter with"%maxiter,proxy,nbins
+		result=list(result)
+		result[-1]=3 #top level maxiter has reached.
+		return tuple(result)
+	return result #converged
   
   def fmin_jointLE(self, estimator, nbinL, nbinE, x0=[1,1]):
 	return fmin(self.jointLE_FChi2, x0, args=(estimator, nbinL, nbinE), xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
