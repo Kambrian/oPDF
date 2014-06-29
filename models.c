@@ -474,6 +474,11 @@ double like_radial_bin(Tracer_t *Sample)
 {
   int i;
   double lnL=0., dr, logRmin, factor;
+  if(Sample->nbin_r==0) 
+  {
+	DEBUGPRINT("Error: %d radial bins. call count_tracer_radial() before radial like.\n", 0);
+	exit(1);
+  }
   if(Sample->FlagRLogBin)
   {
 	logRmin=log(Sample->rmin);

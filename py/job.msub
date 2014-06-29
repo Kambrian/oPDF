@@ -21,6 +21,7 @@ module load intel_comp/c4/2013.1.046 gsl/1.16 platform_mpi/9.1.2 hdf5/1.8.12 pyt
 # python mockFmin.py
 
 export OMP_NUM_THREADS=24
-estimator=$1
-proxy=$2
-python scanMockSingle_job.py $estimator $proxy
+method=$1 #MinDist, MaxLike or IterLike
+estimator=$2
+proxy=$3
+python scan${method}Ensemble.py $estimator $proxy

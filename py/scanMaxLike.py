@@ -20,7 +20,7 @@ xx=x
 #xx=np.logspace(-0.3,0.3,nx)
 #for RBin estimator
 FlagRBinLog=1
-nbin_r=10
+nbin_r=30
 
 outdir=lib.rootdir+'/plots/scan'+halo+'%dZoom/'%npart
 if not os.path.exists(outdir):
