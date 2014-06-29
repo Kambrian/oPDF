@@ -10,11 +10,15 @@ import os,sys
 
 estimator=int(sys.argv[1])   #4 or 8(L conditioned) or 10 or 16 or 0 (wenting_like_conditional)
 
-if not estimator in [0,4,8,10,16]:
-  print "Err: estimator must be one of 0,4,10,16, not %d"%estimator
+epool=[0,-4,4,8,10,16]
+if not estimator in epool:
+  print "Err: estimator must be one of",epool,", not %d"%estimator
   raise estimator
 
-nbinL=100
+if estimator==-4:
+  nbinL=10
+else:
+  nbinL=100
 nbinE=1
 npart=1000
 init_par=[2,2]
@@ -25,7 +29,10 @@ FlagRBinLog=1
 outdir=lib.rootdir+'/data/MaxLikeEnsemble'
 if not os.path.exists(outdir):
   os.makedirs(outdir)
-outfile=outdir+'/fit%d'%estimator+'.dat'
+if estimator==-4:
+  outfile=outdir+'/fit4L.dat'
+else:
+  outfile=outdir+'/fit%d'%estimator+'.dat'
 import shutil
 try:
   shutil.move(outfile,outfile+'.bk')
@@ -41,9 +48,13 @@ with Tracer('Mock') as FullSample:
 		result=fmin(like, init_par, xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
 		L1=like([1,1])
 	  elif estimator==4:
-		#Sample.radial_count(nbin_r,FlagRBinLog)
+		Sample.radial_count(nbin_r,FlagRBinLog)
 		result=Sample.fmin_like(estimator, init_par)
 		L1=-2*Sample.freeze_and_like([1,1], estimator)
+	  elif estimator==-4:
+		lib.NumRadialCountBin=nbin_r
+		result=Sample.fmin_jointLE(-estimator, nbinL, nbinE, init_par)
+		L1=Sample.jointLE_FChi2([1,1], -estimator, nbinL, nbinE)
 	  else:
 		result=Sample.fmin_jointLE(estimator, nbinL, nbinE, init_par)
 		L1=Sample.jointLE_FChi2([1,1], estimator, nbinL, nbinE)

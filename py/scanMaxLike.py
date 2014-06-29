@@ -20,7 +20,8 @@ xx=x
 #xx=np.logspace(-0.3,0.3,nx)
 #for RBin estimator
 FlagRBinLog=1
-nbin_r=30
+nbin_r=50
+lib.NumRadialCountBin.value=nbin_r
 
 outdir=lib.rootdir+'/plots/scan'+halo+'%dZoom/'%npart
 if not os.path.exists(outdir):
@@ -92,7 +93,7 @@ elif proxy=='E':
   like=lambda x: Sample.jointE_FChi2(x, nbinE=nbinE, estimator=estimator)
 elif proxy=='L':
   nbinE=1
-  nbinL=nbin*nbin  
+  nbinL=nbin #*nbin  
   like=lambda x: Sample.jointLE_FChi2(x, nbinL=nbinL, nbinE=nbinE, estimator=estimator)
 elif proxy=='LE' or proxy=='EL':
   nbinE=nbin

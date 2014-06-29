@@ -178,6 +178,7 @@ def fig_MaxLikeContour(estimator='Mean',flagsave=False):
   #plt.plot(m.ravel()[l.argmin()], c.ravel()[l.argmin()], 'ko')
   h1=plot_siglike('f(E,L)_condition','r')
   h2=plot_siglike('RBinLog30','g')
+  h22=plot_siglike('RBinLog30_L','k')
   name={'Mean':'Mean', 'AD':'ADBN'}[estimator]
   h3=plot_siglike(name+'_L','b') 
   h4=plot_siglike(name+'Iter_E','c','dashed')
@@ -191,7 +192,7 @@ def fig_MaxLikeContour(estimator='Mean',flagsave=False):
   plt.plot(plt.xlim(),[0,0],'k:',[0,0],plt.ylim(),'k:')
   plt.xlabel(r'$\log(M/M_{\rm true})$')
   plt.ylabel(r'$\log(c/c_{\rm true})$')
-  plt.legend((h1,h2,h3,h4,h5,h6),('f(E,L)|','RBin',estimator+'|L',estimator+'|E',estimator+'|LE',estimator+'|EL'))
+  plt.legend((h1,h2,h22,h3,h4,h5,h6),('f(E,L)|','RBin','RBin|L',estimator+'|L',estimator+'|E',estimator+'|LE',estimator+'|EL'))
   if flagsave:
 	plt.savefig(lib.rootdir+'/plots/paper/MaxLikeContour'+estimator+'.eps') #rasterize=True, dpi=300
 	

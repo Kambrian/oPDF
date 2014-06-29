@@ -10,7 +10,7 @@ import os,sys
 
 try: 
   estimator=int(sys.argv[1]) #use 10 or 16
-  if estimator not in [10,16]:
+  if estimator not in [8,10,16]:
 	raise
   proxy=sys.argv[2]
   if proxy not in ['EL','LE','E']:

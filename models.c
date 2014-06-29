@@ -733,10 +733,10 @@ double jointE_FChi2(const double pars[], int estimator, int nbin, Tracer_t *Samp
   create_tracer_views(Sample, nbin, 'E');
   for(i=0,chi2=0;i<nbin;i++)
   {
-// 	if(estimator==RADIAL_BIN_ESTIMATOR)  count_tracer_radial(View+i, NumRadialBin);
+	if(estimator==RADIAL_BIN_ESTIMATOR)  count_tracer_radial(Sample->Views+i, NumRadialCountBin, 1);
 	lnL=likelihood(pars, estimator, Sample->Views+i);
 	chi2+=like_to_chi2(lnL, estimator);
-// 	if(estimator==RADIAL_BIN_ESTIMATOR)  free_tracer_rcount(View+i);
+	if(estimator==RADIAL_BIN_ESTIMATOR)  free_tracer_rcounts(Sample->Views+i);
   }
   free_tracer_views(Sample);
   return chi2;

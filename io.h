@@ -30,7 +30,7 @@ struct Tracer
   TracerView *Views;
 };
 
-extern int SubSampleSize,NumRadialBin;
+extern int SubSampleSize,NumRadialCountBin;
 
 extern void load_tracer_particles(char *datafile, Tracer_t * Sample);
 extern void cut_tracer_particles(Tracer_t *Sample, double rmin, double rmax);
