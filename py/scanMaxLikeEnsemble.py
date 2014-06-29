@@ -1,0 +1,56 @@
+#scan mock ensembles with likelihoods
+import matplotlib
+matplotlib.use('Agg')
+from dynio import *
+from myutils import *
+import os,sys
+#from scipy.stats import chi2
+
+#os.environ['OMP_NUM_THREADS']='24'
+
+estimator=int(sys.argv[1])   #4 or 8(L conditioned) or 10 or 16 or 0 (wenting_like_conditional)
+
+if not estimator in [0,4,8,10,16]:
+  print "Err: estimator must be one of 0,4,10,16, not %d"%estimator
+  raise estimator
+
+nbinL=100
+nbinE=1
+npart=1000
+init_par=[2,2]
+#for estimator==4:
+nbin_r=30
+FlagRBinLog=1
+
+outdir=lib.rootdir+'/data/MaxLikeEnsemble'
+if not os.path.exists(outdir):
+  os.makedirs(outdir)
+outfile=outdir+'/fit%d'%estimator+'.dat'
+import shutil
+try:
+  shutil.move(outfile,outfile+'.bk')
+except IOError as e:  
+  print "IO Warning:{0} {1}".format(e.strerror, outfile)
+
+lib.open()
+with Tracer('Mock') as FullSample:
+  for sampleid in range(750):
+	with FullSample.copy(sampleid*npart,npart) as Sample:
+	  if estimator==0:
+		like=lambda x: -2*Sample.wenting_like_conditional(x)
+		result=fmin(like, init_par, xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
+		L1=like([1,1])
+	  elif estimator==4:
+		#Sample.radial_count(nbin_r,FlagRBinLog)
+		result=Sample.fmin_like(estimator, init_par)
+		L1=-2*Sample.freeze_and_like([1,1], estimator)
+	  else:
+		result=Sample.fmin_jointLE(estimator, nbinL, nbinE, init_par)
+		L1=Sample.jointLE_FChi2([1,1], estimator, nbinL, nbinE)
+	  L=result[1]
+	  with open(outfile,'a') as vlog:
+		vlog.write("%f\t%f\t"%(result[0][0],result[0][1]))
+		vlog.write("%f\t%f\t"%(L,L1))
+		vlog.write("%d\n"%(result[-1])) #this differs from previous version
+
+lib.close()
