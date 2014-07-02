@@ -15,12 +15,12 @@ halo='Mock'
 npart=1000 #number of particles
 nbin=10 #E and L bin, or nbin**2 for single proxies
 nx=30 #scan grid
-x=np.logspace(-0.3,0.3,nx)
+x=np.logspace(-0.6,0.6,nx)
 xx=x
 #xx=np.logspace(-0.3,0.3,nx)
 #for RBin estimator
 FlagRBinLog=1
-nbin_r=50
+nbin_r=30
 lib.NumRadialCountBin.value=nbin_r
 
 outdir=lib.rootdir+'/plots/scan'+halo+'%dZoom/'%npart
@@ -50,32 +50,6 @@ FullSample=Tracer(halo)
 Sample=FullSample.copy(5000,npart)
 if estimator==4:
   Sample.radial_count(nbin_r, FlagRBinLog)
-
-def im_plot(infile, flagsave=True):
-  f=h5py.File(infile,'r')
-  mm=f['/logm'][...]
-  cc=f['/logc'][...]
-  dm=mm[0,1]-mm[0,0]
-  dc=cc[1,0]-cc[0,0]
-  extent=[mm.ravel().min()-dm/2,mm.ravel().max()+dm/2,cc.ravel().min()-dc/2,cc.ravel().max()+dc/2]
-  plt.figure() 
-  sig=f['/sig_like'][...]
-  plt.imshow(sig, extent=extent, cmap=plt.cm.summer) #the true extent should b
-  lvls=[0.1,1,2,3,4]
-  cs=plt.contour(mm,cc,sig, levels=lvls)
-  plt.clabel(cs, inline=1, fmt=r'%.0f$\sigma$')
-  #plt.contour(mm,cc,y, levels=[sig.min()+0.1], colors='y')
-  xmin=f['/sig_like'].attrs['xmin']
-  plt.plot(xmin[0],xmin[1],'y+')
-  print sig.argmin()
-  print mm.ravel()[sig.ravel().argmin()],cc.ravel()[sig.ravel().argmin()]
-  plt.plot(mm.ravel()[sig.ravel().argmin()], cc.ravel()[sig.ravel().argmin()],'ys') #this is slightly offset
-  plt.title(name)
-  plt.xlabel(r'$\log(M/M_0)$')
-  plt.ylabel(r'$\log(c/c_0)$')
-  plt.plot(plt.xlim(),[0,0],'k:',[0,0],plt.ylim(),'k:')
-  if flagsave:
-	plt.savefig(outdir+name.replace('|','_')+'.eps')
 			  
 if proxy=='':
   nbinE=1
@@ -104,7 +78,7 @@ else:
   raise proxy
 
 y=[like([m,c]) for m in x for c in xx]
-xmin=fmin(like, [1,1], xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
+xmin=fmin_gsl(like, [1,1], xtol=0.001, full_output=True)
 print min(y),xmin[1]
 fval=min(min(y),xmin[1])	
 y=np.array(y).reshape([nx,nx], order="F")-fval
@@ -115,6 +89,37 @@ sig=P2Sig(chi2.sf(y,2))
 dset=f.create_dataset('/sig_like',data=sig)
 dset.attrs['xmin']=np.log10(xmin[0])
 f.close()
+
+def im_plot(infile, flagsave=True):
+  f=h5py.File(infile,'r')
+  mm=f['/logm'][...]
+  cc=f['/logc'][...]
+  dm=mm[0,1]-mm[0,0]
+  dc=cc[1,0]-cc[0,0]
+  extent=[mm.ravel().min()-dm/2,mm.ravel().max()+dm/2,cc.ravel().min()-dc/2,cc.ravel().max()+dc/2]
+  plt.figure() 
+  sig=f['/sig_like'][...]
+  plt.imshow(sig, extent=extent, cmap=plt.cm.summer)
+  lvls=[0.1,1,2,3,4]
+  cs=plt.contour(mm,cc,sig, levels=lvls)
+  plt.clabel(cs, inline=1, fmt=r'%.0f$\sigma$')
+  #plt.contour(mm,cc,y, levels=[sig.min()+0.1], colors='y')
+  xmin=f['/sig_like'].attrs['xmin']
+  plt.plot(xmin[0],xmin[1],'y+')
+  print sig.argmin()
+  print mm.ravel()[sig.ravel().argmin()],cc.ravel()[sig.ravel().argmin()]
+  plt.plot(mm.ravel()[sig.ravel().argmin()], cc.ravel()[sig.ravel().argmin()],'ys') 
+  x0=np.log10(Sample.gfmin_like(estimator,[2,2])[0])
+  plt.plot(x0[0],x0[1],'ro')
+  x0=np.log10(Sample.gfmin_like(estimator,[3,3])[0])
+  plt.plot(x0[0],x0[1],'gd')
+  plt.title(name)
+  plt.xlabel(r'$\log(M/M_0)$')
+  plt.ylabel(r'$\log(c/c_0)$')
+  plt.plot(plt.xlim(),[0,0],'k:',[0,0],plt.ylim(),'k:')
+  if flagsave:
+	plt.savefig(outdir+name.replace('|','_')+'.eps')
+	
 im_plot(outfile)
 
 FullSample.clean()

@@ -19,6 +19,7 @@ typedef Tracer_t TracerView; //the P pointer are not allocated, but just points 
 
 struct Tracer
 {
+  double lnL; //the likelihood associated with the lowest level view through like_eval(); upper level views are chi2.
   int nP;
   Particle_t *P;
   int nbin_r; //never set this manually. only modify it via count_tracer_radial()

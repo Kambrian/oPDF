@@ -49,7 +49,7 @@ lib.open()
 with Tracer('Mock') as FullSample:
   for sampleid in range(750):
 	with FullSample.copy(sampleid*npart,npart) as Sample:
-	  result=Sample.fmin_FixBinIter(estimator, proxy, nbins, init_par, maxiter=10)
+	  result=Sample.gfmin_FixBinIter(estimator, proxy, nbins, init_par, maxiter=10)
 	  L1=Sample.nested_views_FChi2([1,1], estimator)
 	  L=result[1]
 	  with open(outfile,'a') as vlog:

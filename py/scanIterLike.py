@@ -45,13 +45,13 @@ Sample=FullSample.copy(5000,npart)
 FullSample.clean()
 
 if IterFit:
-  x0=Sample.fmin_FixBinIter(estimator, proxy, nbins, binpar, maxiter=10)
+  x0=Sample.gfmin_FixBinIter(estimator, proxy, nbins, binpar, maxiter=10)
   binpar=x0[0]
 Sample.create_nested_views(binpar, proxy, nbins)
 
 like=lambda x: Sample.nested_views_FChi2(x, estimator)
 y=[like([m,c]) for m in x for c in x]
-xmin=fmin(like, [1,1], xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
+xmin=fmin_gsl(like, [1,1], xtol=0.001, full_output=True)
 print min(y),xmin[1]
 fval=min(min(y),xmin[1])	
 y=np.array(y).reshape([nx,nx], order="F")-fval

@@ -2,11 +2,22 @@
 import sys
 import numpy as np
 from scipy.stats import gaussian_kde,norm
+import ctypesGsl as cgsl
 import matplotlib
 #matplotlib.user('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
-matplotlib.rcParams.update({'font.size': 15, 'ps.fonttype' : 42 , 'pdf.fonttype' : 42 ,' image.origin': 'lower', 'image.interpolation': 'None'})
+matplotlib.rcParams.update({'font.size': 18, 'axis.labelsize': 20, 'legend.fontsize': 18, 'ps.fonttype' : 42 , 'pdf.fonttype' : 42 ,' image.origin': 'lower', 'image.interpolation': 'None'})
+
+from matplotlib.ticker import MaxNLocator # added 
+
+def create31fig(sharex=True, sharey=False, figsize=(8,8)):
+    f,ax = plt.subplots(3, sharex=sharex, sharey=sharey, figsize=figsize)
+    f.subplots_adjust(hspace=0)
+    plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
+    nbins = len(ax[0].get_yticklabels())
+    plt.setp([a.yaxis for a in ax[:-1]], major_locator=MaxNLocator(nbins=nbins, prune='lower',symmetric=True))
+    return ax
 
 def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
     '''
@@ -66,7 +77,12 @@ def plot_circle(cen=[0,0], r=1, **kwargs):
 	y=cen[1]+r*np.sin(phi)
 	h=plt.plot(x,y,**kwargs)
 	return h
-	
+
+def lnADPDF(lnAD):
+  gpar=[[0.569,   -0.570,    0.511], [ 0.431,    0.227,    0.569]] #w, mu, sigma, bi-normal fit
+  p=gpar[0][0]*norm.pdf(lnAD,gpar[0][1],gpar[0][2])+gpar[1][0]*norm.pdf(lnAD, gpar[1][1], gpar[1][2])
+  return p
+  
 def ADSurvFunc(AD):
   gpar=[[0.569,   -0.570,    0.511], [ 0.431,    0.227,    0.569]] #w, mu, sigma, bi-normal fit
   lnAD=np.log(AD)
@@ -84,6 +100,52 @@ def AD2Sig(AD):
   sig=P2Sig(ADSurvFunc(AD))
   #sig[AD>5]=(np.log(AD[AD>5])+0.22)/0.66
   return sig
+
+
+def fmin_gsl(func, x0, args=[], xtol=1e-3, ftolabs=0.01, xstep=1.0, maxiter=1000, full_output=0):
+    '''
+    minimize function with gsl_simplex method
+    func(x [,args]): function to be minimized
+    x0: [a,b,c...], initial parameter
+    args: list of additional parameter if any
+    xstep: initial simplex size
+    mimics scipy.optimize.fmin() interface
+    '''
+    args=list(args)
+    if args is []:
+	  myfunc=lambda x,arg: func(x)
+    else:
+	  myfunc=lambda x,arg: func(x, *arg)
+    F = cgsl.gsl_multimin_function(myfunc, len(x0), args)
+    x = cgsl.vector(x0)
+    T = cgsl.multimin_fminimizer_nmsimplex
+    s = cgsl.multimin_fminimizer(T, F)
+    s.init(x, cgsl.vector([xstep] * F.n))
+    it = 0
+    f1=F(x)
+    while True:
+        it += 1
+        s.iterate()
+        f0=f1
+        f1=s.minimum()
+        status = s.test_size(xtol)
+        xx = s.x()
+        if status and abs(f1-f0)<ftolabs:
+            print "Optimization terminated successfully."
+            print "\t Current function value: ", f1
+            print "\t Iterations: ", it
+            print "\t x abs err: ", s.size()
+            print "\t", xx
+            status=0
+            break
+        if it >= maxiter:
+            status=1
+            break
+    x=np.array([xx[i] for i in xrange(F.n)])
+    if full_output:
+      return x,f1,it,status
+    else:
+      return x
   
 class ProgressMonitor:
 	"""monitor progress of your loops"""
@@ -119,18 +181,19 @@ def percent2level(p,z):
     l=[x[abs(frac-pi).argmin()] for pi in p]
     return l
   
-def percentile_contour(data, nbin=100, percents=0.683, color=None, logscale=False, **kwargs):
+def percentile_contour(data, nbin=100, percents=0.683, colors=None, logscale=False, **kwargs):
     """
     plot contour at specific percentile levels
     
     percents can be a list, specify the contour percentile levels
     data should be shape [2,n] array
     logscale: default False; whether to plot in linear or logspace
+    colors should be a tuple, e.g, (r,)
     **kwargs specify linestyles
     return a handle artist of the same linestyle (but not the contour object) to be used in legends
     """
     if logscale:
-      data=np.log(data)
+      data=np.log10(data)
     l=data.min(axis=1)
     r=data.max(axis=1)
     X, Y = np.mgrid[l[0]:r[0]:nbin*1j, l[1]:r[1]:nbin*1j]
@@ -138,12 +201,12 @@ def percentile_contour(data, nbin=100, percents=0.683, color=None, logscale=Fals
     kernel = gaussian_kde(data)
     Z = np.reshape(kernel(positions).T, X.shape)
     lvls=percent2level(percents,Z)
-    if logscale:
-      h0=plt.contour(np.exp(X),np.exp(Y),Z,lvls, colors=color, **kwargs)
-      plt.loglog()
-    else:
-      h0=plt.contour(X,Y,Z,lvls, colors=color, **kwargs)
-    h=Ellipse((0,0),0,0,fill=False, color=color, **kwargs)
+    #if logscale:
+      #h0=plt.contour(np.exp10(X),np.exp10(Y),Z,lvls, colors=colors, **kwargs)
+      #plt.loglog()
+    #else:
+    h0=plt.contour(X,Y,Z,lvls, colors=colors, **kwargs)
+    h=Ellipse((0,0),0,0,fill=False, color=list(colors)[0], **kwargs)
     return h,h0
   
 def plot_cov_ellipse(cov, pos, nstd=1, ax=None, **kwargs):

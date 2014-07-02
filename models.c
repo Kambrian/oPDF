@@ -15,7 +15,9 @@
 	
 #define EPS 1e-16
 #define MODEL_MAX_INTVAL 1000
-double MODEL_TOL_BIN=1e-6, MODEL_TOL_BIN_ABS=1e-6, MODEL_TOL_REL=1e-3; //should be sufficient, good enough to constrain mass to 1% accuracy with 100000 particles
+double MODEL_TOL_BIN=1e-6, MODEL_TOL_BIN_ABS=1e-6, MODEL_TOL_REL=1e-5; 
+//tol_rel=1e-3 is good enough for a contour scan; tol_rel=1e-4 is probably good enough for fmin_gsl() scan; tol_rel=1e-5 should be enough for everything.
+//1e-3 should be sufficient, good enough to constrain mass to 1% accuracy with 100000 particles
 //accuracy in theta and phase-TS are approximately MODEL_TOL_REL, independent of nP.
 //but it's still not accurate enough for minuit to work with the hessian; better use fmin()
 double HaloM0,HaloC0,HaloRhos0,HaloRs0,HaloZ0=0.;
@@ -637,6 +639,7 @@ double like_eval(const double pars[], int estimator,Tracer_t *Sample)
   }  
   
   //   printf("%g,%g: %g\n", pars[0],pars[1],lnL);
+  Sample->lnL=lnL;
   return lnL;
 }
 
@@ -668,6 +671,7 @@ double wenting_like(const double pars[], Tracer_t *Sample)
   for(i=0;i<Sample->nP;i++)
 	lnL+=dataprob_model(Sample->P[i].r,Sample->P[i].vr,sqrt(Sample->P[i].L2)/Sample->P[i].r, wpar);
 //   printf("%g,%g,%g,%g,%g,%g: %g\n", pars[0],pars[1],pars[2],pars[3],pars[4],pars[5],lnL);
+  Sample->lnL=lnL;
   return lnL; //loglikelihood
 }
 
@@ -739,6 +743,7 @@ double jointE_FChi2(const double pars[], int estimator, int nbin, Tracer_t *Samp
 	if(estimator==RADIAL_BIN_ESTIMATOR)  free_tracer_rcounts(Sample->Views+i);
   }
   free_tracer_views(Sample);
+  Sample->lnL=chi2;
   return chi2;
 }
 void create_nested_views(const double pars[], int nbin[], char ViewTypes[], Tracer_t *Sample)//iteratively: freeze, fit; then freeze, then fit.
@@ -754,7 +759,7 @@ void create_nested_views(const double pars[], int nbin[], char ViewTypes[], Trac
 	create_nested_views(pars, nbin+1, ViewTypes+1, Sample->Views+i);//descend
 }
 double nested_views_Chi2(const double pars[], int estimator, Tracer_t *Sample)
-{//pure like, without freezing energy
+{//pure like, without freezing energy; freeze it yourself before calling this!
   double lnL;
   if(!Sample->nView)
   {
@@ -765,6 +770,7 @@ double nested_views_Chi2(const double pars[], int estimator, Tracer_t *Sample)
   int i;
   for(i=0,lnL=0.;i<Sample->nView;i++)
 	lnL+=nested_views_Chi2(pars, estimator, Sample->Views+i);
+  Sample->lnL=lnL;
   return lnL;
 }
 double nested_views_FChi2(const double pars[], int estimator, Tracer_t *Sample)

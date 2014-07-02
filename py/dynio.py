@@ -1,7 +1,8 @@
 from math import *
 import numpy as np
 import ctypes,os,ConfigParser,h5py
-from scipy.optimize import fmin
+from myutils import fmin_gsl
+from scipy.optimize import fmin, fmin_powell
 from scipy.stats import norm,chi2
 from iminuit import Minuit
 from iminuit.ConsoleFrontend import ConsoleFrontend
@@ -25,7 +26,8 @@ Particle_p=ctypes.POINTER(Particle_t)
 class Tracer_t(ctypes.Structure):
   pass
 Tracer_p=ctypes.POINTER(Tracer_t)
-Tracer_t._fields_=[('nP', ctypes.c_int),
+Tracer_t._fields_=[('lnL', ctypes.c_double),
+				   ('nP', ctypes.c_int),
 				   ('P', Particle_p),
 				   ('nbin_r', ctypes.c_int),
 				   ('FlagRLogBin', ctypes.c_int),
@@ -273,7 +275,9 @@ class Tracer(Tracer_t):
 	lib.like_init(lib.ParType(*pars), estimator, self._pointer)
 	
   def freeze_and_like(self, pars=[1,1], estimator=10):
-	return lib.freeze_and_like(lib.ParType(*pars), estimator, self._pointer)
+	y=lib.freeze_and_like(lib.ParType(*pars), estimator, self._pointer)
+	#print pars, y
+	return y
   
   def jointE_FChi2(self, pars=[1,1], estimator=10, nbinE=10):
 	return lib.jointE_FChi2(lib.ParType(*pars), estimator, nbinE, self._pointer)
@@ -297,16 +301,28 @@ class Tracer(Tracer_t):
   def joint_FChi2(self, pars, estimator, viewtypes, nbins):
 	'''nestviews and like'''
 	self.create_nested_views(pars, viewtypes, nbins)
-	return self.nested_views_Chi2(pars, estimator)
+	return self.nested_views_FChi2(pars, estimator)
   
-  def fmin_FixBinIter(self, estimator,proxy,nbins,x0=[1,1],tol=0.01, maxiter=50):
+  def TSprof(self, pars=[1,1], estimator=10, viewtypes='L', nbins=[100]):
+	self.joint_FChi2(pars, estimator, viewtypes, nbins)
+	ts=[self.Views[i].lnL for i in xrange(self.nView)]
+	ts.append(np.nan)
+	ts=np.array(ts)
+	x,p=self.gen_bin(viewtypes, nbins, equalcount=True)
+	return ts,x
+  
+  def fmin_FixBinIter(self, estimator,proxy,nbins,x0=[1,1],itertol=0.01, maxiter=50, xtol=1e-3, ftolabs=0.1, ftolrel=1e-2):
+	''' itertol: tolerance for iteration
+	xtol,ftolabs,ftolrel: tolerance for each fmin() step
+	'''
 	x=x0
 	x0=[x[0]+1,x[1]]
 	iter=0
-	while abs(x0[0]-x[0])>tol or abs(x0[1]-x[1])>tol:
+	while abs(x0[0]-x[0])>itertol or abs(x0[1]-x[1])>itertol:
 	  x0=x
 	  self.create_nested_views(x0, proxy, nbins)
-	  result=fmin(self.nested_views_FChi2, x0, args=(estimator,), xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
+	  ftol=min(ftolabs/abs(self.nested_views_FChi2(x0, estimator)), ftolrel)
+	  result=fmin_powell(self.nested_views_FChi2, x0, args=(estimator,), xtol=xtol, ftol=ftol, maxiter=1000, maxfun=5000, full_output=True)
 	  x=result[0]
 	  print result[0], result[1], result[-1]
 	  iter+=1
@@ -317,16 +333,51 @@ class Tracer(Tracer_t):
 		return tuple(result)
 	return result #converged
   
-  def fmin_jointLE(self, estimator, nbinL, nbinE, x0=[1,1]):
-	return fmin(self.jointLE_FChi2, x0, args=(estimator, nbinL, nbinE), xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
+  def fmin_jointLE(self, estimator, nbinL, nbinE, x0=[1,1], xtol=1e-3, ftolabs=0.01, ftolrel=1e-2):
+	ftol=min(ftolabs/abs(self.jointLE_FChi2(x0,estimator,nbinL,nbinE)), ftolrel)
+	return fmin_powell(self.jointLE_FChi2, x0, args=(estimator, nbinL, nbinE), xtol=xtol, ftol=ftol, maxiter=500, maxfun=1000, full_output=True)
   
-  def fmin_like(self, estimator, x0=[1,1]):
+  def fmin_like(self, estimator, x0=[1,1], xtol=1e-3, ftolabs=0.01, ftolrel=1e-2):
 	like=lambda x: lib.like_to_chi2(self.freeze_and_like(x, estimator), estimator) #the real likelihood prob
-	return fmin(like, x0, xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
+	ftol=min(ftolabs/abs(like(x0)), ftolrel)
+	return fmin_powell(like, x0, xtol=xtol, ftol=ftol, maxiter=500, maxfun=1000, full_output=True)
   
-  def fmin_dist(self, estimator, x0=[1,1]):
+  def fmin_dist(self, estimator, x0=[1,1],xtol=1e-3, ftolabs=0.01, ftolrel=1e-2):
 	like=lambda x: -self.freeze_and_like(x, estimator) #distance
-	return fmin(like, x0, xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
+	ftol=min(ftolabs/abs(like(x0)), ftolrel)
+	return fmin_powell(like, x0, xtol=xtol, ftol=ftol, maxiter=500, maxfun=1000, full_output=True)
+  
+  def gfmin_FixBinIter(self, estimator,proxy,nbins,x0=[1,1],itertol=0.01, maxiter=50, xtol=1e-3, ftolabs=0.01):
+	''' itertol: tolerance for iteration
+	xtol,ftolabs,ftolrel: tolerance for each fmin_gsl() step
+	'''
+	x=x0
+	x0=[x[0]+1,x[1]]
+	iter=0
+	while abs(x0[0]-x[0])>itertol or abs(x0[1]-x[1])>itertol:
+	  x0=x
+	  self.create_nested_views(x0, proxy, nbins)
+	  result=fmin_gsl(self.nested_views_FChi2, x0, args=(estimator,), xtol=xtol, ftolabs=ftolabs, maxiter=1000,  full_output=True)
+	  x=result[0]
+	  print result[0], result[1], result[-1]
+	  iter+=1
+	  if iter>maxiter:
+		print "Warning: maxiter=%d reached in gfmin_FixBinIter with"%maxiter,proxy,nbins
+		result=list(result)
+		result[-1]=3 #top level maxiter has reached.
+		return tuple(result)
+	return result #converged
+  
+  def gfmin_jointLE(self, estimator, nbinL, nbinE, x0=[1,1], xtol=1e-3, ftolabs=0.01):
+	return fmin_gsl(self.jointLE_FChi2, x0, args=(estimator, nbinL, nbinE), xtol=xtol, ftolabs=ftolabs, maxiter=500, full_output=True)
+  
+  def gfmin_like(self, estimator, x0=[1,1], xtol=1e-3, ftolabs=0.01):
+	like=lambda x: lib.like_to_chi2(self.freeze_and_like(x, estimator), estimator) #the real likelihood prob
+	return fmin_gsl(like, x0, xtol=xtol, ftolabs=ftolabs, maxiter=500, full_output=True)
+  
+  def gfmin_dist(self, estimator, x0=[1,1], xtol=1e-3, ftolabs=0.01):
+	like=lambda x: -self.freeze_and_like(x, estimator) #distance
+	return fmin_gsl(like, x0, xtol=xtol, ftolabs=ftolabs, maxiter=500, full_output=True)
   
   def minuit_like(self, estimator, x0=[1,1], minuittol=1):
 	"""too difficult for minuit to work. just use this to estimate the error matrix? still just fantasy. discard it.
@@ -409,7 +460,7 @@ class Tracer(Tracer_t):
 	
   def radial_count(self, nbin=None, logscale=True):
 	if nbin is None:
-	  nbin=lib.NumRadialCountBin
+	  nbin=lib.NumRadialCountBin.value
 	lib.count_tracer_radial(self._pointer, nbin, logscale)
 	  
   def sort(self, proxy, offset=0,n=0):
@@ -437,6 +488,8 @@ class Tracer(Tracer_t):
 	return newsample
 	
   def gen_bin(self,bintype,nbin=30,logscale=True, equalcount=False):
+	if bintype=='L':
+	  bintype='L2'
 	proxy=np.copy(self.data[bintype])
 	n=nbin+1
 	if equalcount:

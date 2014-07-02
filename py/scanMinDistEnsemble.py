@@ -34,7 +34,7 @@ lib.open()
 with Tracer('Mock') as FullSample:
   for sampleid in range(750):
 	with FullSample.copy(sampleid*npart,npart) as Sample:
-	  result=Sample.fmin_dist(estimator, init_par)
+	  result=Sample.gfmin_dist(estimator, init_par)
 	  L1=-Sample.freeze_and_like([1,1], estimator)
 	  L=result[1]
 	  with open(outfile,'a') as vlog:

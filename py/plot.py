@@ -13,6 +13,127 @@ import h5py
 
 plt.ion()
 
+class EnsembleFile(object):
+  """ file of the fitted parameters for an ensemble of realizations """
+  #below are class-specific variable, static class-scope variable, that are shared by all the instances
+  NameList={0:'f(E,L)',4:'RBin',8:'AD',9:'Resultant',10:'Mean',11:'KS',12:'Kuiper',13:'CosMean'}
+  ColorList={0:'k',4:'r',8:'g',9:'b',10:'c',11:'m',12:'y',13:'k',16:'k'} 
+  def __init__(self,infile,name=None,color=None,oldformat=False):
+    """infile: the file to be examined """
+    #variables here are instance-specific, different for different instances
+    self.file=infile
+    self.rawdata=np.loadtxt(infile)
+    if oldformat:
+	  self.pars=self.rawdata[self.rawdata[:,-1]>0,0:2]
+	  self.id=int(os.path.basename(self.file).split('_')[0][3:])
+    else:
+	  self.pars=self.rawdata[self.rawdata[:,-1]==0,0:2]
+	  self.id=int(os.path.basename(self.file).split('.')[0].lstrip('fit').rstrip('EL'))
+    #self.pars=self.rawdata[:,0:2]
+    if name is None:
+	  self.name=lib.NameList[self.id]
+    else:
+	  self.name=name
+    #self.estimator=self.NameList[self.id]
+    if color is None:
+	  self.color=self.ColorList[self.id]
+    else:
+	  self.color=color
+    self.stat()
+  
+  def stat(self):
+    self.median=np.median(self.pars,axis=0)
+    self.mean=self.pars.mean(axis=0)
+    self.std=self.pars.std(axis=0)
+    self.cov=np.cov(self.pars.T)
+    self.corrcoef=np.corrcoef(self.pars.T)[0,1]
+    self.mean_log=np.log10(self.pars).mean(axis=0)
+    self.std_log=np.log10(self.pars).std(axis=0)
+    self.cov_log=np.cov(np.log10(self.pars.T))
+    self.corrcoef_log=np.corrcoef(np.log10(self.pars.T))[0,1]
+    print "Model %d: "%self.id+self.name
+    print "%d out of %d good fits"%(self.pars.shape[0], self.rawdata.shape[0])
+    print "Median=", self.median
+    print "-----------------------"
+    print "m = %.3f +- %.3f"%(self.mean[0],self.std[0])
+    print "c = %.3f +- %.3f"%(self.mean[1],self.std[1])
+    print "corr= %.3f"%self.corrcoef
+    print "-----------------------"
+    print "log(m) = %.3f +- %.3f"%(self.mean_log[0],self.std_log[0])
+    print "log(c) = %.3f +- %.3f"%(self.mean_log[1],self.std_log[1])
+    print "corr(log)= %.3f"%self.corrcoef_log
+    print "********************************************"
+          
+  def plot_corner(self):    
+    #labels=[r"$\log (\rho_s/\rho_{s0})$",r"$\log (r_s/r_{s0})$"]
+    labels=[r"$M/M_0$",r"$c/c_0$"]
+    fig=triangle.corner(self.pars,labels=labels,truths=self.median,quantiles=[0.5-0.683/2,0.5+0.683/2])
+    return fig
+  
+  def plot_cov(self,logscale=True,**kwargs):
+    if logscale:
+      h=plot_cov_ellipse(self.cov_log, self.mean_log, color=self.color, label=self.name, **kwargs)
+      plt.plot(self.mean_log[0],self.mean_log[1], 'x', color=self.color, markersize=10, **kwargs)
+      plt.axis([-1,1,-1,1])
+    else:
+      h=plot_cov_ellipse(self.cov, self.mean, color=self.color, label=self.name, **kwargs)
+      plt.plot(self.mean[0],self.mean[1], 'x', color=self.color, markersize=10, **kwargs)
+      plt.axis([0,2,0,2])
+    return h      
+  
+  def plot_contour(self,nbin=100, percents=0.683, logscale=True, **kwargs):
+    """percents can be a list, specify the contour percentile levels"""
+    h,h0=percentile_contour(self.pars.T, nbin=nbin, percents=percents, colors=(self.color,), logscale=logscale, **kwargs)
+    h.set_label(self.name)#+' %d/%d'%(self.pars.shape[0],self.rawdata.shape[0]))
+    if logscale:
+	  plt.plot(np.log10(self.median[0]),np.log10(self.median[1]),'o',markersize=8,color=self.color)
+    else:
+	  plt.plot(self.median[0],self.median[1],'o',markersize=8,color=self.color)
+    #plt.plot(10**self.mean_log[0],10**self.mean_log[1],'o',markersize=10,color=self.color)
+    return h
+
+def fig_EnsembleContour(logscale=False, flagsave=False):
+  basedir=lib.rootdir+'/data'
+  flist=[
+		 #('/MinDistEnsemble/fit8.dat','AD'), #fail
+		 #('/MinDistEnsemble/fit10.dat','Mean'), #fail
+		 #('/MaxLikeEnsemble/fit0.dat','f(E,L)|'), #perfect
+		 ('/MaxLikeEnsemble/fit4.dat','RBin'), #good
+		 #('/MaxLikeEnsemble/fit4L.dat','RBin|L'), #no better than RBin
+		 #('/MaxLikeEnsemble/fit8.dat','AD|L'), #slightly biased at 1sigma
+		 ('/MaxLikeEnsemble/fit10.dat','Mean|L'), #ok
+		 #('/MaxLikeEnsemble/fit16.dat','ADBN|L'), #fail
+		 #('/IterLikeEnsemble/fit8E.dat','AD|E'), #biased
+		 #('/IterLikeEnsemble/fit8EL.dat','AD|EL'),#biased
+		 #('/IterLikeEnsemble/fit8LE.dat','AD|LE'),#biased
+		 #('/IterLikeEnsemble/fit10E.dat','Mean|E'), #ok
+		 #('/IterLikeEnsemble/fit10EL.dat','Mean|EL'), #ok
+		 #('/IterLikeEnsemble/fit10LE.dat','Mean|LE'), #ok
+		 #('/IterLikeEnsemble/fit16E.dat','ADBN|E'),
+		 #('/IterLikeEnsemble/fit16EL.dat','ADBN|EL'),
+		 #('/IterLikeEnsemble/fit16LE.dat','ADBN|LE')
+		 ]
+  hall=[]
+  ColorList=itertools.cycle(plt.cm.jet(np.linspace(0.,1.,len(flist)+2)))
+  ff=EnsembleFile(basedir+'/MaxLikeEnsemble/fit0_mc.dat', name='f(E,L)', color=ColorList.next(), oldformat=1)
+  hall.append(ff.plot_contour(percents=[0.68],nbin=80,logscale=logscale))
+  for f,name in flist:
+	ff=EnsembleFile(basedir+f,name, ColorList.next())
+	hall.append(ff.plot_contour(percents=[0.68],nbin=80,logscale=logscale))
+  plt.legend(hall,[plt.getp(x,'label') for x in hall],loc=1)
+  if logscale:
+	plt.axis([-0.3,0.3,-0.3,0.3])
+	plt.plot(plt.xlim(),[0,0],'k:',[0,0],plt.ylim(),'k:')
+	plt.xlabel(r'$\log(M/M_{\rm true})$')
+	plt.ylabel(r'$\log(c/c_{\rm true})$')
+  else:
+	plt.axis([0,2,0,2])
+	plt.plot(plt.xlim(),[1,1],'k:',[1,1],plt.ylim(),'k:')
+	plt.xlabel(r'$M/M_{\rm true}$')
+	plt.ylabel(r'$c/c_{\rm true}$')
+  if flagsave:
+	plt.savefig(lib.rootdir+'/plots/paper/Ensemble.eps') #rasterize=True, dpi=300
+	
 def fig_DegeneracyDistributionRad(nbin=50, logscale=True, cumulative=False, flagsave=False):
   npart=1000
   lib.open()
@@ -37,6 +158,7 @@ def fig_DegeneracyDistributionRad(nbin=50, logscale=True, cumulative=False, flag
 	
   #pars=[ 0.82423562, 1.28484559]
   pars=[0.6013295 ,  2.22171445]
+  #pars=[ 0.51680255,  3.11238955]
   Sample.freeze_energy(pars)
   Sample.like_init(pars)
   pred=Sample.predict_radial_count(nbin, logscale)
@@ -58,7 +180,7 @@ def fig_DegeneracyDistributionRad(nbin=50, logscale=True, cumulative=False, flag
   if logscale:
 	  plt.xscale('log')
   
-  plt.xlabel(r'$r/kpc$')
+  plt.xlabel(r'$r/\mathrm{kpc}$')
  
   Sample.clean()
   lib.close()
@@ -84,6 +206,7 @@ def fig_DegeneracyDistribution(nbin=50, cumulative=True, flagsave=False):
 	
   #pars=[ 0.82423562, 1.28484559]
   pars=[0.6013295 ,  2.22171445]
+  #pars=[ 0.51680255,  3.11238955]
   Sample.freeze_energy(pars)
   Sample.like_init(pars)
   if cumulative:
@@ -132,6 +255,7 @@ def fig_MinDistContour(flagsave=False):
   h2=Ellipse((0,0),0,0,fill=False, linestyle='dashed')
   #x1=np.log10(np.array([ 0.95707194,  1.0434845])) #initial value [1,1]
   x2=np.log10(np.array([ 0.6013295 ,  2.22171445])) #initial value [2,2]
+  #x2=np.log10(np.array([ 0.51680255,  3.11238955])) #initial value [3,3]
   #plt.plot(x1[0],x1[1],'gx',markersize=10)
   plt.plot(x2[0],x2[1],'gx',markersize=10)
   #plt.clabel(cs, inline=1, fmt={1:'',2:'Mean'})
@@ -167,23 +291,30 @@ def fig_MaxLikeContour(estimator='Mean',flagsave=False):
   plt.contourf(f['/logm'],f['/logc'],f['/sig_dist'], levels=[0,1], colors=((0.7,0.7,0.7),)) #colors='k', alpha=0.2
   #h5=Ellipse((0,0),0,0,fill=False, color='m')
   f.close()
-  #data=np.loadtxt(lib.rootdir+'/plots/paper/raw/f(E,L)_marginal.dat', usecols=[0,1,6])
-  #n=sqrt(data.shape[0])
-  #m=np.log10(data[:,0].reshape([n,n], order='F')/1.873)
-  #c=np.log10(data[:,1].reshape([n,n], order='F')/16.3349)
-  #l=data[:,2].reshape([n,n], order='F')
-  #sig=P2Sig(chi2.sf(2*(l-l.ravel().min()),2))
-  #plt.contour(m,c,sig, levels=[1,], colors='k')
-  #h0=Ellipse((0,0),0,0,fill=False, color='k')
-  #plt.plot(m.ravel()[l.argmin()], c.ravel()[l.argmin()], 'ko')
+  data=np.loadtxt(lib.rootdir+'/plots/paper/raw/f(E,L)_marginal.dat', usecols=[0,1,6])
+  n=sqrt(data.shape[0])
+  m=np.log10(data[:,0].reshape([n,n], order='F')/1.873)
+  c=np.log10(data[:,1].reshape([n,n], order='F')/16.3349)
+  l=data[:,2]
+  l[l>1e9]=inf
+  l=l.reshape([n,n], order='F')
+  sig=P2Sig(chi2.sf(2*(l-l.ravel().min()),6))
+  #dm=m[0,1]-m[0,0]
+  #dc=c[1,0]-c[0,0]
+  #extent=[m.ravel().min()-dm/2,m.ravel().max()+dm/2,c.ravel().min()-dc/2,c.ravel().max()+dc/2]
+  #plt.imshow(l-l.ravel().min(), extent=extent, cmap=plt.cm.summer)
+  #plt.colorbar()
+  plt.contour(m,c,sig, levels=[1,], colors='k',linestyles='dashed')
+  h0=Ellipse((0,0),0,0,fill=False, color='k',linestyle='dashed')
+  plt.plot(m.ravel()[l.argmin()], c.ravel()[l.argmin()], 'ko')
   h1=plot_siglike('f(E,L)_condition','r')
   h2=plot_siglike('RBinLog30','g')
-  h22=plot_siglike('RBinLog30_L','k')
+  #h22=plot_siglike('RBinLog30_L','k')
   name={'Mean':'Mean', 'AD':'ADBN'}[estimator]
   h3=plot_siglike(name+'_L','b') 
-  h4=plot_siglike(name+'Iter_E','c','dashed')
-  h5=plot_siglike(name+'Iter_LE','m','dashed')
-  h6=plot_siglike(name+'Iter_EL','y','dashed')
+  #h4=plot_siglike(name+'Iter_E','c','dashed')
+  #h5=plot_siglike(name+'Iter_LE','m','dashed')
+  #h6=plot_siglike(name+'Iter_EL','y','dashed')
   
   if estimator=='Mean':
 	plt.axis([-0.3,0.3, -0.3,0.3])
@@ -192,10 +323,38 @@ def fig_MaxLikeContour(estimator='Mean',flagsave=False):
   plt.plot(plt.xlim(),[0,0],'k:',[0,0],plt.ylim(),'k:')
   plt.xlabel(r'$\log(M/M_{\rm true})$')
   plt.ylabel(r'$\log(c/c_{\rm true})$')
-  plt.legend((h1,h2,h22,h3,h4,h5,h6),('f(E,L)|','RBin','RBin|L',estimator+'|L',estimator+'|E',estimator+'|LE',estimator+'|EL'))
+  plt.legend((h1,h2,h3),('f(E,L)|','RBin','Mean|L'))
+  #plt.legend((h0,h1,h2,h22,h3,h4,h5,h6),('f(E,L)','f(E,L)|','RBin','RBin|L',estimator+'|L',estimator+'|E',estimator+'|LE',estimator+'|EL'))
   if flagsave:
-	plt.savefig(lib.rootdir+'/plots/paper/MaxLikeContour'+estimator+'.eps') #rasterize=True, dpi=300
-	
+	plt.savefig(lib.rootdir+'/plots/paper/MaxLikeContour'+estimator+'6.eps') #rasterize=True, dpi=300
+
+def fig_MockTSprof(flagsave=False, estimator=14, nbin=30):
+  """TS profile for mocks"""
+  lib.open()
+  with Tracer('Mock') as FullSample:
+	with FullSample.copy(5000, 1000) as Sample:
+	  f,ax = plt.subplots(3, sharex=True, sharey=True, figsize=(8,8))
+	  for i,proxy in enumerate(['r','E','L']):
+		h=[]
+		for pars,linestyle in [([1,1],'b-'),([ 0.51680255,  3.11238955],'r--')]:
+		  ts,x=Sample.TSprof(pars, estimator, viewtypes=proxy, nbins=nbin)
+		  tmp,=ax[i].plot(xrange(nbin+1), ts, linestyle)
+		  #ax[i].step(xrange(nbin+1), ts, linestyle, where='post')
+		  h.append(tmp)
+		  ax[i].plot(plt.xlim(),[0,0],'k:')
+		  ax[i].text(nbin*0.05, 2, proxy)
+	  ax[1].set_ylabel(r'$\bar{\Theta}$')
+	  ax[-1].set_xlabel('Bins')
+	  ax[-1].legend(h, (r'$(M_{\rm true},\, c_{\rm true})$', r'$(0.6 M_{\rm true},\, 2.2 c_{\rm true})$'),loc='lower left', frameon=0, ncol=2, fontsize=18)
+  f.subplots_adjust(hspace=0)
+  plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
+  nbins = 7 #len(ax[0].get_yticklabels())
+  plt.setp([a.yaxis for a in ax], major_locator=MaxNLocator(nbins=nbins, prune='lower',symmetric=True))
+  lib.close()
+  if flagsave:
+	plt.savefig(lib.rootdir+'/plots/paper/TSprofMockMean.eps') #rasterize=True, dpi=300
+
+
 def plot_pot(pars, linestyle='-'):
   print pars
   r=np.logspace(0,2,20)
@@ -336,76 +495,12 @@ def check_fit():
 	#legend(hall,[getp(x,'label') for x in hall],loc=1)   
 	#savefig('/work/Projects/DynDistr/plots/SigmaScan.eps')    
   
-class EnsembleFile:
-  """ file of the fitted parameters for an ensemble of realizations """
-  #below are class-specific variable, static class-scope variable, that are shared by all the instances
-  NameList={0:'f(E,L)',4:'RBin',8:'AD',9:'Resultant',10:'Mean',11:'KS',12:'Kuiper',13:'CosMean'}
-  ColorList={0:'k',4:'r',8:'g',9:'b',10:'c',11:'m',12:'y',13:'k'} 
-  def __init__(self,infile):
-    """infile: the file to be examined """
-    #variables here are instance-specific, different for different instances
-    self.file=infile
-    self.rawdata=loadtxt(infile)
-    self.pars=self.rawdata[:,0:2]
-    #self.pars=self.rawdata[self.rawdata[:,-1]>0,0:2]
-    self.id=int(os.path.basename(self.file).split('_')[0][3:])
-    self.estimator=self.NameList[self.id]
-    self.color=self.ColorList[self.id]
-    self.stat()
-  
-  def stat(self):
-    self.median=median(self.pars,axis=0)
-    self.mean=self.pars.mean(axis=0)
-    self.std=self.pars.std(axis=0)
-    self.cov=cov(self.pars.T)
-    self.corrcoef=corrcoef(self.pars.T)[0,1]
-    self.mean_log=log10(self.pars).mean(axis=0)
-    self.std_log=log10(self.pars).std(axis=0)
-    self.cov_log=cov(log10(self.pars.T))
-    self.corrcoef_log=corrcoef(log10(self.pars.T))[0,1]
-    print "Model %d: "%self.id+self.estimator
-    print "%d out of %d good fits"%(self.pars.shape[0], self.rawdata.shape[0])
-    print "Median=", self.median
-    print "-----------------------"
-    print "m = %.3f +- %.3f"%(self.mean[0],self.std[0])
-    print "c = %.3f +- %.3f"%(self.mean[1],self.std[1])
-    print "corr= %.3f"%self.corrcoef
-    print "-----------------------"
-    print "log(m) = %.3f +- %.3f"%(self.mean_log[0],self.std_log[0])
-    print "log(c) = %.3f +- %.3f"%(self.mean_log[1],self.std_log[1])
-    print "corr(log)= %.3f"%self.corrcoef_log
-    print "********************************************"
-          
-  def plot_corner(self):    
-    #labels=[r"$\log (\rho_s/\rho_{s0})$",r"$\log (r_s/r_{s0})$"]
-    labels=[r"$M/M_0$",r"$c/c_0$"]
-    fig=triangle.corner(self.pars,labels=labels,truths=self.median,quantiles=[0.5-0.683/2,0.5+0.683/2])
-    return fig
-  
-  def plot_cov(self,logscale=True,**kwargs):
-    if logscale:
-      h=plot_cov_ellipse(self.cov_log, self.mean_log, color=self.color, label=self.estimator, **kwargs)
-      plot(self.mean_log[0],self.mean_log[1], 'x', color=self.color, markersize=10, **kwargs)
-      axis([-1,1,-1,1])
-    else:
-      h=plot_cov_ellipse(self.cov, self.mean, color=self.color, label=self.estimator, **kwargs)
-      plot(self.mean[0],self.mean[1], 'x', color=self.color, markersize=10, **kwargs)
-      axis([0,2,0,2])
-    return h      
-  
-  def plot_contour(self,nbin=100, percents=0.683, logscale=True, **kwargs):
-    """percents can be a list, specify the contour percentile levels"""
-    h,h0=percentile_contour(self.pars.T, nbin=nbin, percents=percents, color=self.color, logscale=logscale, **kwargs)
-    h.set_label(self.estimator+' %d/%d'%(self.pars.shape[0],self.rawdata.shape[0]))
-    #plot(self.median[0],self.median[1],'o',markersize=10,color=self.color)
-    return h
-
 def plot_dir_cov(dir='/gpfs/data/jvbq85/DynDistr/data/mockfit_mc/',logscale=True):
     hall=[]
     for f in glob.glob(dir+'/fit*.dat'):
-      ff=EnsembleFile(f)
+      ff=EnsembleFile(f,oldformat=1)
       hall.append(ff.plot_cov(logscale))
-    legend(hall,[getp(x,'label') for x in hall],loc=3)
+    plt.legend(hall,[plt.getp(x,'label') for x in hall],loc=3)
     if logscale:
       plot([-1,1],[0,0],'k:',[0,0],[-1,1],'k:')
       axis([-0.5,0.5,-0.5,0.5])
@@ -422,11 +517,11 @@ def plot_dir_contour(name='HighPrecRand',logscale=True):
       dir='/mnt/charon/DynDistr/data/mockfit'+name+'_mc/'
       hall=[]
       for f in glob.glob(dir+'/fit*.dat'):
-	ff=EnsembleFile(f)
+	ff=EnsembleFile(f,oldformat=1)
 	hall.append(ff.plot_contour(percents=[0.683],logscale=logscale))
-      legend(hall,[getp(x,'label') for x in hall],loc=1)
-      plot([0.1,10],[1,1],'k:',[1,1],[0.1,10],'k:')
-      axis([0.3,3,0.3,3])
+      plt.legend(hall,[getp(x,'label') for x in hall],loc=1)
+      plt.plot([0.1,10],[1,1],'k:',[1,1],[0.1,10],'k:')
+      plt.axis([0.3,3,0.3,3])
       if logscale:
 	xtickloc=list(arange(xlim()[0],1,0.1))
 	xtickloc.extend(arange(1,xlim()[1]+0.1,0.2))
@@ -446,7 +541,7 @@ def plot_high_prec(T=1,fit='Fmin'):
     if T==2:
       t=int(not t)
     f=basedir+dirlist[t]+'/fit%d_mc.dat'%m
-    ff=EnsembleFile(f)
+    ff=EnsembleFile(f,oldformat=1)
     hall.append(ff.plot_contour(percents=0.68,logscale=True))
   legend(hall,[getp(x,'label') for x in hall],loc=1)
   plot([0.1,10],[1,1],'k:',[1,1],[0.1,10],'k:')
@@ -465,7 +560,7 @@ def plot_AD(mid=8,percents=0.6):
 	colors=['r','g','b','c','m','k']
 	hall=[]
 	for i,a in enumerate(l):
-		f=EnsembleFile(rootdir+'/data/mockfit'+a+'_mc/fit%d_mc.dat'%mid)
+		f=EnsembleFile(lib.rootdir+'/data/mockfit'+a+'_mc/fit%d_mc.dat'%mid,oldformat=1)
 		f.color=colors[i]
 		hall.append(f.plot_contour(percents=percents, logscale=True))
 	l[0]='LowPrec'	

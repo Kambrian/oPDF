@@ -7,7 +7,6 @@ import h5py,os,sys
 from scipy.stats import chi2
 
 estimator=int(sys.argv[1]) #8 or 10
-proxy='' #one of '','E','L','LE'
 
 halo='Mock'
 npart=1000 #number of particles
@@ -19,7 +18,7 @@ outdir=lib.rootdir+'/plots/scan'+halo+'%dZoom/'%npart
 if not os.path.exists(outdir):
   os.makedirs(outdir)
   
-name=lib.NameList[estimator]+'Dist'
+name=lib.NameList[estimator]+'DistR100'
 outfile=outdir+name.replace('|','_')+'.hdf5'
 f=h5py.File(outfile,'w')
 mm=[m for m in x for c in x] #the first for is top layer, the second nested, so c varies first
@@ -31,7 +30,7 @@ f.create_dataset('/logm',data=mm)
 f.create_dataset('/logc',data=cc)
 
 lib.open()
-FullSample=Tracer(halo)
+FullSample=Tracer(halo,DynRMAX=100)
 Sample=FullSample.copy(5000,npart)
 #Sample.radial_count(30)
 
@@ -88,7 +87,7 @@ dset=f.create_dataset('/ts',data=y)
 dset.attrs['nbinE']=1
 dset.attrs['nbinL']=1
 f.create_dataset('/sig_dist',data=sig)
-xmin=Sample.fmin_dist(estimator,[1,1])
+xmin=Sample.gfmin_dist(estimator,[1,1])
 print xmin
 print np.log10(xmin[0])
 f['/sig_dist'].attrs['xmin']=np.log10(xmin[0])
@@ -96,7 +95,7 @@ siglike=np.array([lib.like_to_chi2(x, estimator) for x in y.flat]).reshape(y.sha
 siglike=siglike-siglike.ravel().min()
 siglike=P2Sig(chi2.sf(siglike, 2)) #likeratio
 f.create_dataset('/sig_like', data=siglike)
-xmin=Sample.fmin_like(estimator,[1,1])
+xmin=Sample.gfmin_like(estimator,[1,1])
 print xmin
 print np.log10(xmin[0])
 f['/sig_like'].attrs['xmin']=np.log10(xmin[0])

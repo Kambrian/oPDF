@@ -45,18 +45,18 @@ with Tracer('Mock') as FullSample:
 	with FullSample.copy(sampleid*npart,npart) as Sample:
 	  if estimator==0:
 		like=lambda x: -2*Sample.wenting_like_conditional(x)
-		result=fmin(like, init_par, xtol=0.001, ftol=1e-4, maxiter=1000, maxfun=5000, full_output=True)
+		result=fmin_gsl(like, init_par, xtol=0.001, full_output=True)
 		L1=like([1,1])
 	  elif estimator==4:
 		Sample.radial_count(nbin_r,FlagRBinLog)
-		result=Sample.fmin_like(estimator, init_par)
+		result=Sample.gfmin_like(estimator, init_par)
 		L1=-2*Sample.freeze_and_like([1,1], estimator)
 	  elif estimator==-4:
 		lib.NumRadialCountBin=nbin_r
-		result=Sample.fmin_jointLE(-estimator, nbinL, nbinE, init_par)
+		result=Sample.gfmin_jointLE(-estimator, nbinL, nbinE, init_par)
 		L1=Sample.jointLE_FChi2([1,1], -estimator, nbinL, nbinE)
 	  else:
-		result=Sample.fmin_jointLE(estimator, nbinL, nbinE, init_par)
+		result=Sample.gfmin_jointLE(estimator, nbinL, nbinE, init_par)
 		L1=Sample.jointLE_FChi2([1,1], estimator, nbinL, nbinE)
 	  L=result[1]
 	  with open(outfile,'a') as vlog:
