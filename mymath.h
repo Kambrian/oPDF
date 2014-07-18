@@ -17,6 +17,8 @@ typedef char Bool;
 #define myfopen(filepointer,filename,filemode) if(!((filepointer)=fopen(filename,filemode))){ fprintf(stderr,"Error opening file '%s'\n",filename);	fflush(stderr); exit(1);	}
 #define MIN(x,y) ((x)<(y)?(x):(y))
 #define MAX(x,y) ((x)>(y)?(x):(y))
+#define VecNorm(x) (x[0]*x[0]+x[1]*x[1]+x[2]*x[2])
+#define VecProd(x,y) (x[0]*y[0]+x[1]*y[1]+x[2]*y[2])
 #define SATURATE(x,x0) ((x)>(x0)?1.0:(x)/(x0))
 #define BrokenPL(x,a,b) ((x)<1.0?pow(x,a):pow(x,b))
 // debugging macros so we can pin down message origin at a glance

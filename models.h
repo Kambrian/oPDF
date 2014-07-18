@@ -88,6 +88,7 @@ extern struct NFWParZ Halo;
 extern void alloc_integration_space();
 extern void free_integration_space();
 
+extern double NFW_like(double pars[], Tracer_t *T);
 extern void define_halo(const double pars[]);
 extern double halo_pot(double r);
 extern void solve_radial_limits ( Particle_t *P, double rmin, double rmax);

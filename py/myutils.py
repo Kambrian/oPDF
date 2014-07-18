@@ -7,7 +7,7 @@ import matplotlib
 #matplotlib.user('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
-matplotlib.rcParams.update({'font.size': 18, 'axis.labelsize': 20, 'legend.fontsize': 18, 'ps.fonttype' : 42 , 'pdf.fonttype' : 42 ,' image.origin': 'lower', 'image.interpolation': 'None'})
+#matplotlib.rcParams.update({'font.name', ''font.size': 18, 'axis.labelsize': 20, 'legend.fontsize': 18, 'ps.fonttype' : 42 , 'pdf.fonttype' : 42 ,' image.origin': 'lower', 'image.interpolation': 'None'})
 
 from matplotlib.ticker import MaxNLocator # added 
 
@@ -102,7 +102,7 @@ def AD2Sig(AD):
   return sig
 
 
-def fmin_gsl(func, x0, args=[], xtol=1e-3, ftolabs=0.01, xstep=1.0, maxiter=1000, full_output=0):
+def fmin_gsl(func, x0, args=[], xtol=1e-3, ftolabs=0.01, xstep=1.0, maxiter=1000, full_output=False):
     '''
     minimize function with gsl_simplex method
     func(x [,args]): function to be minimized
@@ -110,6 +110,7 @@ def fmin_gsl(func, x0, args=[], xtol=1e-3, ftolabs=0.01, xstep=1.0, maxiter=1000
     args: list of additional parameter if any
     xstep: initial simplex size
     mimics scipy.optimize.fmin() interface
+    this fmin() is faster and more accurate than the scipy.optimize.fmin(), also better than fmin_powell() in scipy.
     '''
     args=list(args)
     if args is []:
@@ -207,6 +208,35 @@ def percentile_contour(data, nbin=100, percents=0.683, colors=None, logscale=Fal
     #else:
     h0=plt.contour(X,Y,Z,lvls, colors=colors, **kwargs)
     h=Ellipse((0,0),0,0,fill=False, color=list(colors)[0], **kwargs)
+    return h,h0
+
+def percentile_contourf(data, nbin=100, percents=[0.683,1], colors=None, logscale=False, **kwargs):
+    """
+    plot contourf at specific percentile levels
+    
+    percents can be a list, specify the contour percentile levels
+    data should be shape [2,n] array
+    logscale: default False; whether to plot in linear or logspace
+    colors should be a tuple, e.g, (r,)
+    **kwargs specify linestyles
+    return a handle artist of the same linestyle (but not the contour object) to be used in legends
+    """
+    if logscale:
+      data=np.log10(data)
+    l=data.min(axis=1)
+    r=data.max(axis=1)
+    X, Y = np.mgrid[l[0]:r[0]:nbin*1j, l[1]:r[1]:nbin*1j]
+    positions =np.vstack([X.ravel(), Y.ravel()])
+    kernel = gaussian_kde(data)
+    Z = np.reshape(kernel(positions).T, X.shape)
+    lvls=percent2level(percents,Z)
+    print lvls
+    #if logscale:
+      #h0=plt.contour(np.exp10(X),np.exp10(Y),Z,lvls, colors=colors, **kwargs)
+      #plt.loglog()
+    #else:
+    h0=plt.contourf(X,Y,Z,lvls, colors=colors, **kwargs)
+    h=Ellipse((0,0),0,0,fill=True, color=list(colors)[0], **kwargs)
     return h,h0
   
 def plot_cov_ellipse(cov, pos, nstd=1, ax=None, **kwargs):

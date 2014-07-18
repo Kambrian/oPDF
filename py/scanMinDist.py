@@ -18,7 +18,7 @@ outdir=lib.rootdir+'/plots/scan'+halo+'%dZoom/'%npart
 if not os.path.exists(outdir):
   os.makedirs(outdir)
   
-name=lib.NameList[estimator]+'DistR100'
+name=lib.NameList[estimator]+'Dist'
 outfile=outdir+name.replace('|','_')+'.hdf5'
 f=h5py.File(outfile,'w')
 mm=[m for m in x for c in x] #the first for is top layer, the second nested, so c varies first
@@ -30,7 +30,7 @@ f.create_dataset('/logm',data=mm)
 f.create_dataset('/logc',data=cc)
 
 lib.open()
-FullSample=Tracer(halo,DynRMAX=100)
+FullSample=Tracer(halo)
 Sample=FullSample.copy(5000,npart)
 #Sample.radial_count(30)
 

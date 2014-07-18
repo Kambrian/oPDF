@@ -103,11 +103,27 @@ void load_tracer_particles(char *datafile, Tracer_t * Sample)
     if(nload==0) printf("Assuming flag=1 for every particle\n");
     int *p=B.x;
     for(i=0;i<Sample->nP;i++)
-      if(nload>0)
-	Sample->P[i].flag=p[i];
-      else
-	Sample->P[i].flag=1;
-      
+    if(nload>0)
+	{
+	  Sample->P[i].flag=p[i];
+	  free(B.x);
+	}
+    else
+	  Sample->P[i].flag=1;
+	
+	sprintf(A.name,"%sPartMass",grpname);
+    nload=load_hdfmatrixF(datafile,&A,1);
+    if(nload==0) 
+	{
+	  printf("Setting m=0 for every particle\n");
+	  Sample->mP=0.;
+	}
+	else
+	{
+	  Sample->mP=A.x[0];
+	  free(A.x);
+	}
+   printf("mP=%g\n", Sample->mP);
       /*    
     double x0[3]={0.},v0[3]={0.};
     for(i=0;i<Sample->nP;i++)
@@ -132,8 +148,6 @@ void load_tracer_particles(char *datafile, Tracer_t * Sample)
       }
     }
 */    
-    #define VecNorm(x) (x[0]*x[0]+x[1]*x[1]+x[2]*x[2])
-    #define VecProd(x,y) (x[0]*y[0]+x[1]*y[1]+x[2]*y[2])
     for(i=0;i<Sample->nP;i++)
     {
       Sample->P[i].r=sqrt(VecNorm(Sample->P[i].x));
@@ -207,11 +221,12 @@ void copy_tracer_particles(int offset, int sample_size, Tracer_t *Sample, Tracer
   }
   Sample->rmin=FullSample->rmin;
   Sample->rmax=FullSample->rmax;
+  Sample->mP=FullSample->mP;
   //its the user's responsibility to manage RadialCount[]
 }
 
 void cut_tracer_particles(Tracer_t *Sample, double rmin, double rmax)
-{//apply radial cuts
+{//apply radial cuts, in place
   int i,j;
   Sample->rmin=rmin;
   Sample->rmax=rmax;

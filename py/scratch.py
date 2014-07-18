@@ -11,20 +11,33 @@ from scipy.stats import chi2
 npart=1000
 
 lib.open()
-FullSample=Tracer('Mock')
-#FullSample=Tracer('AqA4N',DynRMAX=100)
-Sample=FullSample.copy(5000,npart)
+#FullSample=Tracer('Mock')
+FullSample=Tracer('AqA4N',DynRMAX=100)
+#Sample=FullSample.copy(5000,npart)
+Sample=FullSample.copy(0,npart)
+Sample.mP*=float(FullSample.nP)/Sample.nP
 Sample.radial_count()
-FullSample.clean()
+#FullSample.clean()
+result,m=Sample.minuit_NFWlike()
+#Sample.gfmin_dist(10, [2, 0.5])
 #plt.ion()
-xtol=1e-3
-x3=Sample.gfmin_like(4,[3,3], xtol)
-x2=Sample.gfmin_like(4,[2,2], xtol)
-x1=Sample.gfmin_like(4,[1,1], xtol)
+#xtol=1e-3
+#x3=Sample.gfmin_like(4,[3,3], xtol)
+#x2=Sample.gfmin_like(4,[2,2], xtol)
+#x1=Sample.gfmin_like(4,[1,1], xtol)
 
-x3=Sample.fmin_like(4,[3,3], xtol)[0]
-x2=Sample.fmin_like(4,[2,2], xtol)[0]
-x1=Sample.fmin_like(4,[1,1], xtol)[0]
+#x3=Sample.fmin_like(4,[3,3], xtol)[0]
+#x2=Sample.fmin_like(4,[2,2], xtol)[0]
+#x1=Sample.fmin_like(4,[1,1], xtol)[0]
+
+#x3=Sample.gfmin_jointLE(10, 100, 1, [3,3], xtol)
+#x2=Sample.gfmin_jointLE(10, 100, 1, [2,2], xtol)
+#x1=Sample.gfmin_jointLE(10, 100, 1, [1,1], xtol)
+
+#x3=Sample.fmin_jointLE(10, 100, 1, [3,3], xtol)[0]
+#x2=Sample.fmin_jointLE(10, 100, 1, [2,2], xtol)[0]
+#x1=Sample.fmin_jointLE(10, 100, 1, [1,1], xtol)[0]
+#print x3,x2,x1
 #x=Sample.gfmin_jointLE(10, 100, 1, [3,3])
 #like=lambda x: -Sample.freeze_and_like(x, 4)
 #x1=fmin(like, [3, 3], xtol=1e-2, ftol=1e-5)

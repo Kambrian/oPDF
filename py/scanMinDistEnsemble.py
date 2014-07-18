@@ -18,9 +18,9 @@ if not estimator in elist:
 nbinL=100
 nbinE=1
 npart=1000
-init_par=[2,2]
+#init_par=[2,2]
 
-outdir=lib.rootdir+'/data/MinDistEnsemble'
+outdir=lib.rootdir+'/data/MinDistEnsembleIniRand'
 if not os.path.exists(outdir):
   os.makedirs(outdir)
 outfile=outdir+'/fit%d'%estimator+'.dat'
@@ -32,7 +32,8 @@ except IOError as e:
 
 lib.open()
 with Tracer('Mock') as FullSample:
-  for sampleid in range(750):
+  for sampleid in xrange(750):
+	init_par=10**(np.random.rand(2)-0.5)
 	with FullSample.copy(sampleid*npart,npart) as Sample:
 	  result=Sample.gfmin_dist(estimator, init_par)
 	  L1=-Sample.freeze_and_like([1,1], estimator)

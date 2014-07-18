@@ -15,7 +15,7 @@ halo='Mock'
 npart=1000 #number of particles
 nbin=10 #E and L bin, or nbin**2 for single proxies
 nx=30 #scan grid
-x=np.logspace(-0.6,0.6,nx)
+x=np.logspace(-0.3,0.3,nx)
 xx=x
 #xx=np.logspace(-0.3,0.3,nx)
 #for RBin estimator
@@ -41,7 +41,6 @@ mm=[m for m in x for c in xx] #the first for is top layer, the second nested, so
 mm=np.log10(np.array(mm).reshape([nx,nx], order="F"))
 cc=[c for m in x for c in xx]
 cc=np.log10(np.array(cc).reshape([nx,nx], order="F"))
-#if 'logm' not in f.keys():
 f.create_dataset('/logm',data=mm)
 f.create_dataset('/logc',data=cc)
 
@@ -109,9 +108,9 @@ def im_plot(infile, flagsave=True):
   print sig.argmin()
   print mm.ravel()[sig.ravel().argmin()],cc.ravel()[sig.ravel().argmin()]
   plt.plot(mm.ravel()[sig.ravel().argmin()], cc.ravel()[sig.ravel().argmin()],'ys') 
-  x0=np.log10(Sample.gfmin_like(estimator,[2,2])[0])
+  x0=np.log10(fmin_gsl(like, [2,2], xtol=0.001))
   plt.plot(x0[0],x0[1],'ro')
-  x0=np.log10(Sample.gfmin_like(estimator,[3,3])[0])
+  x0=np.log10(fmin_gsl(like, [3,3], xtol=0.001))
   plt.plot(x0[0],x0[1],'gd')
   plt.title(name)
   plt.xlabel(r'$\log(M/M_0)$')

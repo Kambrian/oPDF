@@ -87,34 +87,78 @@ class EnsembleFile(object):
     h.set_label(self.name)#+' %d/%d'%(self.pars.shape[0],self.rawdata.shape[0]))
     if logscale:
 	  plt.plot(np.log10(self.median[0]),np.log10(self.median[1]),'o',markersize=8,color=self.color)
+	  #plt.errorbar(self.mean_log[0],self.mean_log[1],xerr=self.std_log[0]/sqrt(self.pars.shape[0]), 
+			#yerr=self.std_log[1]/sqrt(self.pars.shape[0]),
+			#marker='o',markersize=6,mfc=self.color)
     else:
 	  plt.plot(self.median[0],self.median[1],'o',markersize=8,color=self.color)
     #plt.plot(10**self.mean_log[0],10**self.mean_log[1],'o',markersize=10,color=self.color)
     return h
+  
+  def plot_contourf(self,nbin=100, percents=[0,0.683], logscale=True, **kwargs):
+    """percents can be a list, specify the contour percentile levels"""
+    h,h0=percentile_contourf(self.pars.T, nbin=nbin, percents=percents, colors=(self.color,), logscale=logscale, **kwargs)
+    h.set_label(self.name)#+' %d/%d'%(self.pars.shape[0],self.rawdata.shape[0]))
+    return h
 
-def fig_EnsembleContour(logscale=False, flagsave=False):
+
+def fig_EnsembleContour(logscale=True, flagsave=False, init='IniRand'):
+  basedir=lib.rootdir+'/data'
+  nbin=80
+  plt.figure()
+  hall=[]
+  ff=EnsembleFile(basedir+'/MinDistEnsemble'+init+'/fit8.dat', name='AD', color=(0.,0.,0.,0.3))
+  ff.plot_contourf(percents=[0.68,1],nbin=nbin,logscale=logscale)
+  ff=EnsembleFile(basedir+'/MinDistEnsemble'+init+'/fit10.dat', name='Mean', color=(0,0,0,0.2))
+  ff.plot_contourf(percents=[0.68,1],nbin=nbin,logscale=logscale)
+  ff=EnsembleFile(basedir+'/MaxLikeEnsemble/fit0_mc.dat', name='f(E,L)', color='k', oldformat=1)
+  hall.append(ff.plot_contour(percents=[0.68],nbin=nbin,logscale=logscale))
+  ff=EnsembleFile(basedir+'/MaxLikeEnsemble'+init+'/fit4.dat', name='RBin', color='g')
+  hall.append(ff.plot_contour(percents=[0.68],nbin=nbin,logscale=logscale))
+  plt.legend(hall,[plt.getp(x,'label') for x in hall],loc=1)
+  if logscale:
+	#plt.axis([-0.5,0.5,-0.5,0.5])
+	plt.axis([-0.3,0.3,-0.3,0.3])
+	plt.minorticks_on()
+	plt.plot(plt.xlim(),[0,0],'k:',[0,0],plt.ylim(),'k:')
+	plt.xlabel(r'$\log(M/M_{\rm true})$')
+	plt.ylabel(r'$\log(c/c_{\rm true})$')
+  else:
+	plt.axis([0,2,0,2])
+	plt.plot(plt.xlim(),[1,1],'k:',[1,1],plt.ylim(),'k:')
+	plt.xlabel(r'$M/M_{\rm true}$')
+	plt.ylabel(r'$c/c_{\rm true}$')
+  if flagsave:
+	plt.savefig(lib.rootdir+'/plots/paper/Ensemble'+init+'.pdf')# rasterize=True, dpi=300)
+	
+def fig_EnsembleContourExtra(logscale=False, flagsave=False, init='IniRand'):
   basedir=lib.rootdir+'/data'
   flist=[
-		 #('/MinDistEnsemble/fit8.dat','AD'), #fail
-		 #('/MinDistEnsemble/fit10.dat','Mean'), #fail
-		 #('/MaxLikeEnsemble/fit0.dat','f(E,L)|'), #perfect
-		 ('/MaxLikeEnsemble/fit4.dat','RBin'), #good
-		 #('/MaxLikeEnsemble/fit4L.dat','RBin|L'), #no better than RBin
-		 #('/MaxLikeEnsemble/fit8.dat','AD|L'), #slightly biased at 1sigma
-		 ('/MaxLikeEnsemble/fit10.dat','Mean|L'), #ok
-		 #('/MaxLikeEnsemble/fit16.dat','ADBN|L'), #fail
-		 #('/IterLikeEnsemble/fit8E.dat','AD|E'), #biased
-		 #('/IterLikeEnsemble/fit8EL.dat','AD|EL'),#biased
-		 #('/IterLikeEnsemble/fit8LE.dat','AD|LE'),#biased
-		 #('/IterLikeEnsemble/fit10E.dat','Mean|E'), #ok
-		 #('/IterLikeEnsemble/fit10EL.dat','Mean|EL'), #ok
-		 #('/IterLikeEnsemble/fit10LE.dat','Mean|LE'), #ok
-		 #('/IterLikeEnsemble/fit16E.dat','ADBN|E'),
-		 #('/IterLikeEnsemble/fit16EL.dat','ADBN|EL'),
-		 #('/IterLikeEnsemble/fit16LE.dat','ADBN|LE')
+		 #('/MinDistEnsemble'+init+'/fit8.dat','AD'), #fail
+		 #('/MinDistEnsemble'+init+'/fit10.dat','Mean'), #fail
+		 #('/MaxLikeEnsemble'+init+'/fit0.dat','f(E,L)|'), #perfect
+		 ('/MaxLikeEnsemble'+init+'/fit4.dat','RBin'), #good
+		 #('/MaxLikeEnsemble'+init+'/fit4L.dat','RBin|L'), #worse than RBin
+		 #('/MaxLikeEnsemble'+init+'/fit8.dat','AD|L'), #slightly biased at 1sigma
+		 #('/MaxLikeEnsemble'+init+'/fit10.dat','Mean|L'), #ok
+		 #('/MaxLikeEnsemble'+init+'/fit16.dat','ADBN|L'), #fail
+		 #('/IterLikeEnsemble'+init+'/fit8E.dat','AD|E'), #biased
+		 #('/IterLikeEnsemble'+init+'/fit8EL.dat','AD|EL'),#biased
+		 #('/IterLikeEnsemble'+init+'/fit8LE.dat','AD|LE'),#biased
+		 #('/IterLikeEnsemble'+init+'/fit10E.dat','Mean|E'), #ok
+		 #('/IterLikeEnsemble'+init+'/fit10EL.dat','Mean|EL'), #ok
+		 #('/IterLikeEnsemble'+init+'/fit10LE.dat','Mean|LE'), #ok
+		 #('/IterLikeEnsemble'+init+'/fit16E.dat','ADBN|E'),
+		 #('/IterLikeEnsemble'+init+'/fit16EL.dat','ADBN|EL'),
+		 #('/IterLikeEnsemble'+init+'/fit16LE.dat','ADBN|LE')
 		 ]
+  plt.figure()
   hall=[]
   ColorList=itertools.cycle(plt.cm.jet(np.linspace(0.,1.,len(flist)+2)))
+  #ff=EnsembleFile(basedir+'/MinDistEnsemble'+init+'/fit8.dat', name='AD', color=(0.7,0.7,0.7))
+  #ff.plot_contourf(percents=[0.68,1],nbin=80,logscale=logscale)
+  #ff=EnsembleFile(basedir+'/MinDistEnsemble'+init+'/fit10.dat', name='Mean', color=(0.8,0.8,0.8, 0.8))
+  #ff.plot_contourf(percents=[0.68,1],nbin=80,logscale=logscale)
   ff=EnsembleFile(basedir+'/MaxLikeEnsemble/fit0_mc.dat', name='f(E,L)', color=ColorList.next(), oldformat=1)
   hall.append(ff.plot_contour(percents=[0.68],nbin=80,logscale=logscale))
   for f,name in flist:
@@ -122,6 +166,7 @@ def fig_EnsembleContour(logscale=False, flagsave=False):
 	hall.append(ff.plot_contour(percents=[0.68],nbin=80,logscale=logscale))
   plt.legend(hall,[plt.getp(x,'label') for x in hall],loc=1)
   if logscale:
+	#plt.axis([-0.5,0.5,-0.5,0.5])
 	plt.axis([-0.3,0.3,-0.3,0.3])
 	plt.plot(plt.xlim(),[0,0],'k:',[0,0],plt.ylim(),'k:')
 	plt.xlabel(r'$\log(M/M_{\rm true})$')
@@ -132,9 +177,9 @@ def fig_EnsembleContour(logscale=False, flagsave=False):
 	plt.xlabel(r'$M/M_{\rm true}$')
 	plt.ylabel(r'$c/c_{\rm true}$')
   if flagsave:
-	plt.savefig(lib.rootdir+'/plots/paper/Ensemble.eps') #rasterize=True, dpi=300
+	plt.savefig(lib.rootdir+'/plots/paper/Ensemble'+init+'.eps')
 	
-def fig_DegeneracyDistributionRad(nbin=50, logscale=True, cumulative=False, flagsave=False):
+def fig_DegeneracyDistributionRad(nbin=500, logscale=True, cumulative=False, flagsave=False):
   npart=1000
   lib.open()
   FullSample=Tracer('Mock')
@@ -146,32 +191,30 @@ def fig_DegeneracyDistributionRad(nbin=50, logscale=True, cumulative=False, flag
 	xbin=np.linspace(Sample.rmin, Sample.rmax, nbin+1)
   count,tmp=np.histogram(Sample.data['r'], xbin)
   
-  plt.figure()
-  pars=[1,1]
-  Sample.freeze_energy(pars)
-  Sample.like_init(pars)
-  pred=Sample.predict_radial_count(nbin, logscale)
-  if cumulative:
-	plt.plot(xbin, np.hstack((0.,pred)).cumsum()/Sample.nP, 'r-')
-  else:
-	plt.step(xbin,hstack((pred,nan)), where='post', color='r')
-	
-  #pars=[ 0.82423562, 1.28484559]
-  pars=[0.6013295 ,  2.22171445]
-  #pars=[ 0.51680255,  3.11238955]
-  Sample.freeze_energy(pars)
-  Sample.like_init(pars)
-  pred=Sample.predict_radial_count(nbin, logscale)
-  if cumulative:
-	plt.plot(xbin, np.hstack((0.,pred)).cumsum()/Sample.nP, 'g-')
-  else:
-	plt.step(xbin,hstack((pred,nan)), where='post', color='g')
+  def plot_rad_distr(pars, color, label):
+	Sample.freeze_energy(pars)
+	Sample.like_init(pars)
+	pred=Sample.predict_radial_count(nbin, logscale)
+	if cumulative:
+	  plt.plot(xbin, np.hstack((0.,pred)).cumsum()/Sample.nP, '-', color=color, label=label)
+	  f=np.hstack((0.,pred)).cumsum()/Sample.nP
+	  return f
+	else:
+	  plt.step(xbin,hstack((pred,nan)), where='post', color=color)
+  
+  fig,ax=plt.subplots(2,sharex=True, figsize=(8,8))
+  plt.axes(ax[0])
+  f1=plot_rad_distr([1,1], 'r', r'$M_{\rm true},\, c_{\rm true}$')
+  f2=plot_rad_distr([0.6013295 ,  2.22171445], 'g', r'$0.6M_{\rm true},\, 2.2c_{\rm true}$')
+  #f3=plot_theta_distr([2.16523294471, 0.476724073476], 'b', r'$2.2M_{\rm true},\, 0.5c_{\rm true}$')
   
   if cumulative:
-	plt.plot(xbin, np.hstack((0.,count)).cumsum()/Sample.nP, 'k--')
+	plt.plot(xbin, np.hstack((0.,count)).cumsum()/Sample.nP, 'k--', label='Data')
+	f0=np.hstack((0.,count)).cumsum()/Sample.nP
 	plt.ylabel(r'$P(<r)$')
-	plt.legend((r'$M_{\rm true},\, c_{\rm true}$', r'$0.6 M_{\rm true},\, 2.2 c_{\rm true}$', 'Data'),loc='lower right')
+	plt.legend(loc='upper left')
 	plt.ylim([0,1])
+	plt.xlim([1,300])
   else:
 	plt.step(xbin,hstack((count,nan)), where='post', color='k', linestyle='--', linewidth=2)
 	plt.ylabel('Counts')
@@ -180,8 +223,24 @@ def fig_DegeneracyDistributionRad(nbin=50, logscale=True, cumulative=False, flag
   if logscale:
 	  plt.xscale('log')
   
+  plt.axes(ax[1])
+  plt.plot(xbin, f1-f0, 'r-')
+  plt.plot(xbin, f2-f0, 'g-')
+  #plt.plot(xbin, f3-f0, 'b-')
+  plt.plot(plt.xlim(), [0,0], 'k:')
+  plt.ylabel(r'$\Delta P$')
   plt.xlabel(r'$r/\mathrm{kpc}$')
- 
+  if logscale:
+	  plt.xscale('log')
+
+  plt.ylim([-0.04, 0.04])
+    
+  fig.subplots_adjust(left=0.15, hspace=0)
+  plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
+  #plt.setp(ax[1].yaxis, major_locator=MaxNLocator(nbins=5, prune='upper'))
+  plt.yticks([-0.04, -0.02, 0, 0.02])
+  plt.minorticks_on()
+  
   Sample.clean()
   lib.close()
   if flagsave:
@@ -193,38 +252,49 @@ def fig_DegeneracyDistribution(nbin=50, cumulative=True, flagsave=False):
   FullSample=Tracer('Mock')
   Sample=FullSample.copy(5000,npart)
   FullSample.clean()
-  plt.figure()
-  pars=[1,1]
-  Sample.freeze_energy(pars)
-  Sample.like_init(pars)
-  if cumulative:
-	t=Sample.data['theta'][...]
-	t.sort()
-	plt.plot(t, (np.arange(Sample.nP)+1.)/Sample.nP, 'b-')
-  else:
-	plt.hist(Sample.data['theta'], nbin, normed=True, histtype='step', color='b')
-	
-  #pars=[ 0.82423562, 1.28484559]
-  pars=[0.6013295 ,  2.22171445]
-  #pars=[ 0.51680255,  3.11238955]
-  Sample.freeze_energy(pars)
-  Sample.like_init(pars)
-  if cumulative:
-	t=Sample.data['theta'][...]
-	t.sort()
-	plt.plot(t, (np.arange(Sample.nP)+1.)/Sample.nP, 'r-')
-  else:
-	plt.hist(Sample.data['theta'], nbin, normed=True, histtype='step', color='r')
   
-  plt.legend((r'$M_{\rm true},\, c_{\rm true}$', r'$0.6 M_{\rm true},\, 2.2 c_{\rm true}$'),loc='upper left')
+  def plot_theta_distr(pars, color, label):
+	Sample.freeze_energy(pars)
+	Sample.like_init(pars)
+	if cumulative:
+	  t=Sample.data['theta'][...]
+	  t.sort()
+	  f=(np.arange(Sample.nP)+1.)/Sample.nP
+	  plt.plot(t, f, '-', label=label, color=color)
+	  return t.copy(),f
+	else:
+	  plt.hist(Sample.data['theta'], nbin, normed=True, histtype='step', color=color, label=label)
+	  
+  fig,ax=plt.subplots(2, sharex=True, figsize=(8,8))
+  plt.axes(ax[0])
+  t1,f1=plot_theta_distr([1,1], 'r', r'$M_{\rm true},\, c_{\rm true}$')
+  t2,f2=plot_theta_distr([0.6013295 ,  2.22171445], 'g', r'$0.6M_{\rm true},\, 2.2c_{\rm true}$')
+  #t3,f3=plot_theta_distr([2.16523294471, 0.476724073476], 'b', r'$2.2M_{\rm true},\, 0.5c_{\rm true}$')
+  plt.legend(loc='upper left')
   if cumulative:
 	plt.plot([0,1],[0,1],'k:')
+	#plt.plot([0.5,0.5],plt.ylim(), 'k:', plt.xlim(), [0.5, 0.5], 'k:')
 	plt.ylabel(r'$P(<\theta)$')
 	plt.axis([0,1,0,1])
   else:
 	plt.plot([0,1],[1,1],'k:')
 	plt.ylabel(r'$dP/d\theta$')
+  
+  plt.axes(ax[1])
+  
+  plt.plot(t1, f1-t1, 'r-')
+  plt.plot(t2, f2-t2, 'g-')
+  #plt.plot(t3, f3-t3, 'b-')
+  plt.plot(plt.xlim(), [0, 0], 'k:')
+  plt.ylabel(r'$\Delta P$')
   plt.xlabel(r'$\theta$')
+  plt.ylim([-0.04, 0.04])
+    
+  fig.subplots_adjust(left=0.15, hspace=0)
+  plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
+  #plt.setp(ax[1].yaxis, major_locator=MaxNLocator(nbins=5, prune='upper'))
+  plt.yticks([-0.04, -0.02, 0, 0.02])
+  plt.minorticks_on()
   
   Sample.clean()
   lib.close()
@@ -258,10 +328,13 @@ def fig_MinDistContour(flagsave=False):
   #x2=np.log10(np.array([ 0.51680255,  3.11238955])) #initial value [3,3]
   #plt.plot(x1[0],x1[1],'gx',markersize=10)
   plt.plot(x2[0],x2[1],'gx',markersize=10)
+  #x3=np.log10(np.array([2.16523294471, 0.476724073476]))
+  #plt.plot(x3[0],x3[1],'gx',markersize=10)
   #plt.clabel(cs, inline=1, fmt={1:'',2:'Mean'})
   #plt.plot(x[0],x[1],'g+',markersize=10)
   #plt.xlim([-0.3,0.8])
   #plt.ylim([-0.8,0.8])
+  plt.minorticks_on()
   plt.plot(plt.xlim(),[0,0],'k:',[0,0],plt.ylim(),'k:')
   plt.xlabel(r'$\log(M/M_{\rm true})$')
   plt.ylabel(r'$\log(c/c_{\rm true})$')
@@ -269,12 +342,12 @@ def fig_MinDistContour(flagsave=False):
   if flagsave:
 	plt.savefig(lib.rootdir+'/plots/paper/MinDistContour.eps')
 
-def fig_MaxLikeContour(estimator='Mean',flagsave=False):
+def fig_MaxLikeContour(estimator='',flagsave=False):
   '''estimator in 'AD' or 'Mean' '''
-  def plot_siglike(name, color, linestyle='solid'):
+  def plot_siglike(name, color, linestyle='solid', levels=[1,]):
 	marker='o' #{'solid':'s','dashed':'d','dotted':'o','dashdot':'x'}[linestyle]
 	f=h5py.File(lib.rootdir+'/plots/paper/raw/'+name+'.hdf5','r')
-	cs=plt.contour(f['/logm'],f['/logc'],f['/sig_like'], levels=[1,], colors=color, linestyles=linestyle)
+	cs=plt.contour(f['/logm'],f['/logc'],f['/sig_like'], levels=levels, colors=color, linestyles=linestyle)
 	h=Ellipse((0,0),0,0,fill=False, color=color, linestyle=linestyle)
 	x=f['/sig_like'].attrs['xmin']
 	print 10**x
@@ -282,15 +355,20 @@ def fig_MaxLikeContour(estimator='Mean',flagsave=False):
 	f.close()
 	return h
   plt.figure()
+   
+  f=h5py.File(lib.rootdir+'/plots/paper/raw/ADDist.hdf5','r')
+  plt.contourf(f['/logm'],f['/logc'],f['/sig_dist'], levels=[0,1], colors=((0.,0,0, 0.3),)) #colors='k', alpha=0.2
+  #h5=Ellipse((0,0),0,0,fill=False, color='m')
+  f.close()
+  
   f=h5py.File(lib.rootdir+'/plots/paper/raw/MeanDist.hdf5','r')
-  plt.contourf(f['/logm'],f['/logc'],f['/sig_dist'], levels=[0,1], colors=((0.8,0.8,0.8),))
+  plt.contourf(f['/logm'],f['/logc'],f['/sig_dist'], levels=[0,1], colors=((0,0,0, 0.2),))
   #plt.contour(f['/logm'],f['/logc'],f['/sig_dist'], levels=[3], linestyles='dashed', colors=((0.2,0.2,0.2),))
   #h6=Ellipse((0,0),0,0,fill=False, color='y')
   f.close()
-  f=h5py.File(lib.rootdir+'/plots/paper/raw/ADDist.hdf5','r')
-  plt.contourf(f['/logm'],f['/logc'],f['/sig_dist'], levels=[0,1], colors=((0.7,0.7,0.7),)) #colors='k', alpha=0.2
-  #h5=Ellipse((0,0),0,0,fill=False, color='m')
-  f.close()
+ 
+
+  
   data=np.loadtxt(lib.rootdir+'/plots/paper/raw/f(E,L)_marginal.dat', usecols=[0,1,6])
   n=sqrt(data.shape[0])
   m=np.log10(data[:,0].reshape([n,n], order='F')/1.873)
@@ -298,35 +376,31 @@ def fig_MaxLikeContour(estimator='Mean',flagsave=False):
   l=data[:,2]
   l[l>1e9]=inf
   l=l.reshape([n,n], order='F')
-  sig=P2Sig(chi2.sf(2*(l-l.ravel().min()),6))
-  #dm=m[0,1]-m[0,0]
-  #dc=c[1,0]-c[0,0]
-  #extent=[m.ravel().min()-dm/2,m.ravel().max()+dm/2,c.ravel().min()-dc/2,c.ravel().max()+dc/2]
-  #plt.imshow(l-l.ravel().min(), extent=extent, cmap=plt.cm.summer)
-  #plt.colorbar()
-  plt.contour(m,c,sig, levels=[1,], colors='k',linestyles='dashed')
-  h0=Ellipse((0,0),0,0,fill=False, color='k',linestyle='dashed')
+  sig=P2Sig(chi2.sf(2*(l-l.ravel().min()),2))
+  plt.contour(m,c,sig, levels=[1,], colors='k',linestyles='solid')
+  h0=Ellipse((0,0),0,0,fill=False, color='k',linestyle='solid')
   plt.plot(m.ravel()[l.argmin()], c.ravel()[l.argmin()], 'ko')
-  h1=plot_siglike('f(E,L)_condition','r')
+  #h1=plot_siglike('f(E,L)_condition','r', levels=[1,2])
   h2=plot_siglike('RBinLog30','g')
   #h22=plot_siglike('RBinLog30_L','k')
-  name={'Mean':'Mean', 'AD':'ADBN'}[estimator]
-  h3=plot_siglike(name+'_L','b') 
+  #name={'Mean':'Mean', 'AD':'ADBN'}[estimator]
+  #h3=plot_siglike(name+'_L','b') 
   #h4=plot_siglike(name+'Iter_E','c','dashed')
   #h5=plot_siglike(name+'Iter_LE','m','dashed')
   #h6=plot_siglike(name+'Iter_EL','y','dashed')
   
-  if estimator=='Mean':
+  if estimator in ['Mean', '']:
 	plt.axis([-0.3,0.3, -0.3,0.3])
   else:
 	plt.axis([-0.4,0.5, -0.5, 0.4])
   plt.plot(plt.xlim(),[0,0],'k:',[0,0],plt.ylim(),'k:')
   plt.xlabel(r'$\log(M/M_{\rm true})$')
   plt.ylabel(r'$\log(c/c_{\rm true})$')
-  plt.legend((h1,h2,h3),('f(E,L)|','RBin','Mean|L'))
+  plt.legend((h0,h2),('f(E,L)','RBin'))
   #plt.legend((h0,h1,h2,h22,h3,h4,h5,h6),('f(E,L)','f(E,L)|','RBin','RBin|L',estimator+'|L',estimator+'|E',estimator+'|LE',estimator+'|EL'))
+  plt.minorticks_on()
   if flagsave:
-	plt.savefig(lib.rootdir+'/plots/paper/MaxLikeContour'+estimator+'6.eps') #rasterize=True, dpi=300
+	plt.savefig(lib.rootdir+'/plots/paper/MaxLikeContour'+estimator+'.pdf') #rasterize=True, dpi=300
 
 def fig_MockTSprof(flagsave=False, estimator=14, nbin=30):
   """TS profile for mocks"""

@@ -20,7 +20,7 @@ except:
   raise
 
 npart=1000
-init_par=[2,2]
+#init_par=[2,2]
 nbin=10
 if proxy=='E':
   nbinE=nbin*nbin
@@ -35,7 +35,7 @@ elif proxy=='EL':
   nbinE=nbin
   nbins=[nbinE,nbinL]
 
-outdir=lib.rootdir+'/data/IterLikeEnsemble'
+outdir=lib.rootdir+'/data/IterLikeEnsembleIniRand'
 if not os.path.exists(outdir):
   os.makedirs(outdir)
 outfile=outdir+'/fit%d'%estimator+proxy+'.dat'
@@ -47,7 +47,8 @@ except IOError as e:
 
 lib.open()
 with Tracer('Mock') as FullSample:
-  for sampleid in range(750):
+  for sampleid in xrange(750):
+	init_par=10**(np.random.rand(2)-0.5)
 	with FullSample.copy(sampleid*npart,npart) as Sample:
 	  result=Sample.gfmin_FixBinIter(estimator, proxy, nbins, init_par, maxiter=10)
 	  L1=Sample.nested_views_FChi2([1,1], estimator)

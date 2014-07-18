@@ -28,6 +28,7 @@ struct NFWParZ
 	double Rs; //physical scale radius, Mpc/h
 	double Rhos; //physical scale density
 	double Pots; //-4*pi*G*rhos*rs^2, the potential at r=0
+	double Ms; //4*pi*rs^3*rhos
 	int virtype;
 };
 struct ISOParZ //isothermal parameter

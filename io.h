@@ -21,6 +21,7 @@ struct Tracer
 {
   double lnL; //the likelihood associated with the lowest level view through like_eval(); upper level views are chi2.
   int nP;
+  double mP; //this would be zero if particles have individual masses.
   Particle_t *P;
   int nbin_r; //never set this manually. only modify it via count_tracer_radial()
   int FlagRLogBin;

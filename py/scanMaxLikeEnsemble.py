@@ -21,12 +21,12 @@ else:
   nbinL=100
 nbinE=1
 npart=1000
-init_par=[2,2]
+#init_par=[2,2]
 #for estimator==4:
 nbin_r=30
 FlagRBinLog=1
 
-outdir=lib.rootdir+'/data/MaxLikeEnsemble'
+outdir=lib.rootdir+'/data/MaxLikeEnsembleIniRand'
 if not os.path.exists(outdir):
   os.makedirs(outdir)
 if estimator==-4:
@@ -41,7 +41,8 @@ except IOError as e:
 
 lib.open()
 with Tracer('Mock') as FullSample:
-  for sampleid in range(750):
+  for sampleid in xrange(750):
+	init_par=10**(np.random.rand(2)-0.5)
 	with FullSample.copy(sampleid*npart,npart) as Sample:
 	  if estimator==0:
 		like=lambda x: -2*Sample.wenting_like_conditional(x)

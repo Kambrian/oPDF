@@ -28,6 +28,7 @@ class Tracer_t(ctypes.Structure):
 Tracer_p=ctypes.POINTER(Tracer_t)
 Tracer_t._fields_=[('lnL', ctypes.c_double),
 				   ('nP', ctypes.c_int),
+				   ('mP', ctypes.c_double),
 				   ('P', Particle_p),
 				   ('nbin_r', ctypes.c_int),
 				   ('FlagRLogBin', ctypes.c_int),
@@ -48,6 +49,7 @@ class NFWHalo_t(ctypes.Structure):
 	    ('Rs', ctypes.c_double),
 	    ('Rhos', ctypes.c_double),
 	    ('Pots', ctypes.c_double),#-4*pi*G*rhos*rs^2, the potential at r=0
+	    ('Ms', ctypes.c_double), #4*pi*rhos*rs^3
 	    ('virtype', ctypes.c_int)
 	    ]  
 
@@ -124,6 +126,10 @@ lib.halo_pot.restype=ctypes.c_double
 lib.halo_pot.argtypes=[ctypes.c_double]
 lib.comoving_virial_radius.argtypes=[ctypes.c_double, ctypes.c_double, ctypes.c_int]
 lib.comoving_virial_radius.restype=ctypes.c_double
+lib.NFW_mass.restype=ctypes.c_double
+lib.NFW_mass.argtypes=[ctypes.c_double]
+lib.NFW_like.restype=ctypes.c_double
+lib.NFW_like.argtypes=[lib.ParType, Tracer_p]
 
 #tracers
 lib.load_tracer_particles.restype=None
@@ -202,6 +208,9 @@ class NFWHalo(object):
   def comoving_virial_radius(m,z,virtype='c200'):
 	vt={'sc':0,'c200':1,'b200':2}
 	return lib.comoving_virial_radius(m,z,vt[virtype])
+  
+  def mass(self, r):
+	return lib.NFW_mass(r)
   
 class Tracer(Tracer_t):
   def __init__(self, halo=None, **newoptions):
@@ -335,17 +344,23 @@ class Tracer(Tracer_t):
   
   def fmin_jointLE(self, estimator, nbinL, nbinE, x0=[1,1], xtol=1e-3, ftolabs=0.01, ftolrel=1e-2):
 	ftol=min(ftolabs/abs(self.jointLE_FChi2(x0,estimator,nbinL,nbinE)), ftolrel)
-	return fmin_powell(self.jointLE_FChi2, x0, args=(estimator, nbinL, nbinE), xtol=xtol, ftol=ftol, maxiter=500, maxfun=1000, full_output=True)
+	x=fmin_powell(self.jointLE_FChi2, x0, args=(estimator, nbinL, nbinE), xtol=xtol, ftol=ftol, maxiter=500, maxfun=1000, full_output=True)
+	print '\t ', x[0]
+	return x
   
   def fmin_like(self, estimator, x0=[1,1], xtol=1e-3, ftolabs=0.01, ftolrel=1e-2):
 	like=lambda x: lib.like_to_chi2(self.freeze_and_like(x, estimator), estimator) #the real likelihood prob
 	ftol=min(ftolabs/abs(like(x0)), ftolrel)
-	return fmin_powell(like, x0, xtol=xtol, ftol=ftol, maxiter=500, maxfun=1000, full_output=True)
+	x=fmin_powell(like, x0, xtol=xtol, ftol=ftol, maxiter=500, maxfun=1000, full_output=True)
+	print '\t ', x[0]
+	return x
   
   def fmin_dist(self, estimator, x0=[1,1],xtol=1e-3, ftolabs=0.01, ftolrel=1e-2):
 	like=lambda x: -self.freeze_and_like(x, estimator) #distance
 	ftol=min(ftolabs/abs(like(x0)), ftolrel)
-	return fmin_powell(like, x0, xtol=xtol, ftol=ftol, maxiter=500, maxfun=1000, full_output=True)
+	x=fmin_powell(like, x0, xtol=xtol, ftol=ftol, maxiter=500, maxfun=1000, full_output=True)
+	print '\t ', x[0]
+	return x
   
   def gfmin_FixBinIter(self, estimator,proxy,nbins,x0=[1,1],itertol=0.01, maxiter=50, xtol=1e-3, ftolabs=0.01):
 	''' itertol: tolerance for iteration
@@ -416,6 +431,21 @@ class Tracer(Tracer_t):
 	  result=m.migrad()
 	  x=[m.values['m'],m.values['c']]
 	  m.print_fmin()
+	m.print_matrix()
+	return result,m
+  
+  def NFW_like(self, pars=[1,1]):
+	return lib.NFW_like(lib.ParType(*pars), self._pointer)
+	
+  def minuit_NFWlike(self, x0=[1,1], minuittol=1):
+	"""too difficult for minuit to work. just use this to estimate the error matrix? still just fantasy. discard it.
+	set a huge tol, say, 1e10, to avoid walking away"""
+	like=lambda m,c: -self.NFW_like([m,c])
+	#profilelikelihood ratio error-def: chi-square1
+	m=Minuit(like, m=x0[0], c=x0[1], print_level=0, pedantic=False, error_m=0.1, error_c=0.1, errordef=1,frontend=ConsoleFrontend())
+	m.tol=minuittol   #default convergence edm<1e-4*tol*errordef, but we do not need that high accuracy
+	result=m.migrad()
+	m.print_fmin()
 	m.print_matrix()
 	return result,m
   

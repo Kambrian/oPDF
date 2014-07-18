@@ -32,6 +32,26 @@ void define_halo(const double pars[])
 #endif
 }
 
+double NFW_mass(double r)
+{ 
+  double x=r/Halo.Rs;
+  return Halo.Ms*(log(1+x)-x/(1+x)); 
+}
+double NFW_like(double pars[], Tracer_t *T)
+{
+  if(pars[0]<=0||pars[1]<=0||isnan(pars[0])||isnan(pars[1])) return -INFINITY;
+  define_halo(pars);
+  double lnL=log(Halo.Rhos)*T->nP-(NFW_mass(T->rmax)-NFW_mass(T->rmin))/T->mP; //the normalizations
+  int i;
+  #pragma omp parallel for reduction(+: lnL)
+  for(i=0;i<T->nP;i++)
+  {
+	double r=T->P[i].r/Halo.Rs;
+	lnL+=-log(r)-2.*log(1.+r);
+  }
+  return lnL;
+}
+
 double halo_pot(double r)
 {
   double x=r/Halo.Rs;
