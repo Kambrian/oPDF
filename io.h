@@ -1,6 +1,7 @@
 typedef struct
 {
   int flag; //will be assigned a binID for binned MinDist estimator
+  double w; //weight (particle mass normalized by average mass), mostly for tagged stars.
   double r;
   double K;
   double L2;
@@ -21,11 +22,12 @@ struct Tracer
 {
   double lnL; //the likelihood associated with the lowest level view through like_eval(); upper level views are chi2.
   int nP;
-  double mP; //this would be zero if particles have individual masses.
+  double mP; //the average mass of particles
+  int FlagUseWeight; //whether to weight particles by mass or not
   Particle_t *P;
   int nbin_r; //never set this manually. only modify it via count_tracer_radial()
   int FlagRLogBin;
-  int *RadialCount;
+  double *RadialCount;
   double rmin, rmax;
   int nView;
   char ViewType;

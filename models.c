@@ -28,7 +28,9 @@ void define_halo(const double pars[])
 #if FIT_PAR_TYPE==PAR_TYPE_M_C
   decode_NFWprof(HaloZ0,pars[0]*HaloM0,pars[1]*HaloC0,VIR_C200,&Halo);  
 #elif  FIT_PAR_TYPE==PAR_TYPE_RHOS_RS
-  decode_NFWprof2(HaloZ0,pars[0]*Rhos0,pars[1]*HaloRs0,VIR_C200,&Halo);
+  decode_NFWprof2(HaloZ0,pars[0]*HaloRhos0,pars[1]*HaloRs0,VIR_C200,&Halo);
+#elif FIT_PAR_TYPE==PAR_TYPE_POTS_RS  
+  decode_NFWprof2(HaloZ0,pars[0]/pars[1]/pars[1]*HaloRhos0,pars[1]*HaloRs0,VIR_C200,&Halo);
 #endif
 }
 
@@ -49,7 +51,7 @@ double NFW_like(double pars[], Tracer_t *T)
 	double r=T->P[i].r/Halo.Rs;
 	lnL+=-log(r)-2.*log(1.+r);
   }
-  return lnL;
+  return lnL; //loglikelihood
 }
 
 double halo_pot(double r)
@@ -231,7 +233,10 @@ double like_mean_phase(Tracer_t *Sample)
    #pragma omp parallel for reduction(+:c)
     for(i=0;i<Sample->nP;i++)
     {
-      c+=Sample->P[i].theta;
+	  if(Sample->FlagUseWeight)
+		c+=Sample->P[i].theta*Sample->P[i].w;
+	  else
+		c+=Sample->P[i].theta;
     }
     c/=Sample->nP;c-=0.5; 
     return c*sqrt(12.*Sample->nP);//standard normal variable
@@ -243,7 +248,10 @@ double like_linear_moment(Tracer_t *Sample)
    #pragma omp parallel for reduction(+:c)
     for(i=0;i<Sample->nP;i++)
     {
-      c+=Sample->P[i].theta;
+	  if(Sample->FlagUseWeight)
+		c+=Sample->P[i].theta*Sample->P[i].w;
+	  else
+		c+=Sample->P[i].theta;
     }
     c/=Sample->nP;c-=0.5; 
   //squared mean phase
@@ -547,7 +555,10 @@ double like_radial_bin(Tracer_t *Sample)
 		F.params = &Fpar;
 		gsl_integration_cquad (&F, MAX(rbin[0],Sample->P[j].rlim[0]), MIN(rbin[1],Sample->P[j].rlim[1]), 0, MODEL_TOL_REL, //3, 
 			       GSL_workspaceC, &t, &error, &neval);
-		p+=t/Sample->P[j].T;
+		if(Sample->FlagUseWeight)
+		  p+=t/Sample->P[j].T*Sample->P[j].w;
+		else
+		  p+=t/Sample->P[j].T;
       }
       lnL+=Sample->RadialCount[i]*log(p);
     }

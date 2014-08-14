@@ -34,7 +34,8 @@ if estimator==4:
 elif estimator==0:
   name+='_condition'
 if proxy!='':
-  name+='|'+proxy  
+  name+='|'+proxy
+name+='PotsRs'
 outfile=outdir+name.replace('|','_')+'.hdf5'
 f=h5py.File(outfile,'w')
 mm=[m for m in x for c in xx] #the first for is top layer, the second nested, so c varies first

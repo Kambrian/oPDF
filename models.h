@@ -6,6 +6,7 @@
 
 #define PAR_TYPE_M_C 0
 #define PAR_TYPE_RHOS_RS 1
+#define PAR_TYPE_POTS_RS 2
 #define FIT_PAR_TYPE 0
 
 #define HALF_ORBIT_PERIOD 1

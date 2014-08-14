@@ -301,7 +301,61 @@ def fig_DegeneracyDistribution(nbin=50, cumulative=True, flagsave=False):
   if flagsave:
 	plt.savefig(lib.rootdir+'/plots/paper/DegeneracyDistribution.eps')
   
+
+def fig_MinDistContourRhosRs(flagsave=False):
+  f2=h5py.File(lib.rootdir+'/plots/paper/raw/MeanDistRhosRs.hdf5','r')
+  mm=f2['/logm'][...]
+  cc=f2['/logc'][...]
+  sig=f2['/ts'][...]
+  x=f2['/sig_dist'].attrs['xmin']
+  dm=mm[0,1]-mm[0,0]
+  dc=cc[1,0]-cc[0,0]
+  extent=[mm.ravel().min()-dm/2,mm.ravel().max()+dm/2,cc.ravel().min()-dc/2,cc.ravel().max()+dc/2]
+  plt.imshow(sig, extent=extent, cmap=plt.cm.summer)
+  #plt.contour(mm,cc, sig,  linestyles='dashed')
+  plt.contour(mm,cc, mm+2*cc)
+  plt.plot(plt.xlim(),[0,0],'k:',[0,0],plt.ylim(),'k:')
+  plt.xlabel(r'$\log(\rho_s/\rho_{s,{\rm true}})$')
+  plt.ylabel(r'$\log(r_s/r_{s,{\rm true}})$')
+  if flagsave:
+	plt.savefig(lib.rootdir+'/plots/paper/MinDistRhosRs.eps')
+
+def fig_MinDistContourPotsRs(flagsave=False):
+  f1=h5py.File(lib.rootdir+'/plots/paper/raw/MeanDistPotsRs.hdf5','r')
+  mm=f1['/logm'][...]
+  cc=f1['/logc'][...]
+  ts=f1['/ts'][...]
+  sig=f1['/sig_dist'][...]
+  x=f1['/sig_dist'].attrs['xmin']
+  dm=mm[0,1]-mm[0,0]
+  dc=cc[1,0]-cc[0,0]
+  extent=[mm.ravel().min()-dm/2,mm.ravel().max()+dm/2,cc.ravel().min()-dc/2,cc.ravel().max()+dc/2]
+  plt.imshow(ts, extent=extent, cmap=plt.cm.summer)
+  plt.contour(mm,cc, sig, [1,3], linestyles='dashed')
+  h1=Ellipse((0,0),0,0,fill=False, linestyle='dashed')
+  f1.close()
   
+  f2=h5py.File(lib.rootdir+'/plots/paper/raw/RBinLog30PotsRs.hdf5','r')
+  mm=f2['/logm'][...]
+  cc=f2['/logc'][...]
+  ts=f2['/ts'][...]
+  sig=f2['/sig_like'][...]
+  x=f2['/sig_like'].attrs['xmin']
+  dm=mm[0,1]-mm[0,0]
+  dc=cc[1,0]-cc[0,0]
+  extent=[mm.ravel().min()-dm/2,mm.ravel().max()+dm/2,cc.ravel().min()-dc/2,cc.ravel().max()+dc/2]
+  #plt.imshow(ts, extent=extent, cmap=plt.cm.winter)
+  plt.contour(mm,cc, sig, [1,3], linestyles='solid')
+  h2=Ellipse((0,0),0,0,fill=False, linestyle='solid')
+  f2.close()
+  
+  plt.legend((h1,h2), ('Mean','RBin'))
+  plt.plot(plt.xlim(),[0,0],'k:',[0,0],plt.ylim(),'k:')
+  plt.xlabel(r'$\log(\psi_s/\psi_{s,{\rm true}})$')
+  plt.ylabel(r'$\log(r_s/r_{s,{\rm true}})$')
+  if flagsave:
+	plt.savefig(lib.rootdir+'/plots/paper/MinDistPotsRs.eps')
+	
 def fig_MinDistContour(flagsave=False):
   f1=h5py.File(lib.rootdir+'/plots/paper/raw/ADDist.hdf5','r')
   mm=f1['/logm']
@@ -431,11 +485,12 @@ def fig_MockTSprof(flagsave=False, estimator=14, nbin=30):
 
 def plot_pot(pars, linestyle='-'):
   print pars
-  r=np.logspace(0,2,20)
+  r=np.linspace(0, 100)
+  #r=np.logspace(0,2,20)
   Halo=NFWHalo()
   Halo.define_halo(pars)
   y=-np.array(map(Halo.pot, r))
-  plt.loglog(r/Halo.halo.Rs,y, linestyle)
+  plt.semilogy(r,y, linestyle)
   
 def show_legend():
     a=[x for x in gca().get_children() if isinstance(x,matplotlib.patches.Ellipse)]

@@ -10,6 +10,7 @@ from iminuit.ConsoleFrontend import ConsoleFrontend
 #=============C complex datatypes=====================
 class Particle_t(ctypes.Structure):
   _fields_=[('flag', ctypes.c_int),
+		('w', ctypes.c_double),
 	    ('r', ctypes.c_double),
 	    ('K', ctypes.c_double),
 	    ('L2', ctypes.c_double),
@@ -29,10 +30,11 @@ Tracer_p=ctypes.POINTER(Tracer_t)
 Tracer_t._fields_=[('lnL', ctypes.c_double),
 				   ('nP', ctypes.c_int),
 				   ('mP', ctypes.c_double),
+				   ('FlagUseWeight', ctypes.c_int),
 				   ('P', Particle_p),
 				   ('nbin_r', ctypes.c_int),
 				   ('FlagRLogBin', ctypes.c_int),
-				   ('RadialCount', ctypes.POINTER(ctypes.c_int)),
+				   ('RadialCount', ctypes.POINTER(ctypes.c_double)),
 				   ('rmin', ctypes.c_double),
 				   ('rmax', ctypes.c_double),
 				   ('nView', ctypes.c_int),
@@ -219,6 +221,7 @@ class Tracer(Tracer_t):
 	Tracer_t.__init__(self)
 	self.nP=0  #init state
 	self.nView=0
+	self.FlagUseWeight=0
 	#self._as_parameter_=ctypes.byref(self) #this makes it possible to directly pass this as pointer arg
 	self._pointer=ctypes.byref(self) #or ctypes.cast(ctypes.pointer(self), Tracer_p)? or ctypes.pointer(self)
 	if halo!=None or newoptions!={}:
@@ -319,6 +322,12 @@ class Tracer(Tracer_t):
 	ts=np.array(ts)
 	x,p=self.gen_bin(viewtypes, nbins, equalcount=True)
 	return ts,x
+  
+  def scan_Chi2(self, estimator, x, y):
+	'''scan a likelihood surface to be used for contour plots as contour(x,y,z)'''
+	like=lambda x: lib.like_to_chi2(self.freeze_and_like(x, estimator), estimator) #the real likelihood prob
+	z=[like([m,c]) for m in x for c in y]
+	return x,y,np.array(z).reshape([len(y),len(x)], order="F")
   
   def fmin_FixBinIter(self, estimator,proxy,nbins,x0=[1,1],itertol=0.01, maxiter=50, xtol=1e-3, ftolabs=0.1, ftolrel=1e-2):
 	''' itertol: tolerance for iteration
@@ -438,11 +447,10 @@ class Tracer(Tracer_t):
 	return lib.NFW_like(lib.ParType(*pars), self._pointer)
 	
   def minuit_NFWlike(self, x0=[1,1], minuittol=1):
-	"""too difficult for minuit to work. just use this to estimate the error matrix? still just fantasy. discard it.
-	set a huge tol, say, 1e10, to avoid walking away"""
+	''' to fit a NFW density PDF with ML '''
 	like=lambda m,c: -self.NFW_like([m,c])
 	#profilelikelihood ratio error-def: chi-square1
-	m=Minuit(like, m=x0[0], c=x0[1], print_level=0, pedantic=False, error_m=0.1, error_c=0.1, errordef=1,frontend=ConsoleFrontend())
+	m=Minuit(like, m=x0[0], c=x0[1], print_level=0, pedantic=False, error_m=0.1, error_c=0.1, errordef=0.5,frontend=ConsoleFrontend())
 	m.tol=minuittol   #default convergence edm<1e-4*tol*errordef, but we do not need that high accuracy
 	result=m.migrad()
 	m.print_fmin()

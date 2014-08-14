@@ -53,6 +53,22 @@ static int cmpPartL(const void *p1, const void *p2)
    
    return 0;
  }
+ 
+void calibrate_particle_weights(Tracer_t *Sample)
+{//calibrate weights, so that sum(weight)=num_particles. also rescale the average mass so that total mass is still correct.
+  int i;
+  double w;
+  
+  if(Sample->nP==0) return;
+  
+  for(i=0,w=0;i<Sample->nP;i++)
+	w+=Sample->P[i].w;
+  w/=Sample->nP; //average weight
+  for(i=0;i<Sample->nP;i++)
+	Sample->P[i].w/=w;
+  Sample->mP*=w;
+}
+
 void load_tracer_particles(char *datafile, Tracer_t * Sample)
 {
     int i,j;
@@ -112,17 +128,26 @@ void load_tracer_particles(char *datafile, Tracer_t * Sample)
 	
 	sprintf(A.name,"%sPartMass",grpname);
     nload=load_hdfmatrixF(datafile,&A,1);
-    if(nload==0) 
+	Sample->mP=1.; //initial unit
+	if(nload<=1)
 	{
-	  printf("Setting m=0 for every particle\n");
-	  Sample->mP=0.;
+	  if(nload==1) 
+		Sample->mP=A.x[0];
+	  for(i=0;i<Sample->nP;i++)	Sample->P[i].w=1.;
+	}
+	else if(nload==Sample->nP)
+	{
+	  for(i=0;i<nload;i++)
+		Sample->P[i].w=A.x[i];
+	  calibrate_particle_weights(Sample);
 	}
 	else
 	{
-	  Sample->mP=A.x[0];
-	  free(A.x);
+	  fprintf(stderr, "Error: incomplete PartMass arr %zd (expecting %d)\n", nload, Sample->nP);
+	  exit(1);
 	}
-   printf("mP=%g\n", Sample->mP);
+	if(nload>0) free(A.x);
+	printf("mP=%g\n", Sample->mP);
       /*    
     double x0[3]={0.},v0[3]={0.};
     for(i=0;i<Sample->nP;i++)
@@ -193,6 +218,8 @@ void resample_tracer_particles(unsigned long int seed, Tracer_t *ReSample, Trace
     gsl_ran_sample(r, ReSample->P, ReSample->nP, Sample->P, Sample->nP, sizeof(Particle_t));
     
     gsl_rng_free (r);
+	
+	calibrate_particle_weights(ReSample);
 }
 
 void copy_tracer_particles(int offset, int sample_size, Tracer_t *Sample, Tracer_t *FullSample)
@@ -220,7 +247,9 @@ void copy_tracer_particles(int offset, int sample_size, Tracer_t *Sample, Tracer
   }
   Sample->rmin=FullSample->rmin;
   Sample->rmax=FullSample->rmax;
+  Sample->FlagUseWeight=FullSample->FlagUseWeight;
   Sample->mP=FullSample->mP;
+  calibrate_particle_weights(Sample);
   //its the user's responsibility to manage RadialCount[]
 }
 
@@ -239,6 +268,7 @@ void cut_tracer_particles(Tracer_t *Sample, double rmin, double rmax)
   }
   Sample->nP=j;
   Sample->P=realloc(Sample->P,sizeof(Particle_t)*Sample->nP);
+  calibrate_particle_weights(Sample);
 }
 
 void squeeze_tracer_particles(Tracer_t *Sample)
@@ -255,6 +285,7 @@ void squeeze_tracer_particles(Tracer_t *Sample)
   }
   Sample->nP=j;
   Sample->P=realloc(Sample->P,sizeof(Particle_t)*Sample->nP);
+  calibrate_particle_weights(Sample);
 }
 
 void free_tracer_particles(Tracer_t *Sample)
@@ -330,6 +361,8 @@ void create_tracer_views(Tracer_t *Sample, int nView, char proxy)
 	copy_tracer_particles(0, -1, Sample->Views+i, Sample);
 	Sample->Views[i].nP=nP;
 	Sample->Views[i].P=Sample->P+offset;
+	Sample->Views[i].mP=Sample->mP;
+	calibrate_particle_weights(Sample->Views+i);
 	if(proxy=='r')
 	{
 	  Sample->Views[i].rmin=Sample->Views[i].P[0].r;
@@ -371,7 +404,7 @@ void count_tracer_radial(Tracer_t *Sample, int nbin, int FlagRLogBin)
 	free_tracer_rcounts(Sample);
   Sample->FlagRLogBin=FlagRLogBin;
   Sample->nbin_r=nbin;
-  Sample->RadialCount=calloc(Sample->nbin_r, sizeof(int));
+  Sample->RadialCount=calloc(Sample->nbin_r, sizeof(double));
   if(Sample->FlagRLogBin)
   {
 	logRmin=log(Sample->rmin);
@@ -381,8 +414,8 @@ void count_tracer_radial(Tracer_t *Sample, int nbin, int FlagRLogBin)
 	dr=(Sample->rmax-Sample->rmin)/Sample->nbin_r;
   #pragma omp parallel
   {
-	int *bincount;
-	bincount=calloc(Sample->nbin_r, sizeof(int));
+	double *bincount;
+	bincount=calloc(Sample->nbin_r, sizeof(double));
     #pragma omp for private(j)
     for(i=0;i<Sample->nP;i++)
     { 
@@ -392,7 +425,10 @@ void count_tracer_radial(Tracer_t *Sample, int nbin, int FlagRLogBin)
 		j=floor((Sample->P[i].r-Sample->rmin)/dr);
       if(j<0) j=0;
       if(j>=Sample->nbin_r) j=Sample->nbin_r-1;
-      bincount[j]++;
+	  if(Sample->FlagUseWeight)
+		bincount[j]+=Sample->P[i].w;
+	  else
+		bincount[j]++;
     }
     #pragma omp critical  //note this is not barriered by default!!
     {

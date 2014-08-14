@@ -18,7 +18,7 @@ outdir=lib.rootdir+'/plots/scan'+halo+'%dZoom/'%npart
 if not os.path.exists(outdir):
   os.makedirs(outdir)
   
-name=lib.NameList[estimator]+'Dist'
+name=lib.NameList[estimator]+'DistPotsRs'
 outfile=outdir+name.replace('|','_')+'.hdf5'
 f=h5py.File(outfile,'w')
 mm=[m for m in x for c in x] #the first for is top layer, the second nested, so c varies first

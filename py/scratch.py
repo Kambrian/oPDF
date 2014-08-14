@@ -3,65 +3,55 @@ from dynio import *
 from myutils import *
 import h5py,os,sys
 from scipy.stats import chi2
-
+plt.ion()
 
 #estimator=8
 #proxy='LE'
 #nbins=[10,10]
 npart=1000
 
-lib.open()
+#lib.open()
 #FullSample=Tracer('Mock')
-FullSample=Tracer('AqA4N',DynRMAX=100)
-#Sample=FullSample.copy(5000,npart)
-Sample=FullSample.copy(0,npart)
-Sample.mP*=float(FullSample.nP)/Sample.nP
-Sample.radial_count()
+#Sample=FullSample.copy(0,npart)
 #FullSample.clean()
-result,m=Sample.minuit_NFWlike()
-#Sample.gfmin_dist(10, [2, 0.5])
-#plt.ion()
-#xtol=1e-3
-#x3=Sample.gfmin_like(4,[3,3], xtol)
-#x2=Sample.gfmin_like(4,[2,2], xtol)
-#x1=Sample.gfmin_like(4,[1,1], xtol)
 
-#x3=Sample.fmin_like(4,[3,3], xtol)[0]
-#x2=Sample.fmin_like(4,[2,2], xtol)[0]
-#x1=Sample.fmin_like(4,[1,1], xtol)[0]
+def fig_MockTSprof(halo, npart=1000, flagsave=True, estimator=14, nbin=30):
+  """TS profile for mocks"""
+  lib.open()
+  with Tracer(halo) as FullSample:
+	with FullSample.copy(0, npart) as Sample:
+	  #Sample.FlagUseWeight=useweight
+	  f,ax = plt.subplots(3, sharex=True, sharey=True, figsize=(8,8))
+	  for i,proxy in enumerate(['r','E','L']):
+		h=[]
+		pars=[1,1]
+		for Sample.FlagUseWeight,linestyle in [(0,'b-'), (1,'r--')]:
+		  ts,x=Sample.TSprof(pars, estimator, viewtypes=proxy, nbins=nbin)
+		  tmp,=ax[i].plot(xrange(nbin+1), ts, linestyle)
+		  #ax[i].step(xrange(nbin+1), ts, linestyle, where='post')
+		  h.append(tmp)
+		  ax[i].plot(plt.xlim(),[0,0],'k:')
+		  ax[i].text(nbin*0.05, 2, proxy)
+	  ax[1].set_ylabel(r'$\bar{\Theta}$')
+	  ax[-1].set_xlabel('Bins')
+	  ax[-1].legend(h, ('No Weight','Weight'),loc='lower left', frameon=0, ncol=2, fontsize=18)
+  f.subplots_adjust(hspace=0)
+  plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
+  nbins = 7 #len(ax[0].get_yticklabels())
+  plt.setp([a.yaxis for a in ax], major_locator=MaxNLocator(nbins=nbins, prune='lower',symmetric=True))
+  lib.close()
+  ax[0].set_title(halo)
+  if flagsave:
+	plt.savefig(lib.rootdir+'/plots/paper/TSprof'+halo+'Mean.eps') #rasterize=True, dpi=300
+	
 
-#x3=Sample.gfmin_jointLE(10, 100, 1, [3,3], xtol)
-#x2=Sample.gfmin_jointLE(10, 100, 1, [2,2], xtol)
-#x1=Sample.gfmin_jointLE(10, 100, 1, [1,1], xtol)
 
-#x3=Sample.fmin_jointLE(10, 100, 1, [3,3], xtol)[0]
-#x2=Sample.fmin_jointLE(10, 100, 1, [2,2], xtol)[0]
-#x1=Sample.fmin_jointLE(10, 100, 1, [1,1], xtol)[0]
-#print x3,x2,x1
-#x=Sample.gfmin_jointLE(10, 100, 1, [3,3])
-#like=lambda x: -Sample.freeze_and_like(x, 4)
-#x1=fmin(like, [3, 3], xtol=1e-2, ftol=1e-5)
-#from scipy.optimize import fmin_powell
-#x2=fmin_powell(like, [3,3], xtol=1e-2, ftol=1e-5)
-#x3=fmin_gsl(like, [3, 3], xtol=1e-2)
-#x=Sample.fmin_like(4, [3,3], xtol=1e-2, ftolabs=0.1, ftolrel=1e-3)
-#x1=Sample.fmin_dist(8, [1,1])
-#like=lambda m,c, beta,cc, g1, g2: -lib.wenting_like(lib.ParType(m,c,beta,cc,g1,g2), Sample._pointer)
-#print like(1.5401/1.873, 28.0619/16.3349, 0.7173/0.715, 84.3133/69.014, 3.0/2.301, 8.2016/7.467)
-#m=Minuit(like, m=1,c=1,beta=1,cc=1,g1=1,g2=1, print_level=3, pedantic=False, errordef=1, frontend=ConsoleFrontend())
-#m.set_strategy(0)
-#m.tol=10   #default convergence edm<1e-4*tol*errordef, but we do not need that high accuracy
-#m.migrad()
-#Sample.wenting_like_marginal([1,1])
-#from scipy.optimize import *
-#x0=10**((np.random.rand(2)-0.5)*2)
-#x0=[2,1]
-#print 'Initial: ', x0
-#print '-------------raw est---------------'
-#like= lambda x: -Sample.freeze_and_like(x,estimator)
-#x=fmin(like, x0, xtol=0.001, ftol=1e-4)
-#print x,-Sample.freeze_and_like(x,estimator)
-
+#fig_MockTSprof('AqA2star')
+fig_MockTSprof('AqA2starN')
+#fig_MockTSprof('AqA2starN', useweight=1)
+#fig_MockTSprof('AqB2star')
+fig_MockTSprof('AqB2starN')
+#fig_MockTSprof('AqB2starN', useweight=1)
   
 #Sample.clean()
 #lib.close()

@@ -1,7 +1,7 @@
 """ utility functions """
 import sys
 import numpy as np
-from scipy.stats import gaussian_kde,norm
+from scipy.stats import gaussian_kde,norm,chi2
 import ctypesGsl as cgsl
 import matplotlib
 #matplotlib.user('Agg')
@@ -101,6 +101,9 @@ def AD2Sig(AD):
   #sig[AD>5]=(np.log(AD[AD>5])+0.22)/0.66
   return sig
 
+def Sig2TS(sig,dof=1):
+  '''convert a sigma value to the 2*likelihood ratio'''
+  return chi2.ppf(chi2.cdf(np.array(sig)**2,1),dof)
 
 def fmin_gsl(func, x0, args=[], xtol=1e-3, ftolabs=0.01, xstep=1.0, maxiter=1000, full_output=False):
     '''
@@ -181,7 +184,11 @@ def percent2level(p,z):
     frac=x.cumsum()/x.sum()
     l=[x[abs(frac-pi).argmin()] for pi in p]
     return l
-  
+
+def contour_handle(color, linestyle='solid'):
+  '''return a patch object to be used for labelling patch objects in legends'''
+  return Ellipse((0,0),0,0,fill=False, color=color, linestyle=linestyle)  
+
 def percentile_contour(data, nbin=100, percents=0.683, colors=None, logscale=False, **kwargs):
     """
     plot contour at specific percentile levels
