@@ -102,14 +102,13 @@ void load_tracer_particles(char *datafile, Tracer_t * Sample)
     nload=load_hdfmatrix(datafile,&B,1,H5T_NATIVE_INT);
     if(nload==0) printf("Assuming flag=1 for every particle\n");
     int *p=B.x;
-    for(i=0;i<Sample->nP;i++)
-    if(nload>0)
+	if(nload>0)
 	{
-	  Sample->P[i].flag=p[i];
+	  for(i=0;i<Sample->nP;i++)	Sample->P[i].flag=p[i];
 	  free(B.x);
 	}
     else
-	  Sample->P[i].flag=1;
+	  for(i=0;i<Sample->nP;i++)	Sample->P[i].flag=1;
 	
 	sprintf(A.name,"%sPartMass",grpname);
     nload=load_hdfmatrixF(datafile,&A,1);
