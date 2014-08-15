@@ -321,6 +321,7 @@ double AndersonDarlingTest_Old(Tracer_t *Sample)
   int i;
   double lnL=0.,*theta;
   theta=malloc(sizeof(double)*Sample->nP);
+  printf("Old Test\n");
   #pragma omp parallel
   {
    #pragma omp for 
@@ -330,36 +331,76 @@ double AndersonDarlingTest_Old(Tracer_t *Sample)
       {
       qsort(theta, Sample->nP, sizeof(double), cmpDouble);
       lnL=-log((1-theta[0])*theta[Sample->nP-1])-theta[0]+theta[Sample->nP-1]-1; //head and tail partitions
+      printf("head: %g\n", lnL);
       }
     #pragma omp for reduction(+:lnL)
     for(i=1;i<Sample->nP;i++)
-      lnL+=log(theta[i]/theta[i-1])*i*i/Sample->nP/Sample->nP
+	  lnL+=log(theta[i]/theta[i-1])*i*i/Sample->nP/Sample->nP
 	  -log((1-theta[i])/(1-theta[i-1]))*(1.-(double)i/Sample->nP)*(1.-(double)i/Sample->nP)
 	  +theta[i-1]-theta[i];
+//		lnL+=log(P[i].theta/P[i-1].theta)*P[i-1].cw*P[i-1].cw/Sample->nP/Sample->nP
+// 	  -log((1-P[i].theta)/(1-P[i-1].theta))*(1.-P[i-1].cw/Sample->nP)*(1.-P[i-1].cw/Sample->nP)
+// 	  +P[i-1].theta-P[i].theta;
   }
   free(theta);
   lnL*=-Sample->nP; //differ by -1, to make it comparable to a loglike
   return lnL;
 }
+typedef struct
+{
+  double theta;
+  double w;//weight
+  double cw;//cumsum of w
+} ThetaWeight_t;
+
+static int cmpThetaWeight(const void *p1, const void *p2)
+{ //in ascending order
+  if(((ThetaWeight_t *)p1)->theta > ((ThetaWeight_t *)p2)->theta ) 
+    return 1;
+  
+  if(((ThetaWeight_t *)p1)->theta < ((ThetaWeight_t *)p2)->theta )
+    return -1;
+  
+  return 0;
+}
 double AndersonDarlingTest(Tracer_t *Sample)
 {//Beloborodov&Levin 2004, apj, 613:224-237; simplified equation as in the note.
   int i;
-  double lnL=0., *theta;
-  theta=malloc(sizeof(double)*Sample->nP);
+  double lnL=0.;
+  ThetaWeight_t *P;
+  P=malloc(sizeof(ThetaWeight_t)*Sample->nP);
+  
   #pragma omp parallel
   {
    #pragma omp for 
     for(i=0;i<Sample->nP;i++)
 	{
-      theta[i]=Sample->P[i].theta;
+      P[i].theta=Sample->P[i].theta;
+	  P[i].w=Sample->P[i].w;
 	}
     #pragma omp single
-      qsort(theta, Sample->nP, sizeof(double), cmpDouble);
+    {
+      qsort(P, Sample->nP, sizeof(ThetaWeight_t), cmpThetaWeight);
+	  if(Sample->FlagUseWeight)
+	  {
+		double wsum=0.;
+		for(i=0;i<Sample->nP;i++)
+		{
+		  wsum+=P[i].w;
+		  P[i].cw=wsum;
+		}
+	  }
+	}
     #pragma omp for reduction(+:lnL)
     for(i=0;i<Sample->nP;i++)
-      lnL+=-(1.+2.*i)*log(theta[i])+(1+2.*(i-Sample->nP))*log(1-theta[i]);
+	{
+	  if(Sample->FlagUseWeight)
+		lnL+=P[i].w*(P[i].w-2.*P[i].cw)*log(P[i].theta)-P[i].w*(P[i].w+2.*(Sample->nP-P[i].cw))*log(1-P[i].theta);
+	  else
+		lnL+=-(1.+2.*i)*log(P[i].theta)+(1+2.*(i-Sample->nP))*log(1-P[i].theta); //note the i starts from 0 here, so they are actually j=i-1, with i starting from 1
+	}
   }
-  free(theta);
+  free(P);
   lnL=lnL/Sample->nP-Sample->nP; 
   return -lnL; //differ by -1, to make it comparable to a loglike
 }
@@ -641,6 +682,9 @@ double like_eval(const double pars[], int estimator,Tracer_t *Sample)
     case RADIAL_PHASE_ROULETTE:
       lnL=AndersonDarlingTest(Sample);
       break;
+	case (RADIAL_PHASE_ROULETTE+100):
+      lnL=AndersonDarlingTest_Old(Sample);
+      break;  
 	case RADIAL_PHASE_AD_GEV:
 	case RADIAL_PHASE_AD_BINORMAL:
 	case RADIAL_PHASE_AD_NORMAL:
