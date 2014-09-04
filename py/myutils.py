@@ -189,63 +189,87 @@ def contour_handle(color, linestyle='solid'):
   '''return a patch object to be used for labelling patch objects in legends'''
   return Ellipse((0,0),0,0,fill=False, color=color, linestyle=linestyle)  
 
-def percentile_contour(data, nbin=100, percents=0.683, colors=None, logscale=False, **kwargs):
-    """
-    plot contour at specific percentile levels
-    
-    percents can be a list, specify the contour percentile levels
-    data should be shape [2,n] array
-    logscale: default False; whether to plot in linear or logspace
-    colors should be a tuple, e.g, (r,)
-    **kwargs specify linestyles
-    return a handle artist of the same linestyle (but not the contour object) to be used in legends
-    """
-    if logscale:
-      data=np.log10(data)
-    l=data.min(axis=1)
-    r=data.max(axis=1)
-    X, Y = np.mgrid[l[0]:r[0]:nbin*1j, l[1]:r[1]:nbin*1j]
-    positions =np.vstack([X.ravel(), Y.ravel()])
-    kernel = gaussian_kde(data)
-    Z = np.reshape(kernel(positions).T, X.shape)
-    lvls=percent2level(percents,Z)
-    #if logscale:
-      #h0=plt.contour(np.exp10(X),np.exp10(Y),Z,lvls, colors=colors, **kwargs)
-      #plt.loglog()
-    #else:
-    h0=plt.contour(X,Y,Z,lvls, colors=colors, **kwargs)
-    h=Ellipse((0,0),0,0,fill=False, color=list(colors)[0], **kwargs)
-    return h,h0
-
-def percentile_contourf(data, nbin=100, percents=[0.683,1], colors=None, logscale=False, **kwargs):
-    """
-    plot contourf at specific percentile levels
-    
-    percents can be a list, specify the contour percentile levels
-    data should be shape [2,n] array
-    logscale: default False; whether to plot in linear or logspace
-    colors should be a tuple, e.g, (r,)
-    **kwargs specify linestyles
-    return a handle artist of the same linestyle (but not the contour object) to be used in legends
-    """
-    if logscale:
-      data=np.log10(data)
-    l=data.min(axis=1)
-    r=data.max(axis=1)
-    X, Y = np.mgrid[l[0]:r[0]:nbin*1j, l[1]:r[1]:nbin*1j]
-    positions =np.vstack([X.ravel(), Y.ravel()])
-    kernel = gaussian_kde(data)
-    Z = np.reshape(kernel(positions).T, X.shape)
-    lvls=percent2level(percents,Z)
-    print lvls
-    #if logscale:
-      #h0=plt.contour(np.exp10(X),np.exp10(Y),Z,lvls, colors=colors, **kwargs)
-      #plt.loglog()
-    #else:
-    h0=plt.contourf(X,Y,Z,lvls, colors=colors, **kwargs)
-    h=Ellipse((0,0),0,0,fill=True, color=list(colors)[0], **kwargs)
-    return h,h0
+def density_of_points(data, bins=100, method='kde', weights=None):
+  ''' estimate density of points with kde or histogram2d 
   
+  data: should be shape [2,n] array
+  bins: can be an integer or [nx,ny] for number of bins, an ndarray or a list of two arrays  for bin edges
+  method: 'kde' or 'hist', kernel-density-estimate or 2d-histogram estimate
+  weights: whether to use weights or not. currently only supports hist method.
+  return: X,Y,Z; ready to be used for contour plots as contour(X, Y, Z). 
+                X and Y are mid points of the bins on which Z is calculated.
+  '''
+  l=data.min(axis=1)
+  r=data.max(axis=1)
+  if isinstance(bins, int):  
+	  x=np.linspace(l[0], r[0], bins+1)
+	  y=np.linspace(l[1], r[1], bins+1)
+  elif isinstance(bins, np.ndarray):
+	  x=bins
+	  y=bins
+  elif isinstance(bins, list):
+	if isinstance(bins[0], int):
+	  x=np.linspace(l[0], r[0], bins[0]+1)
+	  y=np.linspace(l[1], r[1], bins[1]+1)
+	else:  
+	  x=bins[0]
+	  y=bins[1]
+  
+  X,Y=np.meshgrid((x[:-1]+x[1:])/2, (y[:-1]+y[1:])/2) #mid points
+  if method=='kde':
+	  positions =np.vstack([X.ravel(), Y.ravel()])
+	  kernel = gaussian_kde(data)
+	  Z = np.reshape(kernel(positions).T, X.shape)
+  else:
+	  Z=np.histogram2d(data[0], data[1], bins=[x, y], weights=weights)
+	  Z=Z[0].T
+  return X,Y,Z
+	  
+def percentile_contour(X,Y,Z, percents=0.683, colors=None, fill=False, linestyles='solid', **kwargs):
+  """
+  plot contour at specific percentile levels
+
+  X,Y can be both 2-d arrays as Z, or 1-d array specifying the column(horizontally varying) and row coordinates for Z
+  percents can be a list, specify the contour percentile levels
+  colors should be a tuple, e.g, (r,) 
+  fill: bool, whether to plot filled contours
+  **kwargs specify linestyles
+  return a handle artist of the same linestyle (but not the contour object) to be used in legends
+  """    
+  #if type is 'image':
+	#extent=(x.min()-(x[1]-x[0])/2, x.max()+(x[1]-x[0])/2, y.min()-(y[1]-y[0])/2, y.max()+(y[1]-y[0])/2)
+	#if colors is None:
+	  #colors=plt.cm.summer
+	#h0=plt.imshow(Z, extent=extent, cmap=colors)
+  #else:
+  lvls=percent2level(percents,Z)
+  if fill:
+	h0=plt.contourf(X,Y,Z,lvls, colors=colors, linestyles=linestyles, **kwargs)
+  else:
+	h0=plt.contour(X,Y,Z,lvls, colors=colors, linestyles=linestyles, **kwargs)
+
+  try:
+	color=list(colors)[0]
+  except:
+	color=colors
+  h=Ellipse((0,0),0,0,fill=fill, color=color, linestyle=linestyles, **kwargs)
+  
+  return h,h0,lvls
+
+def get_extent(X,Y):
+  ''' get extent for X,Y vectors or meshgrids. 
+  the output is (xmin,xmax,ymin,ymax), the edge-padded boudaries,
+      assuming X,Y specifies the mid points of bins and uniformly spaced.
+  can be used to specify extent for imshow()'''
+  if X.squeeze().ndim==2:
+	dx=X[0,1]-X[0,0]
+	dy=Y[1,0]-Y[1,1]
+  else:
+	dx=X[1]-X[0]
+	dy=Y[1]-Y[0]
+  extent=(X.ravel().min()-dx/2, X.ravel().max()+dx/2, Y.ravel().min()-dy/2, Y.ravel().max()+dy/2)
+  return extent
+
 def plot_cov_ellipse(cov, pos, nstd=1, ax=None, **kwargs):
     """
     Plots an `nstd` sigma error ellipse based on the specified covariance

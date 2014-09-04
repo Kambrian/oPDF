@@ -179,6 +179,12 @@ lib.make_sample.argtypes=[ctypes.c_int, ctypes.c_int, Tracer_p, Tracer_p]
 lib.free_tracer.restype=None
 lib.free_tracer.argtypes=[Tracer_p]
 #extern void free_tracer(Tracer_t *Sample);
+lib.init_potential_spline.restype=None
+lib.init_potential_spline.argtypes=[]
+lib.free_potential_spline.restype=None
+lib.free_potential_spline.argtypes=[]
+lib.eval_potential_spline.restype=ctypes.c_double
+lib.eval_potential_spline.argtypes=[ctypes.c_double]
 
 #wenting's lib
 prototype=ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double)
@@ -200,6 +206,7 @@ class NFWHalo(object):
 	self.C0=ctypes.c_double.in_dll(lib, 'HaloC0')
 	self.Rhos0=ctypes.c_double.in_dll(lib, 'HaloRhos0')
 	self.Rs0=ctypes.c_double.in_dll(lib, 'HaloRs0')
+	self.ProfID=ctypes.c_int.in_dll(lib, 'HaloProfID')
 	
   def define_halo(self, pars):
 	lib.define_halo(lib.ParType(*pars))
@@ -315,7 +322,7 @@ class Tracer(Tracer_t):
 	self.create_nested_views(pars, viewtypes, nbins)
 	return self.nested_views_FChi2(pars, estimator)
   
-  def TSprof(self, pars=[1,1], estimator=10, viewtypes='L', nbins=[100]):
+  def TSprof(self, pars=[1,1], estimator=10, viewtypes='L', nbins=100):
 	self.joint_FChi2(pars, estimator, viewtypes, nbins)
 	ts=[self.Views[i].lnL for i in xrange(self.nView)]
 	ts.append(np.nan)

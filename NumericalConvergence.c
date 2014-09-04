@@ -120,7 +120,7 @@ scan(1e-6,1e-6);
 
   free_integration_space();
   free_tracer(&Sample);
-  
+// 	free_potential_spline();
   return 0;
   
 }

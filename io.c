@@ -449,6 +449,7 @@ void init_tracer(Tracer_t *Sample)
   Sample->rmax=1000;
   HaloM0=183.5017;
   HaloC0=16.1560;
+  HaloProfID=0;
   
   if(NULL!=getenv("DynDataFile"))
   {
@@ -459,6 +460,7 @@ void init_tracer(Tracer_t *Sample)
     Sample->rmax=strtod(getenv("DynRMAX"),NULL);
     HaloM0=strtod(getenv("DynM0"),NULL);
     HaloC0=strtod(getenv("DynC0"),NULL);
+	HaloProfID=strtol(getenv("DynProfID"), NULL, 10);
   }
   else
     printf("Warning: Using default parameters with datafile %s .\n", datafile);

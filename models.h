@@ -84,7 +84,13 @@
 #define NUM_PAR_MAX 10
 extern double MODEL_TOL_BIN, MODEL_TOL_BIN_ABS, MODEL_TOL_REL;
 extern double HaloM0,HaloC0,HaloRhos0,HaloRs0,HaloZ0; //to define the reference point (units) of the scan
+extern int HaloProfID; //profile data for interpolation
 extern struct NFWParZ Halo;
+
+//potential profile using interpolation
+extern void init_potential_spline();
+extern void free_potential_spline();
+extern double eval_potential_spline(double r);
 
 extern void alloc_integration_space();
 extern void free_integration_space();
