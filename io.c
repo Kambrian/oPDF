@@ -71,7 +71,8 @@ void calibrate_particle_weights(Tracer_t *Sample)
 
 void load_tracer_particles(char *datafile, Tracer_t * Sample)
 {
-    int i,j;
+	size_t nload;
+    int i,j, *p;
     FloatMat A;
     GenericMat B;
     char grpname[32];
@@ -112,14 +113,39 @@ void load_tracer_particles(char *datafile, Tracer_t * Sample)
     }
     free(A.x);
     
-    
-    sprintf(B.name,"%sflag",grpname);
-    size_t nload;
+	sprintf(B.name,"%sHaloID",grpname);
     nload=load_hdfmatrix(datafile,&B,1,H5T_NATIVE_INT);
-    if(nload==0) printf("Assuming flag=1 for every particle\n");
-    int *p=B.x;
 	if(nload>0)
 	{
+	  p=B.x;
+	  for(i=0;i<Sample->nP;i++)	Sample->P[i].haloid=p[i];
+	  free(B.x);
+	}
+	
+	sprintf(B.name,"%sSubID",grpname);
+    nload=load_hdfmatrix(datafile,&B,1,H5T_NATIVE_INT);
+	if(nload>0)
+	{
+	  p=B.x;
+	  for(i=0;i<Sample->nP;i++)	Sample->P[i].subid=p[i];
+	  free(B.x);
+	}
+	
+	sprintf(B.name,"%sStrmID",grpname);
+    nload=load_hdfmatrix(datafile,&B,1,H5T_NATIVE_INT);
+	if(nload>0)
+	{
+	  p=B.x;
+	  for(i=0;i<Sample->nP;i++)	Sample->P[i].strmid=p[i];
+	  free(B.x);
+	}
+    
+    sprintf(B.name,"%sflag",grpname);
+    nload=load_hdfmatrix(datafile,&B,1,H5T_NATIVE_INT);
+    if(nload==0) printf("Assuming flag=1 for every particle\n");
+	if(nload>0)
+	{
+	  p=B.x;
 	  for(i=0;i<Sample->nP;i++)	Sample->P[i].flag=p[i];
 	  free(B.x);
 	}

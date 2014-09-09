@@ -5,12 +5,12 @@ import h5py,os,sys
 from scipy.stats import chi2
 plt.ion()
 
-halo='AqB4'
+halo='AqA2'
 nbin=100
 
 G=43007.1
 lib.open()
-FullSample=Tracer(halo+'all',DynRMIN=0,DynRMAX=500)
+FullSample=Tracer(halo,DynRMIN=0,DynRMAX=500)
 #lib.init_potential_spline()
 xbin=np.logspace(0, np.log10(500), nbin)
 xcen=xbin/np.sqrt(xbin[1]/xbin[0])

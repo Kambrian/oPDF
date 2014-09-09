@@ -342,9 +342,8 @@ def skeleton(x,y,nbin=10,alpha=0.683):
 		ym[i]=np.mean(y[bin==i])
 		ymed[i]=np.median(y[bin==i])
 		ysig[i]=np.std(y[bin==i])
-		tmp=np.sort(y[bin==i])
 		if count[i]:
-			ylim[:,i]=[tmp[np.ceil(alpha*count[i])],tmp[np.ceil((1-alpha)*count[i])]]
+			ylim[:,i]=np.percentile(y[bin==i], [alpha*100, (1-alpha)*100])
 		else:
 			ylim[:,i]=[np.NaN,np.NaN]
 			

@@ -1,7 +1,7 @@
 from math import *
 import numpy as np
 import ctypes,os,ConfigParser,h5py
-from myutils import fmin_gsl
+from myutils import fmin_gsl,density_of_points,get_extent
 from scipy.optimize import fmin, fmin_powell
 from scipy.stats import norm,chi2
 from iminuit import Minuit
@@ -9,7 +9,10 @@ from iminuit.ConsoleFrontend import ConsoleFrontend
 
 #=============C complex datatypes=====================
 class Particle_t(ctypes.Structure):
-  _fields_=[('flag', ctypes.c_int),
+  _fields_=[('haloid', ctypes.c_int),
+		('subid', ctypes.c_int),
+		('strmid', ctypes.c_int),
+		('flag', ctypes.c_int),
 		('w', ctypes.c_double),
 	    ('r', ctypes.c_double),
 	    ('K', ctypes.c_double),
@@ -292,6 +295,9 @@ class Tracer(Tracer_t):
   
   def like_init(self, pars=[1,1], estimator=10):
 	lib.like_init(lib.ParType(*pars), estimator, self._pointer)
+
+  def like_eval(self, pars=[1,1], estimator=10):
+	return lib.like_eval(lib.ParType(*pars), estimator, self._pointer)
 	
   def freeze_and_like(self, pars=[1,1], estimator=10):
 	y=lib.freeze_and_like(lib.ParType(*pars), estimator, self._pointer)
@@ -335,6 +341,17 @@ class Tracer(Tracer_t):
 	like=lambda x: lib.like_to_chi2(self.freeze_and_like(x, estimator), estimator) #the real likelihood prob
 	z=[like([m,c]) for m in x for c in y]
 	return x,y,np.array(z).reshape([len(y),len(x)], order="F")
+  
+  def phase_density(self, proxy='E', bins=100, method='hist', logscale=False):
+	'''estimate density in proxy-theta space. theta has been shifted by -0.5 at output'''
+	if logscale:
+	  f=self.data[proxy]>0
+	  data=np.array((np.log10(self.data[proxy][f]), self.data['theta'][f]-0.5))
+	else:
+	  data=np.array((self.data[proxy], self.data['theta']-0.5))
+	X,Y,Z=density_of_points(data, bins=bins, method=method)
+	extent=get_extent(X,Y)
+	return X,Y,Z,extent,data
   
   def fmin_FixBinIter(self, estimator,proxy,nbins,x0=[1,1],itertol=0.01, maxiter=50, xtol=1e-3, ftolabs=0.1, ftolrel=1e-2):
 	''' itertol: tolerance for iteration
@@ -480,6 +497,13 @@ class Tracer(Tracer_t):
 	newsample.__update_array()
 	return newsample
   
+  def select(self, flags):
+	'''select particles according to flags array, to create a subsample'''
+	sample=self.copy(0,0)
+	sample.data['flag']=flags
+	sample.squeeze() # __update_array() is called automatically
+	return sample
+	
   def create_views(self, n=10, proxy='L'):
 	lib.create_tracer_views(self._pointer, n, proxy)
 	

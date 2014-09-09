@@ -1,5 +1,8 @@
 typedef struct
 {
+  int haloid;//host haloid
+  int subid;//subhalo id
+  int strmid; //stream id
   int flag; //will be assigned a binID for binned MinDist estimator
   double w; //weight (particle mass normalized by average mass), mostly for tagged stars.
   double r;
