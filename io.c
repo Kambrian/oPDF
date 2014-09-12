@@ -130,7 +130,7 @@ void load_tracer_particles(char *datafile, Tracer_t * Sample)
 	  for(i=0;i<Sample->nP;i++)	Sample->P[i].subid=p[i];
 	  free(B.x);
 	}
-	
+/*	
 	sprintf(B.name,"%sStrmID",grpname);
     nload=load_hdfmatrix(datafile,&B,1,H5T_NATIVE_INT);
 	if(nload>0)
@@ -139,7 +139,7 @@ void load_tracer_particles(char *datafile, Tracer_t * Sample)
 	  for(i=0;i<Sample->nP;i++)	Sample->P[i].strmid=p[i];
 	  free(B.x);
 	}
-    
+*/    
     sprintf(B.name,"%sflag",grpname);
     nload=load_hdfmatrix(datafile,&B,1,H5T_NATIVE_INT);
     if(nload==0) printf("Assuming flag=1 for every particle\n");

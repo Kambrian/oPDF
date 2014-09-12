@@ -34,7 +34,7 @@ elif estimator==10:
 elif estimator==4:
   sig=P2Sig(chi2.sf(cont1[2],2))
 else:
-  raise('estimator must be 8 or 10')
+  raise('estimator must be 4, 8 or 10')
 
 f=h5py.File(outfile+'.hdf5','w')
 grp=f.create_group('/Dynamical')

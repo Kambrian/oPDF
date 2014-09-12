@@ -7,10 +7,10 @@ plt.ion()
 
 npart=1000
 
-halo='AqB4'
+halo='B4'
 lib.open()
 
-FullSample=Tracer(halo+'all',DynRMAX=100)
+FullSample=Tracer(halo)
 outfile=lib.rootdir+'/plots/paper/'+halo+'allFitsR'+os.environ['DynRMAX']+'nP%dFull'%npart
 
 Sample=FullSample.copy(0,npart)

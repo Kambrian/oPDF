@@ -11,7 +11,7 @@ from iminuit.ConsoleFrontend import ConsoleFrontend
 class Particle_t(ctypes.Structure):
   _fields_=[('haloid', ctypes.c_int),
 		('subid', ctypes.c_int),
-		('strmid', ctypes.c_int),
+		#('strmid', ctypes.c_int),
 		('flag', ctypes.c_int),
 		('w', ctypes.c_double),
 	    ('r', ctypes.c_double),
@@ -83,6 +83,12 @@ else:
 lib.open=lib.alloc_integration_space
 lib.close=lib.free_integration_space
 
+def has_config(halo):
+  c=ConfigParser.ConfigParser()
+  c.optionxform=str
+  c.read('DataFiles.cfg')
+  return c.has_section(halo)
+
 def get_config(halo):
   if halo==None:
 	return {}
@@ -97,6 +103,7 @@ def get_config(halo):
   return options    
 
 lib.get_config=get_config
+lib.has_config=has_config
 
 #models
 lib.like_init.restype=None
@@ -343,12 +350,12 @@ class Tracer(Tracer_t):
 	return x,y,np.array(z).reshape([len(y),len(x)], order="F")
   
   def phase_density(self, proxy='E', bins=100, method='hist', logscale=False):
-	'''estimate density in proxy-theta space. theta has been shifted by -0.5 at output'''
+	'''estimate density in proxy-theta space'''
 	if logscale:
 	  f=self.data[proxy]>0
-	  data=np.array((np.log10(self.data[proxy][f]), self.data['theta'][f]-0.5))
+	  data=np.array((np.log10(self.data[proxy][f]), self.data['theta'][f]))
 	else:
-	  data=np.array((self.data[proxy], self.data['theta']-0.5))
+	  data=np.array((self.data[proxy], self.data['theta']))
 	X,Y,Z=density_of_points(data, bins=bins, method=method)
 	extent=get_extent(X,Y)
 	return X,Y,Z,extent,data
@@ -588,25 +595,6 @@ class Tracer(Tracer_t):
 	f=f>0
 	self.P['flag'][:]=f
 	print "Found %d pixels, %d particles"%(p[0].shape[0],np.sum(self.P['flag']))
-
-class SubData(object):
-  def __init__(self, infile):
-    f=h5py.File(infile,'r')
-    self.x=f['/x'][...]
-    self.v=f['/v'][...]
-    self.m=f['/m'][...]
-    f.close()
-    self.r=np.sqrt(np.sum(self.x**2,1))
-    self.vr=np.sum(self.v*self.x,1)/self.r
-    self.vr[np.isnan(self.vr)]=0
-    self.K=np.sum(self.v**2,1)/2.
-    self.L2=np.sum(np.cross(self.x, self.v)**2,1)
-    self.Nsub=self.x.shape[0]
-    
-  def eval_energy(self):
-	"""calc binding energy for each sub. the halo potential must be initialized before calling this func,
-	via freeze_energy() or define_halo()"""
-	self.E=np.array([-k-lib.halo_pot(r) for k,r in zip(self.K,self.r)])
   
 if __name__=="__main__":
   lib.open() # common initialization

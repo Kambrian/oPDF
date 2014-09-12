@@ -5,16 +5,30 @@ import h5py,os,sys
 from scipy.stats import chi2
 plt.ion()
 
-halo='AqA2'
+halo=sys.argv[1] #'B4'
 nbin=100
+npart=0 #int(1e6)
 
 G=43007.1
 lib.open()
-FullSample=Tracer(halo,DynRMIN=0,DynRMAX=500)
+FullSample=Tracer(halo+'N',DynRMIN=0,DynRMAX=500)
+Sample=FullSample.copy(0,npart)
+Sample.mP=FullSample.mP*FullSample.nP/Sample.nP
+FullSample.clean()
+
 #lib.init_potential_spline()
-xbin=np.logspace(0, np.log10(500), nbin)
+xbin=np.logspace(np.log10(0.5), np.log10(500), nbin)
 xcen=xbin/np.sqrt(xbin[1]/xbin[0])
 vol=np.diff(np.hstack([0., xbin])**3)*np.pi*4/3
+
+countM,tmp=np.histogram(Sample.data['r'], np.hstack([0., xbin]))#dM
+countR,tmp=np.histogram(Sample.data['r'], np.hstack([0., xbin]), weights=1./Sample.data['r'])#dM/R
+density=countM*Sample.mP/vol
+pot=countM.cumsum()/xbin+countR.sum()-countR.cumsum()
+pot*=G*Sample.mP
+#pad with bin 0
+xbin=np.hstack([0., xbin])
+pot=np.hstack([countR.sum()*G*Sample.mP, pot])
 
 c0=get_config(halo+'N')
 Halo=NFWHalo()
@@ -23,11 +37,6 @@ Halo.C0.value=float(c0['DynC0'])
 Halo.define_halo([1,1])
 potNFW=-np.array(map(Halo.pot,xbin))
 
-countM,tmp=np.histogram(FullSample.data['r'], np.hstack([0., xbin]))#dM
-countR,tmp=np.histogram(FullSample.data['r'], np.hstack([0., xbin]), weights=1./FullSample.data['r'])#dM/R
-density=countM*FullSample.mP/vol
-pot=countM.cumsum()/xbin+countR.sum()-countR.cumsum()
-pot*=G*FullSample.mP
 #iref=-1
 iref=np.abs(xbin-Halo.halo.Rs).argmin()
 plt.plot(xbin, pot-pot[iref]+potNFW[iref], 'gx')
@@ -43,6 +52,17 @@ print ','.join(['{:f}'.format(i) for i in xbin])
 print
 print ','.join(['{:f}'.format(i) for i in pot])
 
-#FullSample.clean()
+lib.init_potential_spline()
+xnew=np.logspace(-1,3,50)
+Halo.define_halo([1,2])
+potNew=-np.array(map(Halo.pot, xnew))
+Halo.define_halo([2,1])
+potNew2=-np.array(map(Halo.pot, xnew))
+plt.figure()
+plt.plot(xnew, potNew, 'ro')
+plt.plot(xnew, potNew2, 'gs')
+plt.plot(xbin, pot, 'k-')
+plt.loglog()
+#Sample.clean()
 #lib.free_potential_spline()
 #lib.close()

@@ -92,7 +92,8 @@ def ADSurvFunc(AD):
 
 def P2Sig(pval):
   """convert pval to sigma"""
-  return norm.ppf(1.0-pval/2)
+  #return norm.ppf(1.0-pval/2)
+  return -norm.ppf(pval/2) #equivalent to the above, but more accurate
 
 def AD2Sig(AD):
   """convert AndersonDarling TS to sigma"""

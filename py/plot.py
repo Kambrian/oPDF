@@ -512,38 +512,57 @@ def fig_DMTSprofShow(halo, npart=10000, flagsave=False, estimator=14, nbin=30, r
   if flagsave:
 	plt.savefig(lib.rootdir+'/plots/paper/TSprof'+halo+'MeanCmp.eps') #rasterize=True, dpi=300
 	
-def fig_DMTSprof(halo, npart=10000, flagsave=False, estimator=14, nbin=30, rmin=1, rmax=500, pars=[1,1], realpot=False):
+def fig_DMTSprof(halo, npart=1e6, flagsave=False, estimator=8, nbin=30, rmin=1, rmax=500, pars=[1,1]):
   """TS profile for DM"""
   lib.open()
-  f,ax = plt.subplots(3, sharex=True, sharey=True, figsize=(8,8))
+  f,ax = plt.subplots(3, sharex=False, sharey=False, figsize=(8,12))
   h=[]
-  for halotype,linestyle in [('allN', 'k-'), ('N','r-'),('subN','g--'),('strmN','b:')]:#,('sublistN', 'c-')]:
-	with Tracer(halo+halotype, DynRMAX=rmax, DynRMIN=rmin) as FullSample:
-	  with FullSample.copy(0, npart) as Sample:
-		if realpot:
-		  lib.init_potential_spline()
-		for i,proxy in enumerate(['r','E','L']):  
-		  ts,x=Sample.TSprof(pars, estimator, viewtypes=proxy, nbins=nbin)
-		  tmp,=ax[i].plot(xrange(nbin+1), ts, linestyle)
-		  #tmp,=ax[i].plot(x, ts, linestyle)
-		  #ax[i].step(xrange(nbin+1), ts, linestyle, where='post')
-		  ax[i].plot(plt.xlim(),[0,0],'k:')
-		  ax[i].text(nbin*0.05, 2, proxy)
-		if realpot:
-		  lib.free_potential_spline()
-	h.append(tmp)
-  ax[1].set_ylabel(r'$\bar{\Theta}$')
-  ax[-1].set_xlabel('Bins')
-  ax[-1].legend(h, ('All','Halo','MainSub','MainStream'),loc='lower left', frameon=0, ncol=3, fontsize=18)
-  f.subplots_adjust(hspace=0)
-  plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
-  nbins = 7 #len(ax[0].get_yticklabels())
-  plt.setp([a.yaxis for a in ax], major_locator=MaxNLocator(nbins=nbins, prune='lower',symmetric=True))
-  lib.close()
-  ax[0].set_title(halo)
-  strpot={True:'RealPot', False:'NFWPot'}
+  labels={'r':r'$\log10(r)$', 'E': r'$\log10(E)$', 'L': r'$\log10(L^2)$'}
+  with Tracer(halo+'N', DynRMIN=rmin, DynRMAX=rmax) as FullSample:
+	with FullSample.copy(0, int(npart)) as All:
+	  with All.select(All.data['subid']<=0) as Clean:
+		for Sample,realpot,linestyle,linewidth in [(All, 1, 'k-', 2), (Clean, 1, 'r--', 2), (All, 0, 'g:', 2)]:
+		  if realpot:
+			lib.init_potential_spline()
+		  for i,proxy in enumerate(['r','E','L']):  
+			ts,x=Sample.TSprof(pars, estimator, viewtypes=proxy, nbins=nbin)
+			if estimator==8:
+			  ts=AD2Sig(-ts)
+			  tsref=1
+			  #ax[i].set_yscale('log')
+			else:
+			  tsref=0
+			tmp,=ax[i].plot(xrange(nbin+1), ts, linestyle, linewidth=linewidth)
+			#tmp,=ax[i].plot(np.log10(x), ts, linestyle, linewidth=linewidth)
+			#ax[i].set_xscale('log')
+			#tmp,=ax[i].step(xrange(nbin+1), ts, linestyle, where='post', linewidth=linewidth)
+			#tmp,=ax[i].step(np.log10(x), ts, linestyle, where='post', linewidth=linewidth)
+			ax[i].plot(ax[i].get_xlim(),[tsref,tsref],'k:')
+			#ax[i].text(nbin*0.05, 2, proxy)
+			plt.axes(ax[i])
+			plt.xticks(range(nbin)[1::3],['%.1f'%np.log10(a) for a in x][1::3])
+			ax[i].set_xlabel(labels[proxy])
+		  if realpot:
+			lib.free_potential_spline()
+		  h.append(tmp)
+		if estimator==8:
+		  ax[1].set_ylabel(r'AD Discrepancy [$\sigma$]')
+		elif estimator==14:
+		  ax[1].set_ylabel(r'$\bar{\Theta}$')
+		#ax[-1].set_xlabel('Bins')
+		l=ax[0].legend(h, ('All','Smooth','All+NFW'),loc='upper left', frameon=0, ncol=2)
+		plt.setp(l.get_texts(), fontsize=18)
+		#ax[0].set_xlim(0.9,2.7);ax[1].set_xlim(4,5.2);ax[2].set_xlim(6,10)
+		f.subplots_adjust(hspace=0.25, bottom=0.1)
+		#plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
+		#nbins = 7 #len(ax[0].get_yticklabels())
+		#plt.setp([a.yaxis for a in ax], major_locator=MaxNLocator(nbins=nbins, prune='lower',symmetric=True))
+		lib.close()
+		ax[0].set_title(halo)
+
+  #strpot={True:'RealPot', False:'NFWPot'}
   if flagsave:
-	plt.savefig(lib.rootdir+'/plots/paper/TSprof'+halo+strpot[realpot]+'Mean.eps') #rasterize=True, dpi=300
+	plt.savefig(lib.rootdir+'/plots/paper/TSprof'+halo+lib.NameList[estimator]+'.eps') #rasterize=True, dpi=300
 	
 def fig_StarTSprof(halo, npart=1000, flagsave=True, estimator=14, nbin=30, realpot=True, rmin=1.01, rmax=499):
   """TS profile for stars"""
@@ -615,6 +634,30 @@ def fig_DensityALLvsFoF(halo='AqB4'):
   plt.legend(('All','FoF','NFWfit'))
   plt.savefig(lib.rootdir+'/plots/paper/extra/DensityProf'+halo+'ALLvsFoF.eps') #rasterize=True, dpi=300
 
+def fig_FoFMap(halo='AqA4', npart=1e5, nbin=100, method='kde', percents=[0.1,0.3,0.5,0.7,0.9, 0.95]):
+  npart=int(npart)
+  lib.open()
+  FullSampleAll=Tracer(halo,DynRMIN=1.1,DynRMAX=499)
+  All=FullSampleAll.copy(0,npart)
+  FoF=All.select(All.data['haloid']==0)
+  Bk=All.select(All.data['haloid']!=0) #ungrouped particle dominate over other halo particles.
+  #Other=All.select(All.data['haloid']>0)
+  bins=np.linspace(-500,500, nbin)
+  h,h0,lvls=percentile_contour(*density_of_points(FoF.data['x'][:,:2].T, bins, method), percents=percents, colors='g')
+  #plt.contour(*density_of_points(FoF.data['x'][:,:2].T, bins, method), levels=lvls, colors='r')
+  plt.plot(Bk.data['x'][:5000,0], Bk.data['x'][:5000,1], '.')
+  FullSampleAll.clean()
+  All.clean()
+  FoF.clean()
+  Bk.clean()
+  lib.close()
+  
+  #plot_circle(r=float(os.environ['DynRv']), color='k', linestyle='--')
+  plt.xlabel('x[kpc]')
+  plt.ylabel('y[kpc]')
+  plt.savefig(lib.rootdir+'/plots/paper/extra/FoFvsBkMap'+halo+'.eps')#, rasterize=True, dpi=300)
+ 
+  
 def plot_pot(pars, linestyle='-'):
   print pars
   r=np.linspace(0, 100)

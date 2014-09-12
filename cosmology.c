@@ -193,6 +193,25 @@ halo->Rv=0.;
 // printf("Rhos=%g,Rs=%g,Rv=%g,Pots=%g\n", halo->Rhos, halo->Rs, halo->Rv, halo->Pots);
 }
 
+void decode_NFWprof3(double z, double Pots, double Rs, int virtype, struct NFWParZ *halo)
+{//record Pots and Rs for the potential spline interpolation. These are no longer halo parameters, but the spline potential scale parameters
+double scaleF,rhoc;
+struct CosmParZ cosm;
+
+halo->z=z;
+halo->Pots=Pots;
+halo->Rs=Rs;
+halo->virtype=virtype;
+
+// evolve_cosmology(halo->z,&cosm);
+// scaleF=1.0/(1+halo->z);
+// rhoc=(3.0*cosm.Hz*cosm.Hz)/(8.0*M_PI*G);
+//to be done:xxxxxxxxxxxxxxxx
+halo->M=0.;
+halo->c=0.;
+halo->Rv=0.;
+}
+
 double NFW_DeltSig(double r,struct NFWParZ *halo)
 {
 /*	
