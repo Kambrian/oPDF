@@ -26,9 +26,12 @@ countR,tmp=np.histogram(Sample.data['r'], np.hstack([0., xbin]), weights=1./Samp
 density=countM*Sample.mP/vol
 pot=countM.cumsum()/xbin+countR.sum()-countR.cumsum()
 pot*=G*Sample.mP
+density_cum=countM.cumsum()/xbin**3/(4*np.pi/3)*Sample.mP
 #pad with bin 0
 xbin=np.hstack([0., xbin])
 pot=np.hstack([countR.sum()*G*Sample.mP, pot])
+density_cum=np.hstack([density_cum[0], density_cum])
+
 
 c0=get_config(halo+'N')
 Halo=NFWHalo()
@@ -48,9 +51,12 @@ plt.xlabel('R')
 plt.ylabel(r'$\psi$')
 plt.legend(('Data','NFWfit'))
 #plt.savefig(lib.rootdir+'/plots/paper/extra/DensityProf'+halo+'ALLvsFoF.eps') #rasterize=True, dpi=300
+print 'R'
 print ','.join(['{:f}'.format(i) for i in xbin])
-print
+print 'Pot'
 print ','.join(['{:f}'.format(i) for i in pot])
+print 'AvDensity'
+print ','.join(['{:g}'.format(i) for i in density_cum])
 
 lib.init_potential_spline()
 xnew=np.logspace(-1,3,50)

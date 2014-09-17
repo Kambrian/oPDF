@@ -452,7 +452,7 @@ def fig_MaxLikeContour(estimator='',flagsave=False):
   plt.minorticks_on()
   if flagsave:
 	plt.savefig(lib.rootdir+'/plots/paper/MaxLikeContour'+estimator+'.pdf') #rasterize=True, dpi=300
-
+  
 def fig_MockTSprof(flagsave=False, estimator=14, nbin=30):
   """TS profile for mocks"""
   lib.open()
@@ -550,7 +550,16 @@ def fig_DMTSprof(halo, npart=1e6, flagsave=False, estimator=8, nbin=30, rmin=1, 
 		elif estimator==14:
 		  ax[1].set_ylabel(r'$\bar{\Theta}$')
 		#ax[-1].set_xlabel('Bins')
-		l=ax[0].legend(h, ('All','Smooth','All+NFW'),loc='upper left', frameon=0, ncol=2)
+		lib.init_potential_spline()
+		sigAll=All.freeze_and_like(estimator=estimator)
+		sigClean=Clean.freeze_and_like(estimator=estimator)
+		lib.free_potential_spline()
+		sigAllNFW=All.freeze_and_like(estimator=estimator)
+		if estimator==8:
+		  sigAll=AD2Sig(-sigAll)
+		  sigClean=AD2Sig(-sigClean)
+		  sigAllNFW=AD2Sig(-sigNFW)
+		l=ax[0].legend(h, ('All(%.1f)'%sigAll,'Smooth(%.1f)'%sigClean,'All+NFW(%.1f)'%sigAllNFW),loc='upper left', frameon=0, ncol=2)
 		plt.setp(l.get_texts(), fontsize=18)
 		#ax[0].set_xlim(0.9,2.7);ax[1].set_xlim(4,5.2);ax[2].set_xlim(6,10)
 		f.subplots_adjust(hspace=0.25, bottom=0.1)
@@ -562,7 +571,7 @@ def fig_DMTSprof(halo, npart=1e6, flagsave=False, estimator=8, nbin=30, rmin=1, 
 
   #strpot={True:'RealPot', False:'NFWPot'}
   if flagsave:
-	plt.savefig(lib.rootdir+'/plots/paper/TSprof'+halo+lib.NameList[estimator]+'.eps') #rasterize=True, dpi=300
+	plt.savefig(lib.rootdir+'/plots/paper/TSprof'+halo+lib.NameList[estimator]+'.%d-%d.eps'%(rmin,rmax)) #rasterize=True, dpi=300
 	
 def fig_StarTSprof(halo, npart=1000, flagsave=True, estimator=14, nbin=30, realpot=True, rmin=1.01, rmax=499):
   """TS profile for stars"""

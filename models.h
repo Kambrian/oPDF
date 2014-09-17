@@ -91,13 +91,18 @@ extern struct NFWParZ Halo;
 extern void init_potential_spline();
 extern void free_potential_spline();
 extern double eval_potential_spline(double r);
+extern double eval_density_spline(double r);
 
 extern void alloc_integration_space();
 extern void free_integration_space();
 
+extern void decode_TemplateProf(double z, double M, double c, int virtype, struct NFWParZ *halo);
+extern void decode_TemplateProf2(double z, double Pots, double Rs, int virtype, struct NFWParZ *halo);
+
 extern double NFW_like(double pars[], Tracer_t *T);
 extern void define_halo(const double pars[]);
 extern double halo_pot(double r);
+extern double halo_mass(double r);
 extern void solve_radial_limits ( Particle_t *P, double rmin, double rmax);
 extern double vr_inv_part(double r, double E, double L2);
 extern void solve_radial_orbit(Particle_t *P, double rmin, double rmax, int estimator);

@@ -20,8 +20,11 @@ module load intel_comp/c4/2013.1.046 gsl/1.16 platform_mpi/9.1.2 hdf5/1.8.12 pyt
 # python MCMCgen.py 20
 # python mockFmin.py
 
-export OMP_NUM_THREADS=24
-method=$1 #MinDist, MaxLike or IterLike
-estimator=$2
-proxy=$3
-python scan${method}Ensemble.py $estimator $proxy
+export OMP_NUM_THREADS=12
+halo=$1 #
+cleansample=$2
+usetemplate=$3
+scancontour=$4
+rmin=$5
+rmax=$6
+python scanDM.py $halo $cleansample $usetemplate $scancontour $rmin $rmax

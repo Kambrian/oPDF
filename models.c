@@ -31,12 +31,14 @@ struct SplineData
 	int FlagUseSpline; //spline ready to be used. override the default potential calculation with spline interpolation
 	gsl_interp_accel *acc;
 	gsl_spline *spline ;
+	gsl_interp_accel *acc_dens;
+	gsl_spline *spline_dens;
 };
 static struct SplineData PotSpline;
 #pragma omp threadprivate(PotSpline)  //make sure each thread has its own cache
 void init_potential_spline()
 {
-#include "PotentialProf.h"
+#include "PotentialTemplate.h"
 	if(HaloProfID<0)
 	{
 	  fprintf(stderr, "Error: HaloProfID=%d, no profile data\n", HaloProfID);
@@ -46,7 +48,12 @@ void init_potential_spline()
 	{
 		PotSpline.acc= gsl_interp_accel_alloc ();
 		PotSpline.spline= gsl_spline_alloc (gsl_interp_cspline, LEN_PROF);
-		gsl_spline_init(PotSpline.spline, PotentialProf[HaloProfID][0], PotentialProf[HaloProfID][1], LEN_PROF);	
+		gsl_spline_init(PotSpline.spline, PotentialTemplate[HaloProfID][0], PotentialTemplate[HaloProfID][1], LEN_PROF);
+		
+		PotSpline.acc_dens= gsl_interp_accel_alloc ();
+		PotSpline.spline_dens= gsl_spline_alloc (gsl_interp_cspline, LEN_PROF);
+		gsl_spline_init(PotSpline.spline_dens, PotentialTemplate[HaloProfID][0], PotentialTemplate[HaloProfID][2], LEN_PROF);
+		
 		PotSpline.FlagUseSpline=1;
 	}
 // 	printf("Spline: [%g,%g], %zd, x~[%g, %g], y~[%g,%g]\n", PotSpline.spline->interp->xmin, PotSpline.spline->interp->xmax,
@@ -61,6 +68,10 @@ void free_potential_spline()
 	 {
 	  gsl_spline_free (PotSpline.spline);
 	  gsl_interp_accel_free(PotSpline.acc);
+	  
+	  gsl_spline_free (PotSpline.spline_dens);
+	  gsl_interp_accel_free(PotSpline.acc_dens);
+	  
 	  PotSpline.FlagUseSpline=0;
 	 }
 	}
@@ -75,10 +86,74 @@ double eval_potential_spline(double r)
   return -gsl_spline_eval(PotSpline.spline, r, PotSpline.acc); //the input are |pot|, restore the sign.
 }
 
+double eval_density_spline(double r)
+{//cumulative density
+  if(r>PotSpline.spline_dens->interp->xmax)//outside the interpolation range: zero density, cumdensity from the inner sphere	
+  {
+	int imax=PotSpline.spline_dens->size-1;
+	double x=PotSpline.spline_dens->x[imax]/r;
+	return PotSpline.spline_dens->y[imax]*x*x*x;
+  }
+  return gsl_spline_eval(PotSpline.spline_dens, r, PotSpline.acc_dens);
+}
+void decode_TemplateProf(double z, double M, double c, int virtype, struct NFWParZ *halo)
+{//translate halo (M,c) to other profile parameters. Input are physical values.
+ //M: 10^10Msun/h
+// (z,virtype) also need to be present upon input.
+//Pots and Rs will be dimensionless version upon return.
+double scaleF,rhoc;
+struct CosmParZ cosm;
+
+halo->z=z;
+halo->M=M;
+halo->c=c;
+halo->virtype=virtype;
+
+evolve_cosmology(halo->z,&cosm);
+// scaleF=1.0/(1+halo->z);
+rhoc=(3.0*cosm.Hz*cosm.Hz)/(8.0*M_PI*G);
+// printf("rhoc=%g\n",rhoc);
+halo->Rv=cbrt(fabs(halo->M)/(4.0*M_PI/3.0*cosm.virialF[halo->virtype]*rhoc));//physical, generalized to negative mass
+//halo->Rv/=scaleF;//convert to comoving
+halo->Rs=halo->Rv/halo->c/HaloRs0; //cbrt(halo->M/HaloM0)/(halo->c/HaloC0); //in units of Rs0
+halo->Pots=cosm.virialF[halo->virtype]*rhoc*halo->Rs*halo->Rs/eval_density_spline(halo->Rv/halo->Rs); //in units of Pots0
+// printf("Rhos=%g,Rs=%g,Rv=%g,Pots=%g\n", halo->Rhos, halo->Rs, halo->Rv, halo->Pots);
+}
+
+void decode_TemplateProf2(double z, double Pots, double Rs, int virtype, struct NFWParZ *halo)
+{//record Pots and Rs for the potential spline interpolation. 
+  //These are dimensionless scale parameters (already scaled by Pots0 and Rs0).
+double scaleF,rhoc;
+struct CosmParZ cosm;
+
+halo->z=z;
+halo->Pots=Pots;
+halo->Rs=Rs;
+halo->virtype=virtype;
+
+// evolve_cosmology(halo->z,&cosm);
+// scaleF=1.0/(1+halo->z);
+// rhoc=(3.0*cosm.Hz*cosm.Hz)/(8.0*M_PI*G);
+//to be done:xxxxxxxxxxxxxxxx
+halo->M=0.;
+halo->c=0.;
+halo->Rv=0.;
+}
+
 void define_halo(const double pars[])
 {
   if(PotSpline.FlagUseSpline)
-	decode_NFWprof3(HaloZ0,pars[0],pars[1],VIR_C200,&Halo);
+  {
+// 	decode_NFWprof3(HaloZ0,pars[0],pars[1],VIR_C200,&Halo);
+	#if FIT_PAR_TYPE==PAR_TYPE_M_C
+	decode_TemplateProf(HaloZ0,pars[0]*HaloM0,pars[1]*HaloC0,VIR_C200,&Halo);  
+	#elif  FIT_PAR_TYPE==PAR_TYPE_RHOS_RS
+	fprintf(stderr, "Error, fit type RHOS_RS not supported by templateprof\n");
+	exit(1);
+	#elif FIT_PAR_TYPE==PAR_TYPE_POTS_RS  
+	decode_TemplateProf2(HaloZ0,pars[0],pars[1],VIR_C200,&Halo);
+	#endif
+  }
   else
   {
 	#if FIT_PAR_TYPE==PAR_TYPE_M_C
@@ -109,6 +184,13 @@ double NFW_like(double pars[], Tracer_t *T)
 	lnL+=-log(r)-2.*log(1.+r);
   }
   return lnL; //loglikelihood
+}
+
+double halo_mass(double r)
+{
+  if(PotSpline.FlagUseSpline)  return eval_density_spline(r/Halo.Rs)*Halo.Pots/Halo.Rs/Halo.Rs*4.*M_PI/3.*r*r*r; //use spline if inited.
+  
+  return NFW_mass(r);
 }
 
 double halo_pot(double r)
@@ -183,7 +265,7 @@ void solve_radial_limits ( Particle_t *P, double rmin, double rmax)
 
 double vr_inv_part(double r, double E, double L2)
 {//E: binding energy, -(K+psi)
-  double vr2=2*(-E-L2/2./r/r-halo_pot(r));
+  double vr2=2*(-E-L2/2./r/r-halo_pot(r));//what about hubble flow?
   if(vr2<=0) return 0.;
   return 1./sqrt(vr2);
 }

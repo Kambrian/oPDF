@@ -136,6 +136,8 @@ lib.define_halo.restype=None
 lib.define_halo.argtypes=[lib.ParType]
 lib.halo_pot.restype=ctypes.c_double
 lib.halo_pot.argtypes=[ctypes.c_double]
+lib.halo_mass.restype=ctypes.c_double
+lib.halo_mass.argtypes=[ctypes.c_double]
 lib.comoving_virial_radius.argtypes=[ctypes.c_double, ctypes.c_double, ctypes.c_int]
 lib.comoving_virial_radius.restype=ctypes.c_double
 lib.NFW_mass.restype=ctypes.c_double
@@ -229,7 +231,7 @@ class NFWHalo(object):
 	return lib.comoving_virial_radius(m,z,vt[virtype])
   
   def mass(self, r):
-	return lib.NFW_mass(r)
+	return lib.halo_mass(r)
   
 class Tracer(Tracer_t):
   def __init__(self, halo=None, **newoptions):
@@ -500,7 +502,7 @@ class Tracer(Tracer_t):
 	
   def copy(self, offset=0, size=0):
 	newsample=Tracer()
-	lib.copy_tracer_particles(offset, size, newsample._pointer, self._pointer)
+	lib.copy_tracer_particles(int(offset), int(size), newsample._pointer, self._pointer)
 	newsample.__update_array()
 	return newsample
   

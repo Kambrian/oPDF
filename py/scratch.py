@@ -4,69 +4,51 @@ import h5py,os,sys
 from scipy.stats import chi2
 plt.ion()
 
-estimator=4
-halo='A2'
-useweight=0
-
-npart=1000
-nbin_r=20
-delta_x=0.5
 lib.open()
 
-FullSample=Tracer(halo,DynRMAX=100)
-outfile=lib.rootdir+'/plots/paper/extra/'+halo+lib.NameList[estimator]+'Weight%d'%useweight
+nbin=100
+xbin=np.logspace(np.log10(1), np.log10(500), nbin)
+xcen=(xbin*np.sqrt(xbin[1]/xbin[0]))[1:]
+vol=np.diff(xbin**3)*np.pi*4/3
 
-Sample=FullSample.copy(0,npart)
-Sample.select(Sample.data['subid']<=0)
-print Sample.nP
-Sample.mP*=float(FullSample.nP)/Sample.nP
-Sample.FlagUseWeight=useweight
-Sample.radial_count(nbin_r)
+plt.figure()
+for halo,color in [('A2','r'),('B2','g'),('C2','b'),('D2','c'),('E2','m')]:
+  sample=Tracer(halo,DynDataFile='Null.hdf5')
+  sample.clean()
+  Halo=NFWHalo()
+  Halo.define_halo([1,1])
+  Rs=Halo.halo.Rs
+  Rv=Halo.halo.Rv
+  potNFW=-np.array(map(Halo.pot,xbin))
+  massNFW=np.array(map(Halo.mass, xbin))
+  densNFW=np.diff(massNFW)/vol
+  densNFW2=Halo.halo.Rhos/(xcen/Rs)/(1+xcen/Rs)**2
+  lib.init_potential_spline()  
+  Halo.define_halo([1,1])
+  pot=-np.array(map(Halo.pot,xbin))
+  mass=np.array(map(Halo.mass,xbin))
+  dens=np.diff(mass)/vol
+  lib.free_potential_spline()
+  #iref=-1
+  plt.subplot(121)
+  iref=np.abs(xbin-Rv).argmin()
+  plt.plot(xbin, potNFW/(pot-pot[iref]+potNFW[iref]), color=color)
+  #plt.plot(xbin, massNFW/mass, color=color)
+  #plt.plot(xbin, mass/xbin, 'x', color=color);plt.plot(xbin,massNFW/xbin,'-',color=color)
+  #plt.plot(xbin, potNFW, 'k',xbin, (pot-pot[iref]+potNFW[iref]), 'gx')
+  plt.semilogx()
+  plt.xlabel('R')
+  plt.ylabel(r'$\psi$')
+  #plt.legend(('Data','NFWfit'))
+  plt.ylim([0.8,1.3])
 
-lib.init_potential_spline()
-
-x1=Sample.gfmin_like(estimator, [1.,1.])
-x=np.logspace(log10(x1[0][0])-delta_x,log10(x1[0][0])+delta_x,20)
-y=np.logspace(log10(x1[0][1])-delta_x,log10(x1[0][1])+delta_x,20)
-#x=np.logspace(-delta_x,delta_x,20)
-#y=np.logspace(-delta_x,delta_x,20)
-cont1=Sample.scan_Chi2(estimator, x,y)
-cont1=cont1[0],cont1[1],cont1[2]-x1[1]
-if estimator==8:
-  sig=AD2Sig(cont1[2])
-elif estimator==10:
-  sig=P2Sig(chi2.sf(cont1[2],1))
-elif estimator==4:
-  sig=P2Sig(chi2.sf(cont1[2],2))
-else:
-  raise('estimator must be 4, 8 or 10')
-
-f=h5py.File(outfile+'.hdf5','w')
-grp=f.create_group('/Dynamical')
-grp.create_dataset('logm', data=np.log10(x))
-grp.create_dataset('logc', data=np.log10(y))
-dset=grp.create_dataset('sig_like', data=sig)
-dset.attrs['xmin']=np.log10(x1[0])
-dset=grp.create_dataset('ts', data=cont1[2])
-
-f.close()
-
-f=h5py.File(outfile+'.hdf5','r')
-grp=f['/Dynamical']
-x2=grp['sig_like'].attrs['xmin']
-h2,=plt.plot(x2[0],x2[1],'go', markersize=10)
-plt.contour(grp['logm'],grp['logc'],grp['sig_like'],levels=[1,2,3], colors='g', linestyles='solid')
-#h1=contour_handle('r', 'dashed')
-#h2=contour_handle('g', 'solid')
-#plt.legend((h1,h2), ('Density','Dynamics'))
-plt.xlabel(r'$\log(M/M_0)$')
-plt.ylabel(r'$\log(c/c_0)$')
-#plt.axis([x2[0]-delta_x,log10(x2[0])+delta_x,x2[1]-delta_x,x2[1]+delta_x])
-plt.plot(plt.xlim(),[0,0],'k:',[0,0],plt.ylim(),'k:')
-plt.savefig(outfile+'.eps')
-f.close()
-
-lib.free_potential_spline()  
-Sample.clean()
-FullSample.clean()
-lib.close()
+  plt.subplot(122)
+  plt.plot(xcen, densNFW/dens, color=color)
+  #plt.plot(xcen, dens, 'gx', xcen, densNFW, 'k')
+  #plt.plot(xcen, densNFW2, 'r--')
+  plt.loglog()
+  plt.ylim([0.5,2])
+  plt.xlabel('R')
+  plt.ylabel(r'$\rho$')
+  #plt.legend(('Data','NFWfit'))
+plt.legend(('A','B','C','D','E'))  
