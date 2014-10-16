@@ -24,7 +24,8 @@ export OMP_NUM_THREADS=12
 halo=$1 #
 cleansample=$2
 usetemplate=$3
-scancontour=$4
-rmin=$5
-rmax=$6
-python scanDM.py $halo $cleansample $usetemplate $scancontour $rmin $rmax
+useweight=$4
+scancontour=$5
+proxy=$6
+percent=$7
+python scanStarDup.py $halo #$cleansample $usetemplate $useweight $scancontour $proxy $percent

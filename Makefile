@@ -77,7 +77,7 @@ LDFLAGS+= -g
 endif
 
 #-----File Dependencies----------------------
-SRC_MAIN=scan.c NumericalConvergence.c
+SRC_MAIN=scan.c NumericalConvergence.c saveHDFstars.c mock_stars.c
 EXEC=$(basename $(SRC_MAIN))
 OBJS_MAIN=$(addsuffix .o, $(EXEC))
 SRC_COMM = io.c hdf_util.c cosmology.c mymath.c models.c wenting.c wenting.f90

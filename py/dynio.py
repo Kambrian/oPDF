@@ -6,6 +6,7 @@ from scipy.optimize import fmin, fmin_powell
 from scipy.stats import norm,chi2
 from iminuit import Minuit
 from iminuit.ConsoleFrontend import ConsoleFrontend
+import copy
 
 #=============C complex datatypes=====================
 class Particle_t(ctypes.Structure):
@@ -40,6 +41,7 @@ Tracer_t._fields_=[('lnL', ctypes.c_double),
 				   ('RadialCount', ctypes.POINTER(ctypes.c_double)),
 				   ('rmin', ctypes.c_double),
 				   ('rmax', ctypes.c_double),
+				   ('proxybin', ctypes.c_double*2),
 				   ('nView', ctypes.c_int),
 				   ('ViewType', ctypes.c_char),
 				   ('Views', Tracer_p)
@@ -57,6 +59,26 @@ class NFWHalo_t(ctypes.Structure):
 	    ('Ms', ctypes.c_double), #4*pi*rhos*rs^3
 	    ('virtype', ctypes.c_int)
 	    ]  
+  def fill(self,halo):
+	'''fill halo with parameters of the named one from the config file'''
+	options=lib.get_config(halo)
+	m=float(options['DynM0'])
+	c=float(options['DynC0'])
+	z=0.
+	virtype=1 #C200
+	lib.decode_NFWprof(z, m, c, virtype, ctypes.byref(self))
+
+  def mc2PotR(self, pars=[1,1], usetemplate=0):
+	'''translate [m,c] pars into [pots, rs] pars (both in units of real values)'''
+	h=copy.deepcopy(self)
+	if usetemplate:
+	  ctypes.c_double.in_dll(lib,'HaloRs0').value=h.Rs
+	  lib.decode_TemplateProf(h.z, pars[0]*h.M, pars[1]*h.c, h.virtype, ctypes.byref(h))
+	else:
+	  lib.decode_NFWprof(h.z, pars[0]*h.M, pars[1]*h.c, h.virtype, ctypes.byref(h))
+	  h.Pots/=self.Pots
+	  h.Rs/=self.Rs
+	return h.Pots,h.Rs
 
 #=======================load the library==========================
 lib=ctypes.CDLL("../libdyn.so")
@@ -102,8 +124,14 @@ def get_config(halo):
 	print "Warning: no config for %s; using defaults."%halo
   return options    
 
+def load_config(halo):
+  ''' fill the library with configuration from halo'''
+  sample=Tracer(halo,DynDataFile='Null.hdf5')
+  sample.clean()
+  
 lib.get_config=get_config
 lib.has_config=has_config
+lib.load_config=load_config
 
 #models
 lib.like_init.restype=None
@@ -140,6 +168,10 @@ lib.halo_mass.restype=ctypes.c_double
 lib.halo_mass.argtypes=[ctypes.c_double]
 lib.comoving_virial_radius.argtypes=[ctypes.c_double, ctypes.c_double, ctypes.c_int]
 lib.comoving_virial_radius.restype=ctypes.c_double
+lib.decode_NFWprof.argtypes=[ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.POINTER(NFWHalo_t)]
+lib.decode_NFWprof.restype=None
+lib.decode_TemplateProf.argtypes=[ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.POINTER(NFWHalo_t)]
+lib.decode_TemplateProf.restype=None
 lib.NFW_mass.restype=ctypes.c_double
 lib.NFW_mass.argtypes=[ctypes.c_double]
 lib.NFW_like.restype=ctypes.c_double
@@ -178,6 +210,8 @@ lib.sort_part_E.argtypes=[Particle_p, ctypes.c_int]
 lib.sort_part_L.restype=None
 lib.sort_part_L.argtypes=[Particle_p, ctypes.c_int]
 #extern void sort_part_E(Particle_t *P, int nP);
+lib.sort_part_R.restype=None
+lib.sort_part_R.argtypes=[Particle_p, ctypes.c_int]
 lib.create_tracer_views.restype=None
 lib.create_tracer_views.argtypes=[Tracer_p, ctypes.c_int, ctypes.c_char]
 lib.free_tracer_views.restype=None
@@ -197,6 +231,11 @@ lib.free_potential_spline.restype=None
 lib.free_potential_spline.argtypes=[]
 lib.eval_potential_spline.restype=ctypes.c_double
 lib.eval_potential_spline.argtypes=[ctypes.c_double]
+
+lib.mock_stars.argtypes=[ctypes.c_char, ctypes.c_int, Tracer_p]
+lib.mock_stars.restype=None
+lib.save_mockstars.argtypes=[ctypes.c_char, Tracer_p]
+lib.save_mockstars.restype=None
 
 #wenting's lib
 prototype=ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double)
@@ -232,7 +271,7 @@ class NFWHalo(object):
   
   def mass(self, r):
 	return lib.halo_mass(r)
-  
+ 	
 class Tracer(Tracer_t):
   def __init__(self, halo=None, **newoptions):
 	'''if called with no par, create an empty tracer; otherwise load according to config
@@ -338,12 +377,55 @@ class Tracer(Tracer_t):
 	return self.nested_views_FChi2(pars, estimator)
   
   def TSprof(self, pars=[1,1], estimator=10, viewtypes='L', nbins=100):
-	self.joint_FChi2(pars, estimator, viewtypes, nbins)
-	ts=[self.Views[i].lnL for i in xrange(self.nView)]
+	if viewtypes=='L2':
+	  viewtypes='L'
+	with self.copy(0,0) as S: #make a copy to avoid messing up the weights
+	  S.joint_FChi2(pars, estimator, viewtypes, nbins)
+	  ts=[S.Views[i].lnL for i in xrange(S.nView)] #these are like_eval, not chi2
 	ts.append(np.nan)
 	ts=np.array(ts)
 	x,p=self.gen_bin(viewtypes, nbins, equalcount=True)
 	return ts,x
+  
+  def TSprofCum(self, pars=[1,1], estimator=8, proxy='r', bins=100):
+	'''cumulative TS profile
+	reuturn bin edges, ts, counts'''
+	self.freeze_energy(pars)
+	self.sort(proxy)
+	if proxy=='E':
+	  self.data[...]=self.data[-1::-1] #reverse the order
+	#if not isinstance(bins, int): 
+	  #if bins[0]>self.data[proxy][0]:#always start from the min value of the proxy
+		#tmp,bins=bins,[self.data[proxy][0]-1]
+		#bins.extend(list(tmp))
+	n,bins=np.histogram(self.data[proxy],bins)
+	if proxy=='E':
+	  n=n[-1::-1].cumsum()
+	else:
+	  n=n.cumsum()
+	ts=[]
+	if proxy!='r':
+	  self.like_init(pars,estimator)
+	for i,x in enumerate(bins[1:]):
+	  if n[i]==0:
+		y=np.nan
+	  else:
+		with self.copy(0,n[i]) as s:
+		  if proxy!='r':
+			y=s.like_eval(pars, estimator)
+		  else:
+			s.rmax=x
+			y=s.likelihood(pars,estimator)
+	  ts.append(y)
+	if proxy=='E':
+	  ts=ts[-1::-1]
+	return np.array(bins),np.array(ts),np.array(n)
+
+  def scan_like(self, estimator, x, y):
+	'''scan a likelihood surface to be used for contour plots as contour(x,y,z)'''
+	like=lambda x: self.freeze_and_like(x, estimator)
+	z=[like([m,c]) for m in x for c in y]
+	return x,y,np.array(z).reshape([len(y),len(x)], order="F")
   
   def scan_Chi2(self, estimator, x, y):
 	'''scan a likelihood surface to be used for contour plots as contour(x,y,z)'''
@@ -356,9 +438,14 @@ class Tracer(Tracer_t):
 	if logscale:
 	  f=self.data[proxy]>0
 	  data=np.array((np.log10(self.data[proxy][f]), self.data['theta'][f]))
+	  w=self.data['w'][f]
 	else:
 	  data=np.array((self.data[proxy], self.data['theta']))
-	X,Y,Z=density_of_points(data, bins=bins, method=method)
+	  w=self.data['w']
+	if self.FlagUseWeight:
+	  X,Y,Z=density_of_points(data, bins=bins, method=method, weights=w)
+	else:
+	  X,Y,Z=density_of_points(data, bins=bins, method=method)
 	extent=get_extent(X,Y)
 	return X,Y,Z,extent,data
   
@@ -544,8 +631,8 @@ class Tracer(Tracer_t):
   def sort(self, proxy, offset=0,n=0):
 	if n==0:
 	  n=self.nP
-	sort_func={'flag': lib.sort_part_flag, 'E': lib.sort_part_E, 'L2': lib.sort_part_L}
-	sort_func[proxy](ctypes.byref(Particle_t.from_buffer(Sample.P[offset])), n)
+	sort_func={'flag': lib.sort_part_flag, 'E': lib.sort_part_E, 'L2': lib.sort_part_L, 'r': lib.sort_part_R}
+	sort_func[proxy](ctypes.byref(Particle_t.from_buffer(self.P[offset])), n)
 
   def auto_load(self):
 	'''high level init; it does the following:
@@ -597,9 +684,11 @@ class Tracer(Tracer_t):
 	f=f>0
 	self.P['flag'][:]=f
 	print "Found %d pixels, %d particles"%(p[0].shape[0],np.sum(self.P['flag']))
-  
+
+lib.open()
+
 if __name__=="__main__":
-  lib.open() # common initialization
+  #lib.open() # common initialization
   FullSample=Tracer('AqA4',DynSIZE=100)
   Sample=FullSample.sample()
   FullSample.print_data(10)
@@ -622,4 +711,4 @@ if __name__=="__main__":
 	  Sample.rmin=10
 	  Sample.print_data()
 
-  lib.close()
+  #lib.close()

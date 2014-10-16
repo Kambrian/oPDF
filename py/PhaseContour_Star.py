@@ -33,14 +33,21 @@ def phase_contour(sample, proxy, bins, method, logscale, levels=5, percents=None
   
 def phase_imshow(sample, proxy, bins, method='hist', logscale=True):
   X,Y,Z,extent,data=sample.phase_density(proxy, bins, method, logscale)
-  Z[Z==0]=np.nan;
+  #Z[Z==0]=np.nan;
   extent=list(extent)
   if proxy=='L2':
 	extent[0]/=2
 	extent[1]/=2
   plt.imshow(Z,extent=extent)
   plt.axis('tight')
-  sk=skeleton(data[0],data[1],nbin=50)
+  if sample.FlagUseWeight:
+	if logscale:
+	  w=sample.data['w'][sample.data[proxy]>0]
+	else:
+	  w=sample.data['w']
+  else:
+	w=None
+  sk=skeleton(data[0],data[1],nbin=50,weights=w)
   if proxy=='L2':
 	plt.plot(sk['x']['median']/2, sk['y']['mean'], 'w-')
   else:
@@ -51,42 +58,26 @@ def phase_imshow(sample, proxy, bins, method='hist', logscale=True):
   plt.plot(extent[:2], [0.5, 0.5], 'k-')
 
 halo=sys.argv[1] #'A4'
-npart=int(1e6)
-rmin=1
+useweight=0 #int(sys.argv[2])
+cleanmethod='sub' #sys.argv[3]
+if cleanmethod not in ['sub','branch']:
+  print 'cleanmethod must be sub or branch. now exit.'
+  exit()
+npart=0
+rmin=10
 rmax=300
 
 lib.open()
-#with Tracer(halo,DynRMIN=rmin,DynRMAX=rmax,DynDataFile=halo+'DM.hbt.hdf5') as FullSample:
-  #SampleHBT=FullSample.copy(0,npart)
-#SubHBT=Tracer(halo, DynRMIN=rmin, DynRMAX=rmax, DynDataFile=halo+'sub.hbt.hdf5')
 
-#lib.init_potential_spline()
-#SubHBT.freeze_energy();
-#SubHBT.like_init()
-#SampleHBT.freeze_energy()
-#SampleHBT.like_init()
-
-#SampleHBT.AD=-SampleHBT.like_eval(estimator=8)
-#SampleHBT.Mean=SampleHBT.like_eval(estimator=10)
-
-#SampleHBTClean=SampleHBT.select(SampleHBT.data['subid']<=0)
-#SampleHBTClean.AD=-SampleHBTClean.like_eval(estimator=8)
-#SampleHBTClean.Mean=SampleHBTClean.like_eval(estimator=10)
-
-#SampleHBTSub=SampleHBT.select(SampleHBT.data['subid']>0)
-#SampleHBTSub.AD=-SampleHBTSub.like_eval(estimator=8)
-#SampleHBTSub.Mean=SampleHBTSub.like_eval(estimator=10)
-
-#SampleHBTStrm=SampleHBT.select(SampleHBT.data['strmid']>0)
-#SampleHBTStrmClean=SampleHBT.select(SampleHBT.data['strmid']<=0)
-#SampleHBTStrmClean.AD=-SampleHBTStrmClean.like_eval(estimator=8)
-#SampleHBTStrm.AD=-SampleHBTStrm.like_eval(estimator=8)
-#SampleHBTStrmClean.Mean=SampleHBTStrmClean.like_eval(estimator=10)
-#SampleHBTStrm.Mean=SampleHBTStrm.like_eval(estimator=10)
-#lib.free_potential_spline()
-
-with Tracer(halo,DynRMIN=rmin,DynRMAX=rmax,DynDataFile=halo+'DM.hdf5') as FullSample:
+with Tracer(halo,DynRMIN=rmin,DynRMAX=rmax,DynDataFile=halo+'star.hdf5') as FullSample:
+  #if not useweight:
+	#tmp=FullSample.select((FullSample.data['haloid']>0))
+	#FullSample.clean()
+	#FullSample=tmp
+  if npart>FullSample.nP:
+	npart=0  
   Sample=FullSample.copy(0,npart)
+Sample.FlagUseWeight=useweight
 Sub=Tracer(halo, DynRMIN=rmin, DynRMAX=rmax, DynDataFile=halo+'sub.hdf5')  
 lib.init_potential_spline()
 
@@ -98,11 +89,14 @@ Sub.like_init()
 Sample.AD=-Sample.like_eval(estimator=8)
 Sample.Mean=Sample.like_eval(estimator=10)
 
-SampleClean=Sample.select(Sample.data['subid']<=0)
+if cleanmethod=='sub':
+  SampleClean=Sample.select(Sample.data['subid']<=0)
+  SampleSub=Sample.select(Sample.data['subid']>0)
+else:
+  SampleClean=Sample.select(Sample.data['haloid']==0) #branch clean
+  SampleSub=Sample.select(Sample.data['haloid']>0)  
 SampleClean.AD=-SampleClean.like_eval(estimator=8)
 SampleClean.Mean=SampleClean.like_eval(estimator=10)
-
-SampleSub=Sample.select(Sample.data['subid']>0)
 SampleSub.AD=-SampleSub.like_eval(estimator=8)
 SampleSub.Mean=SampleSub.like_eval(estimator=10)
  
@@ -113,7 +107,8 @@ proxy='E'
 #percents=None
 #percents=np.linspace(0.05,1,10) #initial levels determined by percents
 logscale=True
-extent={'A2':[4.2,5.2],'A4':[4.2,5.2],'B2':[4,5],'B4':[4,5],'C2':[4,5.5],'D2':[4,5.5],'E2':[4,5.5]}[halo]
+#extent=[4,5.5]
+extent={'A2':[4,5.3],'A4':[4.2,5.2],'B2':[4.2,5.1],'B4':[4,5],'C2':[4,5.5],'D2':[4,5.5],'E2':[4,5.5]}[halo]
 extent.extend([0,1])
 bins=[np.linspace(extent[0], extent[1], nbin[0]+1), np.linspace(extent[2], extent[3], nbin[1]+1)]
 plt.figure(figsize=(18,7))
@@ -131,10 +126,14 @@ plt.subplot(131)
 plt.ylabel(r'$\theta$')
 #plt.subplot(133)
 #plt.colorbar()
-plt.savefig(lib.rootdir+'/plots/paper/extra/PhaseDistr'+proxy+'.'+halo+'.R%d.pdf'%rmax)#, rasterize=True, dpi=300)
+if cleanmethod=='sub':
+  plt.savefig(lib.rootdir+'/plots/paper/extra/PhaseDistr'+proxy+'.'+halo+'.R%d.Weight%d.star.pdf'%(rmax,useweight))#, rasterize=True, dpi=300)
+else:
+  plt.savefig(lib.rootdir+'/plots/paper/extra/PhaseDistr'+proxy+'.'+halo+'.R%d.Weight%d.BranchClean.star.pdf'%(rmax,useweight))#, rasterize=True, dpi=300)
 
 proxy='L2'
-extent={'A2':[6.5,10],'A4':[6.5,10],'B2':[6,9.5],'B4':[6,9.5],'C2':[6,10],'D2':[6,10],'E2':[6,10]}[halo]
+#extent=[3,10]
+extent={'A2':[3.6,10],'A4':[6.5,10],'B2':[3,9.5],'B4':[6,9.5],'C2':[6,10],'D2':[6,10],'E2':[6,10]}[halo]
 extent.extend([0,1])
 bins=[np.linspace(extent[0], extent[1], nbin[0]+1), np.linspace(extent[2], extent[3], nbin[1]+1)]
 plt.figure(figsize=(18,7))
@@ -148,27 +147,16 @@ plt.subplot(132)
 plt.xlabel(r'$\log(L[{\rm kpc\cdot km/s}])$')
 plt.subplot(131)
 plt.ylabel(r'$\theta$')
-plt.savefig(lib.rootdir+'/plots/paper/extra/PhaseDistr'+proxy+'.'+halo+'.R%d.pdf'%rmax)#, rasterize=True, dpi=300)
-
-#plt.subplot(211)
-#f=Sample.data['E']>0
-#X,Y,Z=density_of_points(np.array([np.log10(Sample.data['E'][f]), Sample.data['theta'][f]]), bins=nbin, method=method)
-#extent=get_extent(X,Y)
-#bins=[np.linspace(extent[0], extent[1], nbin[0]+1), np.linspace(extent[2], extent[3], nbin[1]+1)]
-#Z[Z==0]=np.nan; plt.imshow(Z, extent=extent)
-#h,h0,lvls=percentile_contour(X,Y,Z, percents=percents, linestyles='dashed', alpha=0.5)
-#cs=plt.contour(X,Y,Z, linestyles='dashed', alpha=0.5);lvls=cs.levels
-#f=(Sample.data['E']>0)*(Sample.data['subid']>0)
-#plt.scatter(np.log10(Sample.data['E'][f]), Sample.data['theta'][f], '.', c=Sample.data['subid'][f])
-#plt.contour(*density_of_points(np.array([np.log10(Sample.data['E'][f]), Sample.data['theta'][f]]), bins=bins, method=method))#,
-			#levels=lvls, linestyles='solid')
-#for i in range(300):
-	#plt.plot(np.log10(Sublist.data['E'][i]), Sublist.data['theta'][i], 'o', markerfacecolor='w', markersize=40./(i+1.)**0.6)
-#plt.axis(extent)
+if cleanmethod=='sub':
+  plt.savefig(lib.rootdir+'/plots/paper/extra/PhaseDistr'+proxy+'.'+halo+'.R%d.Weight%d.star.pdf'%(rmax,useweight))#, rasterize=True, dpi=300)
+else:
+  plt.savefig(lib.rootdir+'/plots/paper/extra/PhaseDistr'+proxy+'.'+halo+'.R%d.Weight%d.BranchClean.star.pdf'%(rmax,useweight))#, rasterize=True, dpi=300)
 
 
-
-
-#lib.free_potential_spline()
-#FullSample.clean()
-#lib.close()
+lib.free_potential_spline()
+FullSample.clean()
+Sample.clean()
+SampleClean.clean()
+SampleSub.clean()
+Sub.clean()
+lib.close()

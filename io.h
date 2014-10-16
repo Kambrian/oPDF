@@ -32,6 +32,7 @@ struct Tracer
   int FlagRLogBin;
   double *RadialCount;
   double rmin, rmax;
+  double proxybin[2]; //for the edges of views.
   int nView;
   char ViewType;
   TracerView *Views;

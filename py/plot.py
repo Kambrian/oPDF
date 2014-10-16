@@ -452,6 +452,41 @@ def fig_MaxLikeContour(estimator='',flagsave=False):
   plt.minorticks_on()
   if flagsave:
 	plt.savefig(lib.rootdir+'/plots/paper/MaxLikeContour'+estimator+'.pdf') #rasterize=True, dpi=300
+
+def fig_PhaseContours(flagsave=False, nbin=20, scaled=True):
+  '''plot the MeanPhase as a function of Pots and Rs. Also plot the Phase of a random particle'''
+  lib.open()
+  npart=1000
+  pid=np.random.randint(0, npart)
+  x=np.logspace(-0.5,0.5,nbin)
+  z0=np.empty([nbin,nbin])
+  z=np.empty([nbin,nbin])
+  with Tracer('Mock') as F:
+	with F.copy(5000,npart) as Sample:
+	  for i in xrange(nbin):
+		for j in xrange(nbin):
+		  z[j,i]=Sample.freeze_and_like([x[i], x[j]],14) #c: row; m: column
+		  z0[j,i]=Sample.P[pid].theta
+	  #x,y,Z=Sample.scan_like(14, x,x)
+  lib.close()
+  x=np.log10(x)
+
+  plt.figure()
+  if not scaled:
+	z=z/sqrt(12.*npart)+0.5
+  cs=plt.contour(x,x,z)
+  plt.clabel(cs, inline=1)
+  plt.xlabel(r'$\log(\psi_s/\psi_{s0})$')
+  plt.ylabel(r'$\log(r_s/r_{s0})$')
+  if flagsave:
+	  plt.savefig(lib.rootdir+'/plots/paper/PhaseMock_Mean.eps') #rasterize=True, dpi=300
+  plt.figure()
+  cs2=plt.contour(x,x,z0)
+  plt.clabel(cs2, inline=1)
+  plt.xlabel(r'$\log(\psi_s/\psi_{s0})$')
+  plt.ylabel(r'$\log(r_s/r_{s0})$')
+  if flagsave:
+	  plt.savefig(lib.rootdir+'/plots/paper/extra/PhaseMock_Single.eps') #rasterize=True, dpi=300
   
 def fig_MockTSprof(flagsave=False, estimator=14, nbin=30):
   """TS profile for mocks"""
@@ -572,40 +607,84 @@ def fig_DMTSprof(halo, npart=1e6, flagsave=False, estimator=8, nbin=30, rmin=1, 
   #strpot={True:'RealPot', False:'NFWPot'}
   if flagsave:
 	plt.savefig(lib.rootdir+'/plots/paper/TSprof'+halo+lib.NameList[estimator]+'.%d-%d.eps'%(rmin,rmax)) #rasterize=True, dpi=300
-	
-def fig_StarTSprof(halo, npart=1000, flagsave=True, estimator=14, nbin=30, realpot=True, rmin=1.01, rmax=499):
+
+def fig_TSProfDM_all():
+  '''plot all halos in a single plot'''
+  #infile=lib.rootdir+'/plots/paper/DM/TSprofRawMeanN1e+06R300.DMClean.hdf5'
+  infile=lib.rootdir+'/plots/paper/star/TSprofRawMean.hdf5'
+  f=h5py.File(infile,'r')
+  fig=plt.figure(figsize=(8,12))
+  for i,proxy in enumerate(['r','E','L2']):
+	plt.subplot(3,1,i+1)
+	for halo in 'ABCDE':  
+	  ts=f['/'+halo+'/'+proxy+'/tsdiff'][...]
+	  #ts=ts.reshape(-1,2).mean(axis=1)*sqrt(2)
+	  n=len(ts)
+	  plt.plot((np.arange(n)+1.)/n*100, ts)
+	plt.plot(plt.xlim(),[0,0],'k--')
+	plt.xlabel(proxy[0]+' Percentile')
+	plt.ylim([-30,30])
+	plt.plot(plt.xlim(),[-3,-3],'k:')
+	plt.plot(plt.xlim(),[3,3],'k:')
+  plt.subplot(312)
+  plt.ylabel(r'$\bar{\Theta}$')  
+  fig.subplots_adjust(hspace=0.25, bottom=0.1)
+  plt.subplot(311)
+  #plt.ylim([-10,10])
+  plt.subplot(311)
+  plt.legend(list('ABCDE'), ncol=3, loc='upper left')
+  plt.savefig(infile.replace('hdf5','eps')) #rasterize=True, dpi=300
+  f.close()
+  
+def fig_StarTSprof(halo, npart=1e5, flagsave=True, estimator=8, nbin=30, rmin=1, rmax=500):
   """TS profile for stars"""
+  pars=[1,1]
+  npart=int(npart)
   lib.open()
-  with Tracer(halo, DynRMIN=rmin, DynRMAX=rmax) as FullSample:
-	with FullSample.copy(0, npart) as Sample:
-	  #Sample.FlagUseWeight=useweight
-	  if realpot:
-		  lib.init_potential_spline()
-	  f,ax = plt.subplots(3, sharex=True, sharey=True, figsize=(8,8))
-	  for i,proxy in enumerate(['r','E','L']):
-		h=[]
-		pars=[1,1]
-		for Sample.FlagUseWeight,linestyle in [(0,'b-'), (1,'r--')]:
-		  ts,x=Sample.TSprof(pars, estimator, viewtypes=proxy, nbins=nbin)
-		  tmp,=ax[i].plot(xrange(nbin+1), ts, linestyle)
-		  #ax[i].step(xrange(nbin+1), ts, linestyle, where='post')
-		  h.append(tmp)
-		  ax[i].plot(plt.xlim(),[0,0],'k:')
-		  ax[i].text(nbin*0.05, 2, proxy)
-	  if realpot:
-		  lib.free_potential_spline()
-	  ax[1].set_ylabel(r'$\bar{\Theta}$')
-	  ax[-1].set_xlabel('Bins')
-	  ax[-1].legend(h, ('No Weight','Weight'),loc='lower left', frameon=0, ncol=2, fontsize=18)
-  f.subplots_adjust(hspace=0)
-  plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
-  nbins = 7 #len(ax[0].get_yticklabels())
-  plt.setp([a.yaxis for a in ax], major_locator=MaxNLocator(nbins=nbins, prune='lower',symmetric=True))
-  lib.close()
-  ax[0].set_title(halo)
-  strpot={True:'RealPot', False:'NFWPot'}
+  f,ax = plt.subplots(3, sharex=False, sharey=False, figsize=(8,12))
+  h=[]
+  labels={'r':r'$\log10(r)$', 'E': r'$\log10(E)$', 'L': r'$\log10(L^2)$'}
+  with Tracer(halo, DynRMIN=rmin, DynRMAX=rmax, DynDataFile=halo+'star.hdf5') as FullSample:
+	  with FullSample.copy(0, npart) as Star:
+		with FullSample.select(FullSample.data['subid']<=0) as Clean:
+		  with Clean.copy(0, npart) as StarClean:
+			lib.init_potential_spline()
+			for Sample,weight,linestyle,linewidth in [(StarClean, 1, 'r--', 2),(StarClean, 0, 'g:', 2)]:
+			  Sample.FlagUseWeight=weight
+			  for i,proxy in enumerate(['r','E','L']):  
+				ts,x=Sample.TSprof(pars, estimator, viewtypes=proxy, nbins=nbin)
+				if estimator==8:
+				  ts=AD2Sig(-ts)
+				  tsref=1
+				else:
+				  tsref=0
+				tmp,=ax[i].plot(xrange(nbin+1), ts, linestyle, linewidth=linewidth)
+				ax[i].plot(ax[i].get_xlim(),[tsref,tsref],'k:')
+				plt.axes(ax[i])
+				plt.xticks(range(nbin)[1::3],['%.1f'%np.log10(a) for a in x][1::3])
+				ax[i].set_xlabel(labels[proxy])
+			  h.append(tmp)
+			if estimator==8:
+			  ax[1].set_ylabel(r'AD Discrepancy [$\sigma$]')
+			elif estimator==14:
+			  ax[1].set_ylabel(r'$\bar{\Theta}$')
+			#ax[-1].set_xlabel('Bins')
+			StarClean.FlagUseWeight=1
+			sigClean=StarClean.freeze_and_like(estimator=estimator)
+			StarClean.FlagUseWeight=0
+			sigDM=StarClean.freeze_and_like(estimator=estimator)
+			if estimator==8:
+			  sigClean=AD2Sig(-sigClean)
+			  sigDM=AD2Sig(-sigDM)
+			l=ax[0].legend(h, ('Star(%.1f)'%sigClean,'SmthNoWeight(%.1f)'%sigDM),loc='upper left', frameon=0, ncol=1)
+			plt.setp(l.get_texts(), fontsize=18)
+			#ax[0].set_xlim(0.9,2.7);ax[1].set_xlim(4,5.2);ax[2].set_xlim(6,10)
+			f.subplots_adjust(hspace=0.25, bottom=0.1)
+			lib.free_potential_spline()
+			lib.close()
+			ax[0].set_title(halo)
   if flagsave:
-	plt.savefig(lib.rootdir+'/plots/paper/TSprof'+halo+strpot[realpot]+'Mean.eps') #rasterize=True, dpi=300
+	plt.savefig(lib.rootdir+'/plots/paper/TSprof'+halo+lib.NameList[estimator]+'.%d-%d.star.eps'%(rmin,rmax)) #rasterize=True, dpi=300
 
 def fig_DensityALLvsFoF(halo='AqB4'):
   '''compare density profile of all particles vs FoF particles. NFW is a fit to all, not the FoF.'''

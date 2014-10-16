@@ -200,6 +200,8 @@ def density_of_points(data, bins=100, method='kde', weights=None):
   return: X,Y,Z; ready to be used for contour plots as contour(X, Y, Z). 
                 X and Y are mid points of the bins on which Z is calculated.
   '''
+  if data.shape[0]!=2 and data.shape[1]==2:
+	data=data.T
   l=data.min(axis=1)
   r=data.max(axis=1)
   if isinstance(bins, int):  
@@ -271,7 +273,7 @@ def get_extent(X,Y):
   extent=(X.ravel().min()-dx/2, X.ravel().max()+dx/2, Y.ravel().min()-dy/2, Y.ravel().max()+dy/2)
   return extent
 
-def plot_cov_ellipse(cov, pos, nstd=1, ax=None, **kwargs):
+def plot_cov_ellipse(cov, pos, nstd=1, fill=False, ax=None, **kwargs):
     """
     Plots an `nstd` sigma error ellipse based on the specified covariance
     matrix (`cov`). Additional keyword arguments are passed on to the 
@@ -298,7 +300,7 @@ def plot_cov_ellipse(cov, pos, nstd=1, ax=None, **kwargs):
         return vals[order], vecs[:,order]
 
     if ax is None:
-        ax = gca()
+        ax = plt.gca()
 
     TS={1:2.3, 2:6.18, 3:11.8} #the TS=x'* at the specific nstd, for a 2-d
     vals, vecs = eigsorted(cov)
@@ -306,12 +308,12 @@ def plot_cov_ellipse(cov, pos, nstd=1, ax=None, **kwargs):
 
     # Width and height are "full" widths, not radius
     width, height = 2 * np.sqrt(TS[nstd]*vals)
-    ellip = Ellipse(xy=pos, width=width, height=height, angle=theta, fill=False, **kwargs)
+    ellip = Ellipse(xy=pos, width=width, height=height, angle=theta, fill=fill, **kwargs)
     #ellip.set_facecolor('none')
     ax.add_artist(ellip)
     return ellip
   
-def skeleton(x,y,nbin=10,alpha=0.683):
+def skeleton(x,y,nbin=10,alpha=0.683,weights=None):
 	"""function [xmed,ymed,ylim,xm,ym,ysig,count]=skeleton(x,y,nbin,alpha)
 	% to divide x into bins and give estimation of center and variance of y
 	% inside each bin
@@ -324,7 +326,7 @@ def skeleton(x,y,nbin=10,alpha=0.683):
 	x=np.array(x)
 	y=np.array(y)
 	
-	count,xbin=np.histogram(x,nbin)
+	count,xbin=np.histogram(x,nbin,weights=weights)
 	nbin=len(xbin)-1
 	bin=np.digitize(x,xbin)-1
 	
@@ -338,12 +340,15 @@ def skeleton(x,y,nbin=10,alpha=0.683):
 	alpha=(1-alpha)/2;
 	
 	for i in xrange(nbin):
+		if weights is not None:
+		  xm[i]=np.sum(x[bin==i]*weights[bin==i])/np.sum(weights[bin==i])
+		  ym[i]=np.sum(y[bin==i]*weights[bin==i])/np.sum(weights[bin==i])
 		xm[i]=np.mean(x[bin==i])
 		xmed[i]=np.median(x[bin==i])
 		ym[i]=np.mean(y[bin==i])
 		ymed[i]=np.median(y[bin==i])
 		ysig[i]=np.std(y[bin==i])
-		if count[i]:
+		if np.sum(bin==i):
 			ylim[:,i]=np.percentile(y[bin==i], [alpha*100, (1-alpha)*100])
 		else:
 			ylim[:,i]=[np.NaN,np.NaN]

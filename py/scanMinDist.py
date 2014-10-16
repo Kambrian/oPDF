@@ -10,7 +10,6 @@ estimator=int(sys.argv[1]) #8 or 10
 
 halo='Mock'
 npart=1000 #number of particles
-nbin=10 #E and L bin, or nbin**2 for single proxies
 nx=50 #scan grid
 x=np.logspace(-0.5,0.5,nx)
 
@@ -35,7 +34,6 @@ Sample=FullSample.copy(5000,npart)
 #Sample.radial_count(30)
 
 def im_plot(infile, flagsave=True):
-  ''' nbin=nbinE*nbinL: total number of bins used '''
   f=h5py.File(infile,'r')
   mm=f['/logm'][...]
   cc=f['/logc'][...]
@@ -79,6 +77,8 @@ if estimator==8:
   sig=AD2Sig(-y)
 elif estimator==10:
   sig=P2Sig(chi2.sf(-y, 1))
+elif estimator==14:
+  sig=y
 else:
   print "wrong estimator=%d"%estimator
   raise estimator
