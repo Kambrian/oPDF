@@ -475,14 +475,14 @@ def fig_PhaseContours(flagsave=False, nbin=20, scaled=True):
   if not scaled:
 	z=z/sqrt(12.*npart)+0.5
   cs=plt.contour(x,x,z)
-  plt.clabel(cs, inline=1)
+  plt.clabel(cs, inline=1, fmt='%.0f')
   plt.xlabel(r'$\log(\psi_s/\psi_{s0})$')
   plt.ylabel(r'$\log(r_s/r_{s0})$')
   if flagsave:
 	  plt.savefig(lib.rootdir+'/plots/paper/PhaseMock_Mean.eps') #rasterize=True, dpi=300
   plt.figure()
   cs2=plt.contour(x,x,z0)
-  plt.clabel(cs2, inline=1)
+  plt.clabel(cs2, inline=1,fmt='%.2f')
   plt.xlabel(r'$\log(\psi_s/\psi_{s0})$')
   plt.ylabel(r'$\log(r_s/r_{s0})$')
   if flagsave:

@@ -33,7 +33,7 @@ def phase_contour(sample, proxy, bins, method, logscale, levels=5, percents=None
   
 def phase_imshow(sample, proxy, bins, method='hist', logscale=True):
   X,Y,Z,extent,data=sample.phase_density(proxy, bins, method, logscale)
-  Z[Z==0]=np.nan;
+  #Z[Z==0]=np.nan;
   extent=list(extent)
   if proxy=='L2':
 	extent[0]/=2
