@@ -8,6 +8,13 @@ from iminuit import Minuit
 from iminuit.ConsoleFrontend import ConsoleFrontend
 import copy
 
+class Enum(object):
+  def __init__(self, names):
+    for number, name in enumerate(names.split()):
+      setattr(self, name, number)
+HaloFitTypes=Enum('MC RhosRs PotsRs CoreRhosRs CorePotsRs')
+
+MaxNPar=10
 #=============C complex datatypes=====================
 class Particle_t(ctypes.Structure):
   _fields_=[('haloid', ctypes.c_int),
@@ -49,7 +56,8 @@ Tracer_t._fields_=[('lnL', ctypes.c_double),
 	
 class NFWHalo_t(ctypes.Structure):
   """all properties are physical"""
-  _fields_=[('z', ctypes.c_double),
+  _fields_=[('pars', ctypes.c_double*MaxNPar),
+		('z', ctypes.c_double),
 	    ('M', ctypes.c_double),
 	    ('c', ctypes.c_double),
 	    ('Rv', ctypes.c_double), 
@@ -83,7 +91,7 @@ class NFWHalo_t(ctypes.Structure):
 #=======================load the library==========================
 lib=ctypes.CDLL("../libdyn.so")
 #general
-lib.MaxNPar=10
+lib.MaxNPar=MaxNPar
 lib.ParType=ctypes.c_double*lib.MaxNPar
 lib.MODEL_TOL_BIN=ctypes.c_double.in_dll(lib,'MODEL_TOL_BIN')
 lib.MODEL_TOL_BIN_ABS=ctypes.c_double.in_dll(lib,'MODEL_TOL_BIN_ABS')
@@ -258,6 +266,7 @@ class NFWHalo(object):
 	self.Rhos0=ctypes.c_double.in_dll(lib, 'HaloRhos0')
 	self.Rs0=ctypes.c_double.in_dll(lib, 'HaloRs0')
 	self.ProfID=ctypes.c_int.in_dll(lib, 'HaloProfID')
+	self.FitType=ctypes.c_int.in_dll(lib, 'HaloFitType')
 	
   def define_halo(self, pars):
 	lib.define_halo(lib.ParType(*pars))

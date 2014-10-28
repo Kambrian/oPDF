@@ -6,6 +6,8 @@
 #define G 43007.1
 #define HUBBLE0 0.073  //h=0.73, H0=h*0.1 (km/s/kpc)
 
+#define NUM_PAR_MAX 10
+
 /* virial definitions */
 #define VIR_TH 0
 #define VIR_C200 1
@@ -21,6 +23,7 @@ struct CosmParZ
 
 struct NFWParZ
 {
+	double pars[NUM_PAR_MAX]; //raw parameters
 	double z;
 	double M; //Mass, 10^10Msun/h
 	double c;

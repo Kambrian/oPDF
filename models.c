@@ -24,6 +24,7 @@ double MODEL_TOL_BIN=1e-6, MODEL_TOL_BIN_ABS=1e-6, MODEL_TOL_REL=1e-5;
 //but it's still not accurate enough for minuit to work with the hessian; better use fmin()
 double HaloM0,HaloC0,HaloRhos0,HaloRs0,HaloZ0=0.;
 int HaloProfID; //profile for interpolation
+FitType_t HaloFitType=Fit_M_C; //default parameter interpretation
 struct NFWParZ Halo;
 
 struct SplineData
@@ -142,27 +143,49 @@ halo->Rv=0.;
 
 void define_halo(const double pars[])
 {
+  memcpy(Halo.pars, pars, NUM_PAR_MAX*sizeof(double));
   if(PotSpline.FlagUseSpline)
   {
 // 	decode_NFWprof3(HaloZ0,pars[0],pars[1],VIR_C200,&Halo);
-	#if FIT_PAR_TYPE==PAR_TYPE_M_C
-	decode_TemplateProf(HaloZ0,pars[0]*HaloM0,pars[1]*HaloC0,VIR_C200,&Halo);  
-	#elif  FIT_PAR_TYPE==PAR_TYPE_RHOS_RS
-	fprintf(stderr, "Error, fit type RHOS_RS not supported by templateprof\n");
-	exit(1);
-	#elif FIT_PAR_TYPE==PAR_TYPE_POTS_RS  
-	decode_TemplateProf2(HaloZ0,pars[0],pars[1],VIR_C200,&Halo);
-	#endif
+	switch(HaloFitType)
+	{
+	  case Fit_M_C:
+		decode_TemplateProf(HaloZ0,pars[0]*HaloM0,pars[1]*HaloC0,VIR_C200,&Halo);  
+		break;
+	  case Fit_Pots_Rs:
+		decode_TemplateProf2(HaloZ0,pars[0],pars[1],VIR_C200,&Halo);
+		break;
+	  default:
+		fprintf(stderr, "Error, fit type %d not supported by templateprof\n", HaloFitType);
+		exit(1);
+	}
   }
   else
   {
-	#if FIT_PAR_TYPE==PAR_TYPE_M_C
-	decode_NFWprof(HaloZ0,pars[0]*HaloM0,pars[1]*HaloC0,VIR_C200,&Halo);  
-	#elif  FIT_PAR_TYPE==PAR_TYPE_RHOS_RS
-	decode_NFWprof2(HaloZ0,pars[0]*HaloRhos0,pars[1]*HaloRs0,VIR_C200,&Halo);
-	#elif FIT_PAR_TYPE==PAR_TYPE_POTS_RS  
-	decode_NFWprof2(HaloZ0,pars[0]/pars[1]/pars[1]*HaloRhos0,pars[1]*HaloRs0,VIR_C200,&Halo);
-	#endif
+	switch(HaloFitType)
+	{
+	  case Fit_M_C:
+		decode_NFWprof(HaloZ0,pars[0]*HaloM0,pars[1]*HaloC0,VIR_C200,&Halo);  
+		break;
+	  case Fit_Rhos_Rs:
+		decode_NFWprof2(HaloZ0,pars[0]*HaloRhos0,pars[1]*HaloRs0,VIR_C200,&Halo);
+		break;
+	  case Fit_Pots_Rs:
+		decode_NFWprof2(HaloZ0,pars[0]/pars[1]/pars[1]*HaloRhos0,pars[1]*HaloRs0,VIR_C200,&Halo);
+		break;
+	  case Fit_Core_Pots_Rs:
+		Halo.Pots=pars[0]*4*M_PI*G*HaloRhos0*HaloRs0*HaloRs0;
+		Halo.Rs=pars[1]*HaloRs0;
+		Halo.Rhos=pars[0]/pars[1]/pars[1]*HaloRhos0;
+		break;
+	  case Fit_Core_Rhos_Rs:
+		Halo.Rhos=pars[0]*HaloRhos0;
+		Halo.Rs=pars[1]*HaloRs0;
+		Halo.Pots=4*M_PI*G*Halo.Rhos*Halo.Rs*Halo.Rs;
+		break;
+	  default:
+		break;
+	}
   }
 }
 
@@ -194,10 +217,16 @@ double halo_mass(double r)
 }
 
 double halo_pot(double r)
-{
+{  
   if(PotSpline.FlagUseSpline)  return eval_potential_spline(r/Halo.Rs)*Halo.Pots; //use spline if inited.
   
   double x=r/Halo.Rs;
+  
+  if(HaloFitType==Fit_Core_Pots_Rs||HaloFitType==Fit_Core_Rhos_Rs)
+  {
+	if(x<EPS) return Halo.Pots/2.;
+	return Halo.Pots*(log(1.+x)/x-0.5/(1.+x));
+  }
   if(x<EPS) return Halo.Pots; //to avoid numerical nan at x=0;
   return Halo.Pots*log(1+x)/x; //the halo boundary is irrelevant in this problem, since only the potential difference affects the orbit
 }
@@ -854,7 +883,7 @@ double like_eval(const double pars[], int estimator,Tracer_t *Sample)
       exit(estimator);
   }  
   
-  //   printf("%g,%g: %g\n", pars[0],pars[1],lnL);
+    printf("%g,%g: %g\n", pars[0],pars[1],lnL);
   Sample->lnL=lnL;
   return lnL;
 }
