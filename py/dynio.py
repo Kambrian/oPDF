@@ -438,7 +438,7 @@ class Tracer(Tracer_t):
   
   def scan_Chi2(self, estimator, x, y):
 	'''scan a likelihood surface to be used for contour plots as contour(x,y,z)'''
-	like=lambda x: lib.like_to_chi2(self.freeze_and_like(x, estimator), estimator) #the real likelihood prob
+	like=lambda x: lib.like_to_chi2(self.freeze_and_like(x, estimator), estimator) #the real likelihood prob translated to chi-square values
 	z=[like([m,c]) for m in x for c in y]
 	return x,y,np.array(z).reshape([len(y),len(x)], order="F")
   

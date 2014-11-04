@@ -13,6 +13,10 @@ print 'x1', x1
 
 ## scan likelihood contour
 
+##est error
+sigm=P2Sig(chi2.sf(ts.min(0),1))
+sigc=P2Sig(chi2.sf(ts.min(0),2))
+
 ## ML fit of density profile
 
 ## plot density profile
