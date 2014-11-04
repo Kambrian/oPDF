@@ -144,8 +144,8 @@ def fmin_gsl(func, x0, args=[], xtol=1e-3, ftolabs=0.01, xstep=1.0, maxiter=1000
             status=0
             break
         if it >= maxiter:
-			print "Maximum number of %d iterations reached"%maxiter
-			print "Failed to converge"
+            print "Maximum number of %d iterations reached"%maxiter
+            print "Failed to converge"
             status=1
             break
     x=np.array([xx[i] for i in xrange(F.n)])

@@ -4,10 +4,14 @@
 #include "cosmology.h"
 #include "wenting.h"
 
-#define PAR_TYPE_M_C 0
-#define PAR_TYPE_RHOS_RS 1
-#define PAR_TYPE_POTS_RS 2
-#define FIT_PAR_TYPE 0
+typedef enum
+{
+  Fit_M_C=0,
+  Fit_Rhos_Rs,
+  Fit_Pots_Rs,
+  Fit_Core_Rhos_Rs,
+  Fit_Core_Pots_Rs
+} FitType_t;
 
 #define HALF_ORBIT_PERIOD 1
 #define FULL_ORBIT_PERIOD 2
@@ -80,11 +84,10 @@
   #endif
 #endif
 
-
-#define NUM_PAR_MAX 10
 extern double MODEL_TOL_BIN, MODEL_TOL_BIN_ABS, MODEL_TOL_REL;
 extern double HaloM0,HaloC0,HaloRhos0,HaloRs0,HaloZ0; //to define the reference point (units) of the scan
 extern int HaloProfID; //profile data for interpolation
+extern FitType_t HaloFitType;
 extern struct NFWParZ Halo;
 
 //potential profile using interpolation
