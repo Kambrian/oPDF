@@ -274,7 +274,6 @@ void copy_tracer_particles(int offset, int sample_size, Tracer_t *Sample, Tracer
   }
   Sample->rmin=FullSample->rmin;
   Sample->rmax=FullSample->rmax;
-  Sample->FlagUseWeight=FullSample->FlagUseWeight;
   Sample->mP=FullSample->mP;
   calibrate_particle_weights(Sample);
   //its the user's responsibility to manage RadialCount[]
@@ -469,10 +468,7 @@ void count_tracer_radial(Tracer_t *Sample, int nbin, int FlagRLogBin)
 		j=floor((Sample->P[i].r-Sample->rmin)/dr);
       if(j<0) j=0;
       if(j>=Sample->nbin_r) j=Sample->nbin_r-1;
-	  if(Sample->FlagUseWeight)
-		bincount[j]+=Sample->P[i].w;
-	  else
-		bincount[j]++;
+	  bincount[j]++;
     }
     #pragma omp critical  //note this is not barriered by default!!
     {

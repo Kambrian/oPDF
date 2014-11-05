@@ -26,10 +26,9 @@ struct Tracer
   double lnL; //the likelihood associated with the lowest level view through like_eval(); upper level views are chi2.
   int nP;
   double mP; //the average mass of particles
-  int FlagUseWeight; //whether to weight particles by mass or not
   Particle_t *P;
   int nbin_r; //never set this manually. only modify it via count_tracer_radial()
-  int FlagRLogBin;
+  int FlagRLogBin; //whether to bin r in logspace or linear space
   double *RadialCount;
   double rmin, rmax;
   double proxybin[2]; //for the edges of views.

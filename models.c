@@ -178,94 +178,42 @@ void solve_radial_orbit(Particle_t *P, double rmin, double rmax, int estimator, 
   //   result=smpintD(&F,xlim[0],xlim[1],Globals.tol.rel); //too slow
 //   if(P->T<=0) printf("Part %d (M=%g,c=%g): r=%g,K=%g, E=%g, L2=%g; T=%g (vt/v=%g)\n",pid, Halo.M, Halo.c, P->r, P->K, P->E, P->L2, P->T, sqrt(P->L2/P->r/P->r/2./P->K));
 }
-
-double like_mean_phase_raw(Tracer_t *Sample)
-{  //raw mean phase (not squared)
+double MeanPhaseTest(Tracer_t *Sample, int FlagRaw)
+{  
   int i;
   double c=0.;
    #pragma omp parallel for reduction(+:c)
     for(i=0;i<Sample->nP;i++)
     {
-	  if(Sample->FlagUseWeight)
-		c+=Sample->P[i].theta*Sample->P[i].w;
-	  else
-		c+=Sample->P[i].theta;
+      c+=Sample->P[i].theta;
     }
     c/=Sample->nP;c-=0.5; 
-    return c*sqrt(12.*Sample->nP);//standard normal variable
-}
-double like_mean_phase(Tracer_t *Sample)
-{ //mean phase 
-  int i;
-  double c=0.;
-   #pragma omp parallel for reduction(+:c)
-    for(i=0;i<Sample->nP;i++)
-    {
-	  if(Sample->FlagUseWeight)
-		c+=Sample->P[i].theta*Sample->P[i].w;
-	  else
-		c+=Sample->P[i].theta;
-    }
-    c/=Sample->nP;c-=0.5; 
-  //squared mean phase
-    return -c*c*12*Sample->nP; //a standard chisquare variable
-}
-typedef struct
-{
-  double theta;
-  double w;//weight
-  double cw;//cumsum of w
-} ThetaWeight_t;
-static int cmpThetaWeight(const void *p1, const void *p2)
-{ //in ascending order
-  if(((ThetaWeight_t *)p1)->theta > ((ThetaWeight_t *)p2)->theta ) 
-    return 1;
-  
-  if(((ThetaWeight_t *)p1)->theta < ((ThetaWeight_t *)p2)->theta )
-    return -1;
-  
-  return 0;
+	if(FlagRaw)  
+	  return c*sqrt(12.*Sample->nP);//raw mean phase, standard normal variable
+	else//squared mean phase
+	  return -c*c*12*Sample->nP; //a standard chisquare variable	  
 }
 double AndersonDarlingTest(Tracer_t *Sample)
 {//Beloborodov&Levin 2004, apj, 613:224-237; simplified equation as in the note.
   int i;
-  double lnL=0.;
-  ThetaWeight_t *P;
-  P=malloc(sizeof(ThetaWeight_t)*Sample->nP);
-  
+  double AD=0., *theta;
+  theta=malloc(sizeof(double)*Sample->nP);
   #pragma omp parallel
   {
    #pragma omp for 
     for(i=0;i<Sample->nP;i++)
 	{
-      P[i].theta=Sample->P[i].theta;
-	  P[i].w=Sample->P[i].w;
+      theta[i]=Sample->P[i].theta;
 	}
     #pragma omp single
-    {
-      qsort(P, Sample->nP, sizeof(ThetaWeight_t), cmpThetaWeight);
-	  if(Sample->FlagUseWeight)
-	  {
-		double wsum=0.;
-		for(i=0;i<Sample->nP;i++)
-		{
-		  wsum+=P[i].w;
-		  P[i].cw=wsum;
-		}
-	  }
-	}
-    #pragma omp for reduction(+:lnL)
+      qsort(theta, Sample->nP, sizeof(double), cmpDouble);
+    #pragma omp for reduction(+:AD)
     for(i=0;i<Sample->nP;i++)
-	{
-	  if(Sample->FlagUseWeight)
-		lnL+=P[i].w*(P[i].w-2.*P[i].cw)*log(P[i].theta)-P[i].w*(P[i].w+2.*(Sample->nP-P[i].cw))*log(1-P[i].theta);
-	  else
-		lnL+=-(1.+2.*i)*log(P[i].theta)+(1+2.*(i-Sample->nP))*log(1-P[i].theta); //note the i starts from 0 here, so they are actually j=i-1, with i starting from 1
-	}
+      AD+=-(1.+2.*i)*log(theta[i])+(1+2.*(i-Sample->nP))*log(1-theta[i]);
   }
-  free(P);
-  lnL=lnL/Sample->nP-Sample->nP; 
-  return -lnL; //differ by -1, to make it comparable to a loglike
+  free(theta);
+  AD=AD/Sample->nP-Sample->nP; 
+  return AD; //AD test stat
 }
 void predict_radial_count (double RadialCountPred[], int nbin, int FlagRLogBin,  Tracer_t *Sample)
 {
@@ -305,7 +253,7 @@ void predict_radial_count (double RadialCountPred[], int nbin, int FlagRLogBin, 
 			OrbitPar Fpar;
 			Fpar.E=Sample->P[j].E;
 			Fpar.L2=Sample->P[j].L2;
-			Fpar.halo=halo;
+			Fpar.halo=Sample->halo;
 			F.params = &Fpar;
             gsl_integration_cquad ( &F, MAX ( rbin[0],Sample->P[j].rlim[0] ), MIN ( rbin[1],Sample->P[j].rlim[1] ), 0, Globals.tol.rel, //3,
                                     GSL_workspaceC, &t, &error, &neval );
@@ -366,18 +314,14 @@ double like_radial_bin( Tracer_t *Sample)
 		if(Sample->P[j].rlim[0]>=rbin[1]||Sample->P[j].rlim[1]<=rbin[0]) continue;
 		Fpar.E=Sample->P[j].E; 
 		Fpar.L2=Sample->P[j].L2; 
-		Fpar.halo=halo;
+		Fpar.halo=Sample->halo;
 		F.params = &Fpar;
 		gsl_integration_cquad (&F, MAX(rbin[0],Sample->P[j].rlim[0]), MIN(rbin[1],Sample->P[j].rlim[1]), 0, Globals.tol.rel, //3, 
 			       GSL_workspaceC, &t, &error, &neval);
-		if(Sample->FlagUseWeight)
-		  p+=t/Sample->P[j].T*Sample->P[j].w;
-		else
-		  p+=t/Sample->P[j].T;
+		p+=t/Sample->P[j].T;
       }
       lnL+=Sample->RadialCount[i]*log(p);
     }
-    
     return lnL;
 }
 
@@ -393,7 +337,6 @@ void tracer_set_orbits(int estimator,  Tracer_t *Sample)
 double like_eval(int estimator, Tracer_t *Sample)
 {
   double lnL;
-  
   switch(estimator)
   {
     case EID_RBinLike:
@@ -403,11 +346,10 @@ double like_eval(int estimator, Tracer_t *Sample)
       lnL=AndersonDarlingTest(Sample);
       break;
     case EID_PhaseMean:
-      lnL=like_mean_phase(Sample);
-      break;
+	  lnL=MeanPhaseTest(Sample, 0);
 	case EID_PhaseMeanRaw:
-      lnL=like_mean_phase_raw(Sample);
-      break;  
+      lnL=MeanPhaseTest(Sample, 1);
+      break;
     default:
       DEBUGPRINT("Error: unknown Estimator=%d\n", estimator);
       exit(estimator);
