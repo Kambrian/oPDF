@@ -5,9 +5,8 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-#include "mymath.h"
+// #include "mymath.h"
 #include "hdf_util.h"
-#include "halo.h"
 #include "tracer.h"
 #include "models.h"
 
@@ -104,7 +103,7 @@ void load_tracer_particles(char *datafile, Tracer_t * Sample)
     load_hdfmatrixF(datafile,&A,1);
     if(A.size[1]!=3||A.size[0]!=Sample->nP)
     {
-      printf("Error, unexpected matrix size %zd,%zd (expecting %d,3)\n",A.size[0],A.size[1],Sample->nP);
+      printf("Error, unexpected matrix size %zd,%zd (expecting %d,3)\n",(size_t)A.size[0],(size_t)A.size[1],Sample->nP);
       exit(1);
     }
     for(i=0;i<Sample->nP;i++)
@@ -246,7 +245,7 @@ void resample_tracer_particles(unsigned long int seed, Tracer_t *ReSample, Trace
     
     gsl_rng_free (r);
 	
-	calibrate_particle_weights(ReSample);
+// 	calibrate_particle_weights(ReSample);
 }
 
 void copy_tracer_particles(int offset, int sample_size, Tracer_t *Sample, Tracer_t *FullSample)
@@ -275,7 +274,7 @@ void copy_tracer_particles(int offset, int sample_size, Tracer_t *Sample, Tracer
   Sample->rmin=FullSample->rmin;
   Sample->rmax=FullSample->rmax;
   Sample->mP=FullSample->mP;
-  calibrate_particle_weights(Sample);
+//   calibrate_particle_weights(Sample);
   //its the user's responsibility to manage RadialCount[]
 }
 
@@ -294,7 +293,7 @@ void cut_tracer_particles(Tracer_t *Sample, double rmin, double rmax)
   }
   Sample->nP=j;
   Sample->P=realloc(Sample->P,sizeof(Particle_t)*Sample->nP);
-  calibrate_particle_weights(Sample);
+//   calibrate_particle_weights(Sample);
 }
 
 void squeeze_tracer_particles(Tracer_t *Sample)
@@ -311,7 +310,7 @@ void squeeze_tracer_particles(Tracer_t *Sample)
   }
   Sample->nP=j;
   Sample->P=realloc(Sample->P,sizeof(Particle_t)*Sample->nP);
-  calibrate_particle_weights(Sample);
+//   calibrate_particle_weights(Sample);
 }
 
 void free_tracer_particles(Tracer_t *Sample)
@@ -356,7 +355,7 @@ void sort_part_R(Particle_t *P, int nP)
 void create_tracer_views(Tracer_t *Sample, int nView, char proxy)
 {//sort Sample and divide into nView equal-size subsamples, discarding remainders.
   //the data are not copied. so only views are generated.
-//FIXME: the calibration of weights in views destroy the relative weighting of particles accross views! so do not do weighted likelihood once you created views.
+  //tracer need to have called tracer_freeze_energy() if creating E views.
   if(nView>1)//otherwise no need to sort
   {
 	switch(proxy)
@@ -389,7 +388,7 @@ void create_tracer_views(Tracer_t *Sample, int nView, char proxy)
 	Sample->Views[i].P=Sample->P+offset;
 	Sample->Views[i].mP=Sample->mP;
 	Sample->Views[i].halo=Sample->halo;
-	calibrate_particle_weights(Sample->Views+i);
+// 	calibrate_particle_weights(Sample->Views+i);
 	if(proxy=='r')
 	{
 	  Sample->Views[i].rmin=Sample->Views[i].P[0].r;
@@ -427,6 +426,18 @@ void free_tracer_views(Tracer_t *Sample)
 	Sample->nView=0;
 	Sample->ViewType='\0';
   }
+}
+void create_nested_views(int nbin[], char ViewTypes[],  Tracer_t *Sample)
+{//ViewTypes should be a non-empty string!
+  //used to create static views (jointE, jointLE dynamically create views by themselves instead)
+  //do not mix this with joint_like functions, since they destroy the views!
+  //tracer should have done freeze_energy() upon input
+  int i;
+  create_tracer_views(Sample, nbin[0], ViewTypes[0]);
+  if(ViewTypes[1]=='\0') return; //done
+  
+  for(i=0;i<nbin[0];i++)
+	create_nested_views(nbin+1, ViewTypes+1, Sample->Views+i);//descend
 }
 void free_tracer_rcounts(Tracer_t *Sample)
 {
@@ -479,6 +490,11 @@ void count_tracer_radial(Tracer_t *Sample, int nbin, int FlagRLogBin)
   }
 }
 
+void tracer_attach_halo(Halo_t *halo, Tracer_t * Sample)
+{
+  Sample->halo=halo;
+}
+
 void tracer_freeze_energy(Tracer_t *Sample)
 {//fix the energy parameter according to initial potential
   int i;
@@ -487,50 +503,10 @@ void tracer_freeze_energy(Tracer_t *Sample)
       Sample->P[i].E=-(Sample->P[i].K+halo_pot(Sample->P[i].r, Sample->halo));//differ from previous version
 }
 
-void tracer_set_halo(Halo_t *halo, Tracer_t * Sample)
+void tracer_set_orbits(Tracer_t *Sample, int FlagSetPhase)
 {
-  Sample->halo=halo;
-  tracer_freeze_energy(Sample);
-}
-
-//======higher level funcs====================
-int NumRadialCountBin=30;
-int SubSampleSize=1000;
-void init_tracer(Tracer_t *Sample)
-{
-  char datafile[1024]=ROOTDIR"/data/mockhalo_wenting.hdf5";
-  Sample->rmin=1;
-  Sample->rmax=1000;
-  HaloM0=183.5017;
-  HaloC0=16.1560;
-  HaloProfID=0;
-  
-  if(NULL!=getenv("DynDataFile"))
-  {
-    printf("Importing parameters from environment..\n");
-    sprintf(datafile,"%s/data/%s", ROOTDIR, getenv("DynDataFile"));
-    SubSampleSize=strtol(getenv("DynSIZE"),NULL, 10);
-    Sample->rmin=strtod(getenv("DynRMIN"),NULL);
-    Sample->rmax=strtod(getenv("DynRMAX"),NULL);
-    HaloM0=strtod(getenv("DynM0"),NULL);
-    HaloC0=strtod(getenv("DynC0"),NULL);
-	HaloProfID=strtol(getenv("DynProfID"), NULL, 10);
-  }
-  else
-    printf("Warning: Using default parameters with datafile %s .\n", datafile);
- 
-  printf("%s; %d; %g,%g;%g,%g\n", datafile, SubSampleSize, Sample->rmin,Sample->rmax,HaloM0,HaloC0);
-  decode_NFWprof(HaloZ0,HaloM0,HaloC0,VIR_C200,&Halo);
-  HaloRhos0=Halo.Rhos;
-  HaloRs0=Halo.Rs;
-  
-  load_tracer_particles(datafile, Sample);
-  cut_tracer_particles(Sample,Sample->rmin,Sample->rmax);
-  shuffle_tracer_particles(100,Sample);
-  count_tracer_radial(Sample, NumRadialCountBin, 1);
-}
-void make_sample(int offset, int samplesize, Tracer_t *Sample, Tracer_t *FullSample)
-{//make a subsample
-  copy_tracer_particles(offset, samplesize, Sample, FullSample);
-  count_tracer_radial(Sample, NumRadialCountBin, 1);
+  int i;
+  #pragma omp parallel for
+  for(i=0;i<Sample->nP;i++)
+    solve_radial_orbit(Sample->P+i,Sample->rmin,Sample->rmax,Sample->halo, FlagSetPhase);
 }

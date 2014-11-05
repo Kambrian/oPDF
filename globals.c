@@ -1,30 +1,5 @@
-struct global
-{
-  struct
-  {
-	double bin=1e-6;
-	double bin_abs=1e-6;
-	double rel=1e-5;
-  } tol;
-  struct
-  {
-	double OmegaM0=0.3;
-	double OmegaL0=0.7;
-	double Redshift=0.;
-  } cosmology;
-  struct
-  {
-	double MassInMsunh;
-	double LengthInKpch;
-	double VelInKms;
-	struct
-	{
-	  double G;
-	  double H0;
-	} Const;
-  } units;
-  VirType_t virtype=VIR_C200;
-} Globals;
+#include "globals.h"
+struct global Globals;
 
 void default_global_pars()
 {
@@ -39,7 +14,8 @@ void default_global_pars()
   Globals.cosmology.OmegaL0=0.7;
   Globals.cosmology.Redshift=0.;
   Globals.virtype=VIR_C200;
-  set_units(1e10, 1., 1.);
+  double h=0.73;
+  set_units(1e10*h, h, 1.);//default units set to 1e10Msun, kpc, km/s
 }
 
 void set_units(double MassInMsunh, double LengthInKpch, double VelInKms)
@@ -47,6 +23,6 @@ void set_units(double MassInMsunh, double LengthInKpch, double VelInKms)
   Globals.units.MassInMsunh=MassInMsunh;
   Globals.units.LengthInKpch=LengthInKpch;
   Globals.units.VelInKms=VelInKms;
-  Globals.units.Const.G=43007.1*VelInKms*VelInKms*LengthInKpch/MassInMsunh;
-  Globals.units.Const.H0=0.1*LengthInKpch/MassInMsunh;
+  Globals.units.Const.G=4.30071e-6*MassInMsunh/VelInKms/VelInKms/LengthInKpch;
+  Globals.units.Const.H0=0.1*LengthInKpch/VelInKms;
 }

@@ -1,3 +1,7 @@
+#ifndef TRACER_HEADER_INCLUDED
+
+#include "halo.h"
+
 typedef struct
 {
   int haloid;//host haloid
@@ -32,10 +36,10 @@ struct Tracer
   double *RadialCount;
   double rmin, rmax;
   double proxybin[2]; //for the edges of views.
+  Halo_t * halo;
   int nView;
   char ViewType;
   TracerView *Views;
-  Halo_t * halo;
 };
 
 extern int SubSampleSize,NumRadialCountBin;
@@ -58,8 +62,13 @@ extern void sort_part_L(Particle_t *P, int nP);
 extern void sort_part_E(Particle_t *P, int nP);
 extern void create_tracer_views(Tracer_t *Sample, int nView, char proxy);
 extern void free_tracer_views(TracerView * Views);
+extern void create_nested_views(int nbin[], char ViewTypes[],  Tracer_t *Sample);
 
 extern void free_tracer(Tracer_t *Sample);
 
-extern void init_tracer(Tracer_t *Sample);
-extern void make_sample(int offset, int samplesize, Tracer_t *Sample, Tracer_t *FullSample);
+void tracer_attach_halo(Halo_t *halo, Tracer_t * Sample);
+void tracer_freeze_energy(Tracer_t *Sample);
+void tracer_set_orbits(Tracer_t *Sample, int FlagSetPhase);
+
+#define TRACER_HEADER_INCLUDED
+#endif

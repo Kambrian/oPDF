@@ -3,12 +3,12 @@
 #include <math.h>
 #include <string.h>
 
-#include "mymath.h"
+// #include "mymath.h"
 #include "globals.h"
 #include "cosmology.h"
 #include "halo.h"
-#include "Template.h"
-#include "NFW.h"
+#include "template.h"
+#include "nfw.h"
 
 void halo_set_type(HaloType_t t, Halo_t *halo)
 {
@@ -17,7 +17,7 @@ void halo_set_type(HaloType_t t, Halo_t *halo)
 void halo_set_param(double *pars, Halo_t *halo)
 {
   halo->z=Globals.cosmology.Redshift;
-  halo->virtype=VirType;
+  halo->virtype=Globals.virtype;
 //   memcpy(Halo.pars, pars, NUM_PAR_MAX*sizeof(double));
   switch(halo->type)
   {
@@ -30,15 +30,15 @@ void halo_set_param(double *pars, Halo_t *halo)
 	case HT_CorePotsRs://same as NFWPotsRs
 	  halo->Pots=-pars[0];
 	  halo->Rs=pars[1];
-	  halo->Rhos=-halo->Pots/halo->Rs/halo->Rs/4/M_PI/Units.Const.G;
-	  halo->Ms=-halo->Pots*halo->Rs/Units.Const.G;
+	  halo->Rhos=-halo->Pots/halo->Rs/halo->Rs/4/M_PI/Globals.units.Const.G;
+	  halo->Ms=-halo->Pots*halo->Rs/Globals.units.Const.G;
 	  break;
 	case HT_NFWRhosRs:
 	case HT_CoreRhosRs:
 	  halo->Rhos=pars[0];
 	  halo->Rs=pars[1];
 	  halo->Ms=4.0*M_PI*halo->Rhos*halo->Rs*halo->Rs*halo->Rs;
-	  halo->Pots=-Units.Const.G*halo->Ms/halo->Rs;
+	  halo->Pots=-Globals.units.Const.G*halo->Ms/halo->Rs;
 	  break;
 	case HT_TMPMC:
 	  halo->M=pars[0];
@@ -60,7 +60,7 @@ double halo_mass(double r, Halo_t *halo)
   {
 	case HT_TMPMC:
 	case HT_TMPPotScaleRScale:
-	  return eval_density_spline(r/Halo.Rs)*Halo.Pots/Halo.Rs/Halo.Rs*4.*M_PI/3.*r*r*r; //use spline if inited.
+	  return eval_density_spline(r/halo->Rs)*halo->PotScale/halo->RScale/halo->RScale*4.*M_PI/3.*r*r*r; //use spline if inited.
 	case HT_NFWMC:
 	case HT_NFWPotsRs:
 	case HT_NFWRhosRs:
@@ -88,5 +88,9 @@ double halo_pot(double r, Halo_t *halo)
 	case HT_TMPMC:
 	case HT_TMPPotScaleRScale:
 	  return eval_potential_spline(r/halo->RScale)*halo->PotScale; 
+	default:
+	  DEBUGPRINT("Error: halo type %d not supported by halo_pot yet", halo->type);
+	  exit(1);
   }
+  return 0.;//just to conform with the rules for a final return.
 }

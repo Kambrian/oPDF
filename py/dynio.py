@@ -286,6 +286,11 @@ class Tracer(Tracer_t):
 	'''if called with no par, create an empty tracer; otherwise load according to config
 	configuration according to get_config(halo). newoptions will overide get_config.'''
 	Tracer_t.__init__(self)
+	#self.load_tracer_particles()
+	#self.rmin=min(self.data['r'])
+	#self.rmax=xxx
+	#if rmin, then self.rmin=xx; self.cut_radial()
+	#self.shuffle()
 	self.nP=0  #init state
 	self.nView=0
 	self.FlagUseWeight=0

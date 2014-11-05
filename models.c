@@ -14,24 +14,8 @@
 #include "cosmology.h"
 #include "tracer.h"
 #include "models.h"
-#include "halo.h"
 	
 #define MODEL_MAX_INTVAL 1000
-
-double NFW_like(double pars[], Tracer_t *T, Halo_t *halo)
-{//define the appropriate halo_type first
-  if(pars[0]<=0||pars[1]<=0||isnan(pars[0])||isnan(pars[1])) return -INFINITY;
-  halo_set_param(pars, halo);
-  double lnL=log(halo->Rhos)*T->nP-(halo_mass(T->rmax, halo)-halo_mass(T->rmin, halo))/T->mP; //the normalizations
-  int i;
-  #pragma omp parallel for reduction(+: lnL)
-  for(i=0;i<T->nP;i++)
-  {
-	double r=T->P[i].r/halo->Rs;
-	lnL+=-log(r)-2.*log(1.+r);
-  }
-  return lnL; //loglikelihood
-}
 
 static int is_forbidden(double r, double E, double L2, Halo_t *halo)
 {//according to current potential and E,L,r
@@ -129,7 +113,7 @@ void free_integration_space()
   {//gsl_integration_workspace_free (GSL_workspace);
     gsl_integration_cquad_workspace_free (GSL_workspaceC);}
 }
-void solve_radial_orbit(Particle_t *P, double rmin, double rmax, int estimator, Halo_t *halo)//bottleneck in gsl_integration_cquad
+void solve_radial_orbit(Particle_t *P, double rmin, double rmax, Halo_t *halo, int FlagSetPhase)//bottleneck in gsl_integration_cquad
 {//find peri(apo)-centers and integrate the period 
   solve_radial_limits(P, rmin, rmax, halo); //according to current potential and E,L,r; E must be initialized with a initial potential
   if(is_forbidden(P->r,P->E,P->L2, halo))
@@ -154,7 +138,7 @@ void solve_radial_orbit(Particle_t *P, double rmin, double rmax, int estimator, 
 			 GSL_workspaceC, &(P->T), &error, &neval);
   if(P->T<=0||isnan(P->T)||P->T==INFINITY){ 
 	fprintf(stderr,"Warning: T=%g, reset to 1. [%g,%g]\n", P->T, P->rlim[0], P->rlim[1]);P->T=1.;}
-  if(IS_PHASE_ESTIMATOR(estimator))
+  if(FlagSetPhase)
   {
   double t;
   gsl_integration_cquad (&F, P->rlim[0],P->r, 0, Globals.tol.rel, //3, 
@@ -325,16 +309,7 @@ double like_radial_bin( Tracer_t *Sample)
     return lnL;
 }
 
-void tracer_set_orbits(int estimator,  Tracer_t *Sample)
-{
-  int i;
-
-  #pragma omp parallel for
-  for(i=0;i<Sample->nP;i++)
-    solve_radial_orbit(Sample->P+i,Sample->rmin,Sample->rmax,estimator,Sample->halo);
-}
-
-double like_eval(int estimator, Tracer_t *Sample)
+double like_eval(Estimator_t estimator, Tracer_t *Sample)
 {
   double lnL;
   switch(estimator)
@@ -359,69 +334,50 @@ double like_eval(int estimator, Tracer_t *Sample)
   return lnL;
 }
 
-double likelihood(int estimator, Tracer_t *Sample)
-{
-  tracer_set_orbits(estimator, Sample);
-  double lnL=like_eval(estimator, Sample);
-  return lnL;
-}
+// double likelihood(Estimator_t estimator, Tracer_t *Sample)
+// {
+//   tracer_freeze_energy(Sample);
+//   tracer_set_orbits(estimator, Sample);
+//   double lnL=like_eval(estimator, Sample);
+//   return lnL;
+// }
 
-double jointLE_FChi2(const double pars[], int estimator, int nbinL, int nbinE,  Tracer_t *Sample)
-{//automatically update views if needed; then freeze and like
+double jointLE_like(Estimator_t estimator, int nbinL, int nbinE,  Tracer_t *Sample)
+{//automatically update views if needed; 
+  //this can be more efficient than create_nested_views() and nested_views_like() when nbinL is not changed.
+  //tracer has to be prepare for like upon input
   int i;
-  double chi2;
+  double lnL;
   if(Sample->nView!=nbinL||Sample->ViewType!='L') //already allocated
 	create_tracer_views(Sample, nbinL, 'L');
-  for(i=0,chi2=0;i<nbinL;i++)
-	chi2+=jointE_FChi2(pars, estimator, nbinE, halo, Sample->Views+i);
-  return chi2;
+  for(i=0,lnL=0;i<nbinL;i++)
+	lnL+=jointE_like(estimator, nbinE, Sample->Views+i);
+  return lnL;
 }
-double jointE_FChi2(const double pars[], int estimator, int nbin,  Tracer_t *Sample)
-{//this does freeze_and_like
+double jointE_like(Estimator_t estimator, int nbin,  Tracer_t *Sample)
+{//tracer has to be prepared for like upon input
   int i;
-  double lnL, chi2;
-  freeze_energy(halo, Sample);
+  double lnL;
   create_tracer_views(Sample, nbin, 'E');
-  for(i=0,chi2=0;i<nbin;i++)
+  for(i=0,lnL=0;i<nbin;i++)
   {
 	if(estimator==EID_RBinLike)  count_tracer_radial(Sample->Views+i, NumRadialCountBin, 1);
-	lnL=likelihood(estimator, halo, Sample->Views+i);
-	chi2+=like_to_chi2(lnL, estimator);
+	lnL+=like_eval(estimator, Sample->Views+i);
 	if(estimator==EID_RBinLike)  free_tracer_rcounts(Sample->Views+i);
   }
   free_tracer_views(Sample);
-  Sample->lnL=chi2;
-  return chi2;
-}
-void create_nested_views(int nbin[], char ViewTypes[],  Tracer_t *Sample)
-{//ViewTypes should be a non-empty string!
-  //used to create static views (jointE, jointLE dynamically create views by themselves instead)
-  //do not mix this with joint_like functions, since they destroy the views!
-  int i;
-  if(ViewTypes[0]=='E')  freeze_energy(halo, Sample);
-  create_tracer_views(Sample, nbin[0], ViewTypes[0]);
-  if(ViewTypes[1]=='\0') return; //done
-  
-  for(i=0;i<nbin[0];i++)
-	create_nested_views(nbin+1, ViewTypes+1, halo, Sample->Views+i);//descend
-}
-double nested_views_Chi2(int estimator,  Tracer_t *Sample)
-{//pure like, without freezing energy; freeze it yourself before calling this!
-  double lnL;
-  if(!Sample->nView)
-  {
-	lnL=likelihood(estimator, Sample);
-	return like_to_chi2(lnL,estimator);
-  }
-  
-  int i;
-  for(i=0,lnL=0.;i<Sample->nView;i++)
-	lnL+=nested_views_Chi2(estimator, halo, Sample->Views+i);
   Sample->lnL=lnL;
   return lnL;
 }
-double nested_views_FChi2(int estimator,  Tracer_t *Sample)
-{//freeze and like
-  freeze_energy(halo, Sample);
-  return nested_views_Chi2(estimator, halo, Sample);
+double nested_views_like(Estimator_t estimator,  Tracer_t *Sample)
+{//pure like, without freeze_energy()/set_orbits();  prepare them before calling this!
+  double lnL;
+  if(!Sample->nView)
+	return like_eval(estimator, Sample);
+  
+  int i;
+  for(i=0,lnL=0.;i<Sample->nView;i++)
+	lnL+=nested_views_like(estimator, Sample->Views+i);
+  Sample->lnL=lnL;
+  return lnL;
 }

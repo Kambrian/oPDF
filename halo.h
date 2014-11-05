@@ -19,6 +19,7 @@ typedef struct Halo
   double z;
   double M;
   double c;
+  double Rv;
   double Pots;//-4*pi*G*rhos*rs^2, the potential at r=0
   double Rs;
   double Rhos;//4*pi*rs^3*rhos

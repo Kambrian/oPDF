@@ -1,7 +1,5 @@
 #ifndef MYMATH_HEADER_INCLUDED
 
-#define EPS 1e-16
-
 #include <gsl/gsl_integration.h>
 #ifndef INFINITY
   #define INFINITY (1.0/0.0)

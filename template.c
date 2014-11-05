@@ -1,9 +1,22 @@
 #include <math.h>
 #include <stdio.h>
-#include "template.h"
-#include "cosmology.h"
 #include <gsl/gsl_spline.h>
 
+#include "globals.h"
+#include "cosmology.h"
+#include "halo.h"
+#include "template.h"
+
+struct SplineData
+{
+	int FlagUseSpline; //spline ready to be used. override the default potential calculation with spline interpolation
+	gsl_interp_accel *acc;
+	gsl_spline *spline ;
+	gsl_interp_accel *acc_dens;
+	gsl_spline *spline_dens;
+	int TMPid;
+	double Rs;
+};
 static struct SplineData PotSpline;
 #pragma omp threadprivate(PotSpline)  //make sure each thread has its own cache
 void init_potential_spline(int TMPid)
@@ -75,7 +88,7 @@ double scaleF,rhoc;
 struct CosmParZ cosm;
 
 evolve_cosmology(halo->z,&cosm);
-rhoc=(3.0*cosm.Hz*cosm.Hz)/(8.0*M_PI*G);
+rhoc=(3.0*cosm.Hz*cosm.Hz)/(8.0*M_PI*Globals.units.Const.G);
 halo->Rv=cbrt(fabs(halo->M)/(4.0*M_PI/3.0*cosm.virialF[halo->virtype]*rhoc));
 halo->Rs=halo->Rv/halo->c; 
 halo->RScale=halo->Rs/PotSpline.Rs;

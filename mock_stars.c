@@ -8,7 +8,7 @@
 
 #include "mymath.h"
 #include "cosmology.h"
-#include "io.h"
+#include "tracer.h"
 #include "models.h"
 
 int main(int argc, char **argv)

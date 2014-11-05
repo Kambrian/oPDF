@@ -80,7 +80,7 @@ endif
 SRC_MAIN=scan.c NumericalConvergence.c saveHDFstars.c mock_stars.c
 EXEC=$(basename $(SRC_MAIN))
 OBJS_MAIN=$(addsuffix .o, $(EXEC))
-SRC_COMM = io.c hdf_util.c cosmology.c mymath.c models.c wenting.c wenting.f90
+SRC_COMM = hdf_util.c globals.c cosmology.c mymath.c models.c tracer.c halo.c template.c nfw.c
 OBJS_COMM= $(patsubst %.f90,%.f.o,$(SRC_COMM:%.c=%.o))
 # OBJS_COMM = $(SRC_COMM:%.c=%.o)
 #any additional OBJS below:
@@ -110,7 +110,7 @@ lib: CFLAGS+=-fPIC
 lib: FFLAGS+=-fPIC
 lib: libdyn.so
 
-libdyn.so:models.o $(OBJS_COMM) wenting.f.o wenting.o
+libdyn.so:models.o $(OBJS_COMM)
 	$(CC) -shared -Wl,-soname,libdyn.so -o libdyn.so $^ $(LDFLAGS) -lifport -lifcore -lirc
 #----------------------
 submit: tmpdir=exe/mockfitFmin_mc$(ESTIMATOR)
@@ -154,10 +154,15 @@ distclean: clean
 #-----end--- auto dependencies below---------	
 # DO NOT DELETE
 
-io.o: mymath.h hdf_util.h io.h models.h cosmology.h wenting.h
 hdf_util.o: hdf_util.h mymath.h
-cosmology.o: mymath.h cosmology.h
+cosmology.o: cosmology.h globals.h
 mymath.o: mymath.h
-models.o: mymath.h cosmology.h io.h models.h wenting.h
-scan.o: mymath.h cosmology.h io.h models.h wenting.h
-NumericalConvergence.o: mymath.h cosmology.h io.h models.h wenting.h
+models.o: mymath.h globals.h cosmology.h tracer.h halo.h models.h
+tracer.o: hdf_util.h tracer.h halo.h models.h
+halo.o: globals.h cosmology.h halo.h template.h nfw.h
+template.o: globals.h cosmology.h halo.h template.h TemplateData.h
+nfw.o: globals.h cosmology.h halo.h tracer.h
+scan.o: mymath.h cosmology.h globals.h models.h
+NumericalConvergence.o: mymath.h cosmology.h globals.h models.h
+saveHDFstars.o: mymath.h hdf_util.h
+mock_stars.o: mymath.h cosmology.h globals.h tracer.h halo.h models.h
