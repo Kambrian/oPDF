@@ -4,90 +4,27 @@
 #include "cosmology.h"
 #include "wenting.h"
 
-typedef enum
-{
-  Fit_M_C=0,
-  Fit_Rhos_Rs,
-  Fit_Pots_Rs,
-  Fit_Core_Rhos_Rs,
-  Fit_Core_Pots_Rs
-} FitType_t;
-
 #define HALF_ORBIT_PERIOD 1
 #define FULL_ORBIT_PERIOD 2
-
-#define PHASE_PERIOD 1
+#define PHASE_PERIOD HALF_ORBIT_PERIOD
 // #define SWAP_T
+typedef enum
+{
+  EID_RBinLike=0,
+  EID_PhaseAD,
+  EID_PhaseMean,
+  EID_PhaseMeanRaw
+} Estimator_t;
 
-// typedef enum
-// {
-//   EID_Radial=0,
-//   EID_RadialBin,
-//   EID_MixedRadial,
-//   EID_Entropy,
-//   EID_Iterative,
-//   EID_Phase=100,
-//   EID_PhaseAD,
-//   EID_PhaseADProb,
-//   EID_PhaseMean,
-//   EID_PhaseMeanRaw,
-//   EID_PhaseBin,
-//   EID_PhasePartition,
-//   EID_PhaseProcess,
-//   EID_PhaseKS,
-//   EID_PhaseKuiper,
-//   EID_PhaseResultant,
-//   EID_PhaseCosMean,
-// } Estimator_t;
-#define ENTROPY_ESTIMATOR 1 //conditional like; junk
-#define ITERATIVE_ESTIMATOR 2 //iterative entropy; still junk
-#define MIXED_RADIAL_ESTIMATOR 3
-#define RADIAL_BIN_ESTIMATOR 4
-#define RADIAL_PHASE_BINNED 5
-#define RADIAL_PHASE_PARTITION 6//multinomial distribution
-#define RADIAL_PHASE_PROCESS 7    //Poisson process time delay; junk
-#define RADIAL_PHASE_ROULETTE 8
-#define RADIAL_PHASE_CMOMENT 9  //circular moment
-#define RADIAL_PHASE_LMOMENT 10 //linear moment, under roulette phase definition
-#define RADIAL_PHASE_KS 11 //ks-test
-#define RADIAL_PHASE_KUIPER 12 //kuiper's test
-#define RADIAL_PHASE_COSMEAN 13 //<cos(theta)>
-#define RADIAL_PHASE_LMEANRAW 14 //mean phase, std normal
-#define RADIAL_PHASE_AD_GEV 15 //ADtest likelihood, from GEV fit
-#define RADIAL_PHASE_AD_BINORMAL 16 //AD like, from binormal fit
-#define RADIAL_PHASE_AD_NORMAL 17 //AD like, from normal fit
 #define LnADMean (-0.22)
 #define LnADSig 0.66
 #define LnAD_GEV_K (-0.2128)
 #define LnAD_GEV_SIGMA 0.6335
 #define LnAD_GEV_MU (-0.4776)
 
-//#define ESTIMATOR 10  //this has been moved to makefile
-// #define RETURN_RAWMEAN 
-// #define RETURN_PROB //for KS and Kuiper
-
-#define IS_PHASE_ESTIMATOR(x) ((x)>=RADIAL_PHASE_BINNED)
-
-#ifndef PHASE_PERIOD
-  #if ESTIMATOR==RADIAL_PHASE_KUIPER||ESTIMATOR==RADIAL_PHASE_CMOMENT||ESTIMATOR==RADIAL_PHASE_COSMEAN //these two seems to be biased a bit when used with the half-period-phase
-    #ifndef SWAP_T 
-      #define PHASE_PERIOD FULL_ORBIT_PERIOD
-    #else //alternative period def
-      #define PHASE_PERIOD HALF_ORBIT_PERIOD
-    #endif
-  #else //below can be biased if used with the full-period-phase
-    #ifndef SWAP_T
-      #define PHASE_PERIOD HALF_ORBIT_PERIOD 
-    #else
-      #define PHASE_PERIOD FULL_ORBIT_PERIOD 
-    #endif
-  #endif
-#endif
+#define IS_PHASE_ESTIMATOR(x) ((x)>=EID_PhaseAD)
 
 extern double MODEL_TOL_BIN, MODEL_TOL_BIN_ABS, MODEL_TOL_REL;
-extern double HaloM0,HaloC0,HaloRhos0,HaloRs0,HaloZ0; //to define the reference point (units) of the scan
-extern int HaloProfID; //profile data for interpolation
-extern FitType_t HaloFitType;
 extern struct NFWParZ Halo;
 
 //potential profile using interpolation

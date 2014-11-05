@@ -36,6 +36,7 @@ struct Tracer
   int nView;
   char ViewType;
   TracerView *Views;
+  Halo_t * halo;
 };
 
 extern int SubSampleSize,NumRadialCountBin;

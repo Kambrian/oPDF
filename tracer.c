@@ -7,7 +7,8 @@
 
 #include "mymath.h"
 #include "hdf_util.h"
-#include "io.h"
+#include "halo.h"
+#include "tracer.h"
 #include "models.h"
 
 static int cmpPartFlag(const void *p1, const void *p2)
@@ -388,6 +389,7 @@ void create_tracer_views(Tracer_t *Sample, int nView, char proxy)
 	Sample->Views[i].nP=nP;
 	Sample->Views[i].P=Sample->P+offset;
 	Sample->Views[i].mP=Sample->mP;
+	Sample->Views[i].halo=Sample->halo;
 	calibrate_particle_weights(Sample->Views+i);
 	if(proxy=='r')
 	{
@@ -481,6 +483,20 @@ void count_tracer_radial(Tracer_t *Sample, int nbin, int FlagRLogBin)
   }
 }
 
+void tracer_freeze_energy(Tracer_t *Sample)
+{//fix the energy parameter according to initial potential
+  int i;
+  #pragma omp parallel for
+  for(i=0;i<Sample->nP;i++)
+      Sample->P[i].E=-(Sample->P[i].K+halo_pot(Sample->P[i].r, Sample->halo));//differ from previous version
+}
+
+void tracer_set_halo(Halo_t *halo, Tracer_t * Sample)
+{
+  Sample->halo=halo;
+  tracer_freeze_energy(Sample);
+}
+
 //======higher level funcs====================
 int NumRadialCountBin=30;
 int SubSampleSize=1000;
@@ -521,166 +537,4 @@ void make_sample(int offset, int samplesize, Tracer_t *Sample, Tracer_t *FullSam
 {//make a subsample
   copy_tracer_particles(offset, samplesize, Sample, FullSample);
   count_tracer_radial(Sample, NumRadialCountBin, 1);
-}
-void mock_stars(char halo, int seed, Tracer_t *NewStar)
-{
-  Tracer_t DM={}, Star={};
-  NewStar->nP=0; NewStar->nView=0;
-  char datafile[1024];
-  double rmin=10.,rmax=300.;
-  switch(halo)
-  {
-	case 'A':
-	  HaloM0=184.2;
-	  HaloC0=16.10;
-	  HaloProfID=2;
-	  break;
-	case 'B':
-	  HaloM0=81.94;
-	  HaloC0=8.16;
-	  HaloProfID=3;
-	  break;
-	case 'C':
-	  HaloM0=177.4;
-	  HaloC0=12.34;
-	  HaloProfID=4;
-	  break;
-	case 'D':
-	  HaloM0=177.4;
-	  HaloC0=8.73;
-	  HaloProfID=5;
-	  break;
-	case 'E':
-	  HaloM0=118.5;
-	  HaloC0=8.67;
-	  HaloProfID=6;
-	  break;
-	default:
-	  printf("Error: wrong halo %c\n",halo);
-	  exit(1);
-  }
-  decode_NFWprof(HaloZ0,HaloM0,HaloC0,VIR_C200,&Halo);
-  HaloRhos0=Halo.Rhos;
-  HaloRs0=Halo.Rs;
- 
-  sprintf(datafile,"%s/data/FullData/%c2DM.hdf5", ROOTDIR, halo);
-  load_tracer_particles(datafile, &DM);
-  cut_tracer_particles(&DM,rmin,rmax);
-//   shuffle_tracer_particles(100, &DM);
-//   DM.nP=10000;
-
-  sprintf(datafile,"%s/data/%c2star.hdf5", ROOTDIR, halo);
-  load_tracer_particles(datafile, &Star);
-  cut_tracer_particles(&Star,rmin,rmax);
-//   shuffle_tracer_particles(100, &Star);
-//   Star.nP=1000;
-  int i;
-  for(i=0;i<DM.nP;i++)
-	DM.P[i].flag=(DM.P[i].subid<=0);
-  squeeze_tracer_particles(&DM);
-  for(i=0;i<Star.nP;i++)
-	Star.P[i].flag=(Star.P[i].subid<=0);
-  squeeze_tracer_particles(&Star);
-  
-  NewStar->nP=Star.nP;
-  NewStar->P=malloc(sizeof(Particle_t)*NewStar->nP);
-  
-  init_potential_spline();
-  double pars[2]={1.,1.};
-  int nbin[2]={100,100};
-  char proxies[32]="EL";
-  create_nested_views(pars, nbin, proxies, &DM);
-  freeze_energy(pars, &Star);
-  free_potential_spline();
-
-    const gsl_rng_type * T;
-    gsl_rng * r;
-    gsl_rng_env_setup();
-    T = gsl_rng_default;
-    r = gsl_rng_alloc (T);
-    gsl_rng_set(r,seed);
-	
-  qsort(Star.P, Star.nP, sizeof(Particle_t), cmpPartE);
-  int pid, pid0, eid;
-  NewStar->nP=0;
-  for(eid=0,pid0=0,pid=0;pid<Star.nP&&eid<nbin[0];pid++)
-  {
-	while(Star.P[pid].E>=DM.Views[eid].proxybin[1]||pid==Star.nP-1)//passed bin boundary, process and walk eid
-	{
-// 	  printf("\n%d:",eid);
-	  if(pid>pid0)//non-empty bin, open it
-	  {
-		qsort(Star.P+pid0, pid-pid0, sizeof(Particle_t), cmpPartL);
-		int cid,cid0, lid;
-		for(lid=0,cid0=pid0,cid=pid0;(cid<pid&&lid<nbin[1])||cid==Star.nP-1;cid++)
-		{
-		  Tracer_t *View=&(DM.Views[eid].Views[lid]);
-		  while(Star.P[cid].L2>=View->proxybin[1]||cid==Star.nP-1)//passed a new bin, sample and walk lid
-		  {
-// 			printf("%d,",lid);
-			int nP=cid-cid0;
-			if(nP>0)//non-empty, sample it
-			{
-			  if(nP>View->nP)
-			  {
-				printf("Warning: nstar=%d, nDM=%d\n", nP, View->nP); 
-				nP=View->nP;
-			  }
-			  gsl_ran_choose(r, NewStar->P+NewStar->nP, nP, View->P, View->nP, sizeof(Particle_t));
-			  NewStar->nP+=nP;
-			  cid0=cid;
-			}
-			lid++;
-			if(lid==nbin[1]) break;
-			View=&(DM.Views[eid].Views[lid]);
-		  }
-		}
-		pid0=pid;//rebase lower boundary
-	  }
-	  eid++;
-	  if(eid==nbin[0]) break;
-	}
-  }
-  gsl_rng_free (r);
-  printf("Old: %d; New: %d\n", Star.nP, NewStar->nP);
-  NewStar->P=realloc(NewStar->P, sizeof(Particle_t)*NewStar->nP);
-  
-  free_tracer(&DM);
-  free_tracer(&Star);
-}
-void save_mockstars(char halo, Tracer_t *NewStar)
-{
-  hid_t file_id;
-  herr_t status;
-  hsize_t dims[2];
-  char datafile[1024];
-  sprintf(datafile,"%s/data/%c2starCleanFromDM.hdf5", ROOTDIR, halo);
-  file_id = H5Fcreate (datafile, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT); //always create a new file or overwite existing file
-
-  dims[0]=NewStar->nP;
-  dims[1]=3;
-  float (* pos)[3], (* vel)[3];
-  int * subid;
-  int i,j;
-  pos=malloc(sizeof(float)*3*NewStar->nP);
-  vel=malloc(sizeof(float)*3*NewStar->nP);
-  subid=malloc(sizeof(int)*NewStar->nP);
-  for(i=0;i<NewStar->nP;i++)
-  {
-	for(j=0;j<3;j++)
-	{
-	  pos[i][j]=NewStar->P[i].x[j];
-	  vel[i][j]=NewStar->P[i].v[j];
-	}
-	subid[i]=NewStar->P[i].subid;
-  }
-  status = H5LTmake_dataset(file_id,"/x",2,dims,H5T_NATIVE_FLOAT,pos);
-  status = H5LTmake_dataset(file_id,"/v",2,dims,H5T_NATIVE_FLOAT,vel);
-  dims[1]=1;
-  status = H5LTmake_dataset(file_id,"/SubID",2,dims,H5T_NATIVE_INT,subid);
-  free(pos);
-  free(vel);
-  free(subid);
-  
-  H5Fclose(file_id);
 }
