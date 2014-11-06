@@ -18,7 +18,7 @@ struct global
   } tol;
   struct
   {
-	double OmegaM0, OmegaL0, Redshift;
+	double OmegaM0, OmegaL0;
   } cosmology;
   struct
   {
@@ -28,7 +28,6 @@ struct global
 	  double G, H0;
 	} Const;
   } units;
-  VirType_t virtype;
 };
 extern struct global Globals;
 extern void default_global_pars();

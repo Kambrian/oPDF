@@ -58,13 +58,8 @@ endif
 
 #SRCFLAG= -DSRCFILE='"shearmap_MODLE2Z0X0M0.seed1024"'
 
-ifeq ("$(ESTIMATOR)", "")
-ESTIMATOR=10
-endif
-
-CFLAGS += $(HDFINC) $(GSLINC) -DROOTDIR=$(ROOTDIR) -DESTIMATOR=$(ESTIMATOR) $(OMPLIB)
-LDFLAGS += $(HDFLIB) $(GSLLIB) $(OMPLIB) -lifport -lifcore -lirc
-FFLAGS+=$(OMPLIB) #essential! to make it thread-safe!
+CFLAGS += $(HDFINC) $(GSLINC) -DROOTDIR=$(ROOTDIR) $(OMPLIB)
+LDFLAGS += $(HDFLIB) $(GSLLIB) $(OMPLIB)
 
 #~ ifeq ($(USER),kam)      #my laptop has hdf v1.6
 ifeq ($(shell uname -n),kam-laptop)
@@ -108,10 +103,10 @@ $(EXEC): $(OBJS_COMM)
 
 lib: CFLAGS+=-fPIC
 lib: FFLAGS+=-fPIC
-lib: libdyn.so
+lib: liboPDF.so
 
-libdyn.so:models.o $(OBJS_COMM)
-	$(CC) -shared -Wl,-soname,libdyn.so -o libdyn.so $^ $(LDFLAGS) -lifport -lifcore -lirc
+liboPDF.so:models.o $(OBJS_COMM)
+	$(CC) -shared -Wl,-soname,liboPDF.so -o libdyn.so $^ $(LDFLAGS)
 #----------------------
 submit: tmpdir=exe/mockfitFmin_mc$(ESTIMATOR)
 submit: FORCE

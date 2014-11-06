@@ -1,6 +1,8 @@
 Dynamical modelling using orbital PDF method. 
 
 
+set_defaults()
+
 Tracer=()
 Tracer.count_radial()
 

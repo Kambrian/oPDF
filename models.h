@@ -12,8 +12,6 @@ typedef enum
   EID_PhaseMeanRaw
 } Estimator_t;
 
-#define IS_PHASE_ESTIMATOR(x) ((x)>=EID_PhaseAD)
-
 extern void alloc_integration_space();
 extern void free_integration_space();
 

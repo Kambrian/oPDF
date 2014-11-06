@@ -10,14 +10,14 @@
 #include "template.h"
 #include "nfw.h"
 
-void halo_set_type(HaloType_t t, Halo_t *halo)
+void halo_set_type(HaloType_t t, VirType_t virtype, double Redshift, Halo_t *halo)
 {
   halo->type=t;
+  halo->z=Redshift;
+  halo->virtype=virtype;
 }
 void halo_set_param(double *pars, Halo_t *halo)
 {
-  halo->z=Globals.cosmology.Redshift;
-  halo->virtype=Globals.virtype;
 //   memcpy(Halo.pars, pars, NUM_PAR_MAX*sizeof(double));
   switch(halo->type)
   {

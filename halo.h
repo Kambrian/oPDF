@@ -22,8 +22,8 @@ typedef struct Halo
   double Rv;
   double Pots;//-4*pi*G*rhos*rs^2, the potential at r=0
   double Rs;
-  double Rhos;//4*pi*rs^3*rhos
-  double Ms;
+  double Rhos;
+  double Ms;//4*pi*rs^3*rhos
   double RScale; //for TMP profile, Rs/Rs0
   double PotScale; //for TMP profile, Pots/Pots0
   int TMPid;//for TMP profile
@@ -31,7 +31,7 @@ typedef struct Halo
   HaloType_t type;
 } Halo_t;
 
-extern void halo_set_type(HaloType_t t, Halo_t *halo);
+extern void halo_set_type(HaloType_t t, VirType_t virtype, double Redshift,  Halo_t *halo);
 extern void halo_set_param(double *pars, Halo_t *halo);
 extern double halo_mass(double r, Halo_t *halo);
 extern double halo_pot(double r, Halo_t *halo);

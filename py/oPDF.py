@@ -8,6 +8,16 @@ from iminuit import Minuit
 from iminuit.ConsoleFrontend import ConsoleFrontend
 import copy
 
+lib=ctypes.CDLL("../liboPDF.so")
+
+if os.uname()[1]=='Medivh':
+    rootdir='/work/Projects/DynDistr/'
+else:
+    rootdir='/gpfs/data/jvbq85/DynDistr/'
+
+MaxNPar=10
+Param_t=ctypes.c_double*MaxNPar
+
 class Enum(object):
   def __init__(self, names):
     for number, name in enumerate(names.split()):
@@ -16,7 +26,6 @@ HaloTypes=Enum('NFWMC NFWPotsRs NFWRhosRs TMPMC TMPPotScaleRScale CoreRhosRs Cor
 Estimators=Enum('RBinLike AD MeanPhase MeanPhaseRaw')
 VirTypes=Enum('VirTH VirC200 VirB200')
 
-MaxNPar=10
 #=============C complex datatypes=====================
 class Particle_t(ctypes.Structure):
   _fields_=[('haloid', ctypes.c_int),
@@ -37,25 +46,6 @@ class Particle_t(ctypes.Structure):
 	    ]  
 Particle_p=ctypes.POINTER(Particle_t)  
 
-class Halo_t(ctypes.Structure):
-  #all quantities are physical
-  _fields_=[('z', ctypes.c_double),
-			('M', ctypes.c_double),
-			('c', ctypes.c_double),
-			('Rv',ctypes.c_double),
-			('Pots',ctypes.c_double),#-4*pi*G*rhos*rs^2, the potential at r=0
-			('Rs',ctypes.c_double),
-			('Rhos',ctypes.c_double),
-			('Ms',ctypes.c_double),#4*pi*rs^3*rhos
-			('RScale',ctypes.c_double),#for TMP profile, Rs/Rs0
-			('PotScale',ctypes.c_double),#for TMP profile, Pots/Pots0
-			('TMPid',ctypes.c_int),#for TMP profile
-			('virtype',ctypes.c_int),
-			('type',ctypes.c_int)
-			]
-  
-Halo_p=ctypes.POINTER(Halo_t)  
-
 class Tracer_t(ctypes.Structure):
   pass
 Tracer_p=ctypes.POINTER(Tracer_t)
@@ -75,89 +65,110 @@ Tracer_t._fields_=[('lnL', ctypes.c_double),
 				   ('ViewType', ctypes.c_char),
 				   ('Views', Tracer_p)
 				  ]
-	
-#=======================load the library==========================
-lib=ctypes.CDLL("../libdyn.so")
-#general
-lib.MaxNPar=MaxNPar
-lib.ParType=ctypes.c_double*lib.MaxNPar
-lib.MODEL_TOL_BIN=ctypes.c_double.in_dll(lib,'MODEL_TOL_BIN')
-lib.MODEL_TOL_BIN_ABS=ctypes.c_double.in_dll(lib,'MODEL_TOL_BIN_ABS')
-lib.MODEL_TOL_REL=ctypes.c_double.in_dll(lib,'MODEL_TOL_REL')
-lib.SubSampleSize=ctypes.c_int.in_dll(lib,'SubSampleSize')
-lib.NumRadialCountBin=ctypes.c_int.in_dll(lib,'NumRadialCountBin')
+#=======================prototype the library==========================
+#globals.h
+class global_tol(ctypes.Structure):
+  _fields_=[('bin', ctypes.c_double),
+			('bin_abs',ctypes.c_double),
+			('rel', ctypes.c_double)]
+class global_cosm(ctypes.Structure):
+  _fields_=[('OmegaM0',ctypes.c_double),
+			('OmegaL0',ctypes.c_double),
+			('Redshift',ctypes.c_double)]
+class global_const(ctypes.Structure):
+  _fields_=[('G',ctypes.c_double),
+			('H0',ctypes.c_double)]
+class global_units(ctypes.Structure):
+  _fields_=[('MassInMsunh',ctypes.c_double),
+			('LengthInKpch',ctypes.c_double),
+			('VelInKms',ctypes.c_double),
+			('Const',global_const)]
+lib.set_units.restype=None
+lib.set_units.argtypes=[ctypes.c_double, ctypes.c_double, ctypes.c_double]
+class globals_t(ctypes.Structure):
+  _fields_=[('tol',global_tol),
+			('cosmology',global_cosm),
+			('units',global_units),
+			('virtype',ctypes.c_int)]
+  def set_defaults(self):
+	'''set default global parameters, 
+	including precision, cosmology and units'''
+	lib.default_global_pars()
+  
+  def set_units(self, MassInMsunh=0.73e10, LengthInKpch=0.73, VelInKms=1.):
+	'''set system of units,
+	specify Mass in Msun/h, Length in kpc/h, Velocity in km/s'''
+	lib.set_units(MassInMsunh, LengthInKpch, VelInKms)
+Globals=globals_t.in_dll(lib, 'Globals')
+
+#halo.h
+class Halo_t(ctypes.Structure):
+  #all quantities are physical
+  _fields_=[('z', ctypes.c_double),
+			('M', ctypes.c_double),
+			('c', ctypes.c_double),
+			('Rv',ctypes.c_double),
+			('Pots',ctypes.c_double),#-4*pi*G*rhos*rs^2, the potential at r=0
+			('Rs',ctypes.c_double),
+			('Rhos',ctypes.c_double),
+			('Ms',ctypes.c_double),#4*pi*rs^3*rhos
+			('RScale',ctypes.c_double),#for TMP profile, Rs/Rs0
+			('PotScale',ctypes.c_double),#for TMP profile, Pots/Pots0
+			('TMPid',ctypes.c_int),#for TMP profile
+			('virtype',ctypes.c_int),
+			('type',ctypes.c_int)
+			]
+  def set_type(self, halotype=HaloTypes.NFWMC, virtype=VirTypes.VirC200, redshift=0.):
+	'''set the parametrization, virial definition and redshift of halo
+	halotype: halo parametrization, one of the HaloTypes members
+	virtype: virial definition, one of the VirTypes members
+	redshift: redshift of halo'''
+	lib.halo_set_type(halotype, virtype, redshift, ctypes.byref(self))
+  def set_param(self, pars=[1.,1.]):
+	'''set the parameters of the halo
+	pars: parameters describing the halo'''
+	lib.halo_set_param(Param_t(pars), ctypes.byref(self))
+Halo_p=ctypes.POINTER(Halo_t) 
+lib.halo_set_type.restype=None
+lib.halo_set_type.argtypes=[ctypes.c_int, ctypes.c_int, ctypes.c_double, Halo_p]
+lib.halo_set_param.restype=None
+lib.halo_set_param.argtypes=[Param_t, Halo_p]
+lib.halo_mass.restype=ctypes.c_double
+lib.halo_mass.argtypes=[ctypes.c_double, Halo_p]
+lib.halo_pot.restype=ctypes.c_double
+lib.halo_pot.argtypes=[ctypes.c_double, Halo_p]
+
+#models.h
 lib.alloc_integration_space.restype=None
 lib.alloc_integration_space.argtypes=[]
 lib.free_integration_space.restype=None
 lib.free_integration_space.argtypes=[]
-lib.like_to_chi2.restype=ctypes.c_double
-lib.like_to_chi2.argtypes=[ctypes.c_double, ctypes.c_int]
-lib.NameList={0:'f(E,L)',4:'RBin',8:'AD',9:'Resultant',10:'Mean',11:'KS',12:'Kuiper',13:'CosMean', 14:'RawMean', 15:'ADGEV', 16:'ADBN', 17:'ADNM'}
-if os.uname()[1]=='Medivh':
-    lib.rootdir='/work/Projects/DynDistr/'
-else:
-    lib.rootdir='/gpfs/data/jvbq85/DynDistr/'
-    
-lib.open=lib.alloc_integration_space
-lib.close=lib.free_integration_space
 
-def has_config(halo):
-  c=ConfigParser.ConfigParser()
-  c.optionxform=str
-  c.read('DataFiles.cfg')
-  return c.has_section(halo)
+openlib=lib.alloc_integration_space
+closelib=lib.free_integration_space
 
-def get_config(halo):
-  if halo==None:
-	return {}
-  c=ConfigParser.ConfigParser()
-  c.optionxform=str
-  c.read('DataFiles.cfg')
-  try:
-	options=dict(c.items(halo))
-  except:
-	options=dict(c.defaults())
-	print "Warning: no config for %s; using defaults."%halo
-  return options    
-
-def load_config(halo):
-  ''' fill the library with configuration from halo'''
-  sample=Tracer(halo,DynDataFile='Null.hdf5')
-  sample.clean()
-  
-lib.get_config=get_config
-lib.has_config=has_config
-lib.load_config=load_config
-
-#models
-lib.like_init.restype=None
-lib.like_init.argtypes=[lib.ParType, ctypes.c_int, Tracer_p]
 lib.like_eval.restype=ctypes.c_double
-lib.like_eval.argtypes=[lib.ParType, ctypes.c_int, Tracer_p]
-lib.likelihood.restype=ctypes.c_double
-lib.likelihood.argtypes=[lib.ParType, ctypes.c_int, Tracer_p]
-lib.wenting_like.restype=ctypes.c_double
-lib.wenting_like.argtypes=[lib.ParType, Tracer_p]
-lib.freeze_energy.restype=None
-lib.freeze_energy.argtypes=[lib.ParType, Tracer_p]
-lib.freeze_and_like.restype=ctypes.c_double
-lib.freeze_and_like.argtypes=[lib.ParType, ctypes.c_int, Tracer_p]
-lib.jointLE_FChi2.restype=ctypes.c_double
-lib.jointLE_FChi2.argtypes=[lib.ParType, ctypes.c_int, ctypes.c_int, ctypes.c_int, Tracer_p]
-#extern double jointE_like(double pars[], int estimator, int nbin, Tracer_t *Sample);
-lib.jointE_FChi2.restype=ctypes.c_double
-lib.jointE_FChi2.argtypes=[lib.ParType, ctypes.c_int, ctypes.c_int, Tracer_p]
-lib.create_nested_views.restype=None
-lib.create_nested_views.argtypes=[lib.ParType, ctypes.POINTER(ctypes.c_int), ctypes.c_char_p, Tracer_p];
-lib.nested_views_Chi2.restype=ctypes.c_double
-lib.nested_views_Chi2.argtypes=[lib.ParType, ctypes.c_int, Tracer_p]
-lib.nested_views_FChi2.restype=ctypes.c_double
-lib.nested_views_FChi2.argtypes=[lib.ParType, ctypes.c_int, Tracer_p]
+lib.like_eval.argtypes=[ctypes.c_int, Tracer_p]
+lib.nested_views_like.restype=ctypes.c_double
+lib.nested_views_like.argtypes=[ctypes.c_int, Tracer_p]
+lib.jointLE_like.restype=ctypes.c_double
+lib.jointLE_like.argtypes=[ctypes.c_int, ctypes.c_int, ctypes.c_int, Tracer_p]
+lib.jointE_like.restype=ctypes.c_double
+lib.jointE_like.argtypes=[ctypes.c_int, ctypes.c_int, Tracer_p]
 lib.predict_radial_count.restype=None
 lib.predict_radial_count.argtypes=[ctypes.POINTER(ctypes.c_double), ctypes.c_int, ctypes.c_int, Tracer_p]
+
+
+
+#
+lib.create_nested_views.restype=None
+lib.create_nested_views.argtypes=[lib.Param_t, ctypes.POINTER(ctypes.c_int), ctypes.c_char_p, Tracer_p];
+lib.nested_views_FChi2.restype=ctypes.c_double
+lib.nested_views_FChi2.argtypes=[lib.Param_t, ctypes.c_int, Tracer_p]
+
 #halos
 lib.define_halo.restype=None
-lib.define_halo.argtypes=[lib.ParType]
+lib.define_halo.argtypes=[lib.Param_t]
 lib.halo_pot.restype=ctypes.c_double
 lib.halo_pot.argtypes=[ctypes.c_double]
 lib.halo_mass.restype=ctypes.c_double
@@ -171,7 +182,7 @@ lib.decode_TemplateProf.restype=None
 lib.NFW_mass.restype=ctypes.c_double
 lib.NFW_mass.argtypes=[ctypes.c_double]
 lib.NFW_like.restype=ctypes.c_double
-lib.NFW_like.argtypes=[lib.ParType, Tracer_p]
+lib.NFW_like.argtypes=[lib.Param_t, Tracer_p]
 
 #tracers
 lib.load_tracer_particles.restype=None
@@ -257,7 +268,7 @@ class NFWHalo(object):
 	self.FitType=ctypes.c_int.in_dll(lib, 'HaloFitType')
 	
   def define_halo(self, pars):
-	lib.define_halo(lib.ParType(*pars))
+	lib.define_halo(lib.Param_t(*pars))
 	
   def pot(self,r):
 	return lib.halo_pot(r)
@@ -322,14 +333,14 @@ class Tracer(Tracer_t):
 
   def wenting_like_conditional(self, pars=[1,1]):
 	"wenting's likelihood for the mocks, with other parameters conditioned at true values"
-	lnL=lib.wenting_like(lib.ParType(pars[0],pars[1],1,1,1,1), self._pointer)
+	lnL=lib.wenting_like(lib.Param_t(pars[0],pars[1],1,1,1,1), self._pointer)
 	#print pars, lnL
 	return lnL
   
   def wenting_like_marginal(self, pars=[1,1]):
 	'''wenting's likelihood for the mocks, with other parameters marginalized.
 	this is too slow to use...'''
-	like=lambda c,d,e,f: -lib.wenting_like(lib.ParType(pars[0],pars[1],c,d,e,f), self._pointer)
+	like=lambda c,d,e,f: -lib.wenting_like(lib.Param_t(pars[0],pars[1],c,d,e,f), self._pointer)
 	m=Minuit(like, c=1,d=1,e=1,f=1, fix_d=False, fix_e=0, fix_f=0, limit_c=[-0.7,1.4], limit_d=[0.1,2], limit_e=[0.1,10], limit_f=[0.1,10], print_level=3, pedantic=False, errordef=1, frontend=ConsoleFrontend())
 	#m.set_strategy(0)
 	m.tol=10   #default convergence edm<1e-4*tol*errordef, but we do not need that high accuracy
@@ -338,40 +349,40 @@ class Tracer(Tracer_t):
 	return -m.fval
   
   def freeze_energy(self, pars=[1,1]):
-	lib.freeze_energy(lib.ParType(*pars), self._pointer)
+	lib.freeze_energy(lib.Param_t(*pars), self._pointer)
 
   def likelihood(self, pars=[1,1], estimator=10):
-	return lib.likelihood(lib.ParType(*pars), estimator, self._pointer)
+	return lib.likelihood(lib.Param_t(*pars), estimator, self._pointer)
   
   def like_init(self, pars=[1,1], estimator=10):
-	lib.like_init(lib.ParType(*pars), estimator, self._pointer)
+	lib.like_init(lib.Param_t(*pars), estimator, self._pointer)
 
   def like_eval(self, pars=[1,1], estimator=10):
-	return lib.like_eval(lib.ParType(*pars), estimator, self._pointer)
+	return lib.like_eval(lib.Param_t(*pars), estimator, self._pointer)
 	
   def freeze_and_like(self, pars=[1,1], estimator=10):
-	y=lib.freeze_and_like(lib.ParType(*pars), estimator, self._pointer)
+	y=lib.freeze_and_like(lib.Param_t(*pars), estimator, self._pointer)
 	#print pars, y
 	return y
   
   def jointE_FChi2(self, pars=[1,1], estimator=10, nbinE=10):
-	return lib.jointE_FChi2(lib.ParType(*pars), estimator, nbinE, self._pointer)
+	return lib.jointE_FChi2(lib.Param_t(*pars), estimator, nbinE, self._pointer)
 	
   def jointLE_FChi2(self, pars=[1,1], estimator=10, nbinL=10, nbinE=10):
-	return lib.jointLE_FChi2(lib.ParType(*pars), estimator, nbinL, nbinE, self._pointer)
+	return lib.jointLE_FChi2(lib.Param_t(*pars), estimator, nbinL, nbinE, self._pointer)
 
   def create_nested_views(self, pars=[1,1], viewtypes='EL', nbins=[10,10]):
 	try:
 	  nbins=list(nbins)
 	except:
 	  nbins=[nbins]
-	lib.create_nested_views(lib.ParType(*pars), (ctypes.c_int*(len(nbins)+1))(*nbins), ctypes.c_char_p(viewtypes), self._pointer)
+	lib.create_nested_views(lib.Param_t(*pars), (ctypes.c_int*(len(nbins)+1))(*nbins), ctypes.c_char_p(viewtypes), self._pointer)
   
   def nested_views_Chi2(self, pars=[1,1], estimator=10):
-	return lib.nested_views_Chi2(lib.ParType(*pars), estimator, self._pointer)
+	return lib.nested_views_Chi2(lib.Param_t(*pars), estimator, self._pointer)
   
   def nested_views_FChi2(self, pars=[1,1], estimator=10):
-	return lib.nested_views_FChi2(lib.ParType(*pars), estimator, self._pointer)
+	return lib.nested_views_FChi2(lib.Param_t(*pars), estimator, self._pointer)
   
   def joint_FChi2(self, pars, estimator, viewtypes, nbins):
 	'''nestviews and like'''
@@ -566,7 +577,7 @@ class Tracer(Tracer_t):
 	return result,m
   
   def NFW_like(self, pars=[1,1]):
-	return lib.NFW_like(lib.ParType(*pars), self._pointer)
+	return lib.NFW_like(lib.Param_t(*pars), self._pointer)
 	
   def minuit_NFWlike(self, x0=[1,1], minuittol=1):
 	''' to fit a NFW density PDF with ML '''

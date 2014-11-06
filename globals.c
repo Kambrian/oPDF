@@ -12,8 +12,6 @@ void default_global_pars()
 //but it's still not accurate enough for minuit to work with the hessian; better use fmin()
   Globals.cosmology.OmegaM0=0.3;
   Globals.cosmology.OmegaL0=0.7;
-  Globals.cosmology.Redshift=0.;
-  Globals.virtype=VIR_C200;
   double h=0.73;
   set_units(1e10*h, h, 1.);//default units set to 1e10Msun, kpc, km/s
 }
