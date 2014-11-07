@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <gsl/gsl_spline.h>
 
+#include "mymath.h"
 #include "globals.h"
 #include "cosmology.h"
 #include "halo.h"
@@ -19,12 +20,19 @@ struct SplineData
 };
 static struct SplineData PotSpline;
 #pragma omp threadprivate(PotSpline)  //make sure each thread has its own cache
+int get_current_TMPid()
+{
+  if(PotSpline.FlagUseSpline)
+	return PotSpline.TMPid;
+  
+  return -1;
+}
 void init_potential_spline(int TMPid)
 {
 #include "TemplateData.h"
 	if(TMPid<0)
 	{
-	  fprintf(stderr, "Error: TMPid=%d, no profile data\n", TMPid);
+	  DEBUGPRINT("Error: TMPid=%d, no profile data\n", TMPid);
 	  exit(1);
 	}
 	#pragma omp parallel 
@@ -57,6 +65,7 @@ void free_potential_spline()
 	  gsl_spline_free (PotSpline.spline_dens);
 	  gsl_interp_accel_free(PotSpline.acc_dens);
 	  
+	  PotSpline.TMPid=-1;
 	  PotSpline.FlagUseSpline=0;
 	 }
 	}

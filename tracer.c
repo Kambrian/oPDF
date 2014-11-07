@@ -5,7 +5,8 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-// #include "mymath.h"
+#include "mymath.h"
+#include "globals.h"
 #include "hdf_util.h"
 #include "tracer.h"
 #include "models.h"
@@ -241,7 +242,7 @@ void resample_tracer_particles(unsigned long int seed, Tracer_t *ReSample, Trace
     r = gsl_rng_alloc (T);
     gsl_rng_set(r,seed);
     
-    gsl_ran_sample(r, ReSample->P, ReSample->nP, Sample->P, Sample->nP, sizeof(Particle_t));
+    gsl_ran_sample(r, ReSample->P, Sample->nP, Sample->P, Sample->nP, sizeof(Particle_t));
     
     gsl_rng_free (r);
 	
@@ -355,7 +356,7 @@ void sort_part_R(Particle_t *P, int nP)
 void create_tracer_views(Tracer_t *Sample, int nView, char proxy)
 {//sort Sample and divide into nView equal-size subsamples, discarding remainders.
   //the data are not copied. so only views are generated.
-  //tracer need to have called tracer_freeze_energy() if creating E views.
+  //tracer need to have called tracer_set_energy() if creating E views.
   if(nView>1)//otherwise no need to sort
   {
 	switch(proxy)
@@ -393,6 +394,8 @@ void create_tracer_views(Tracer_t *Sample, int nView, char proxy)
 	{
 	  Sample->Views[i].rmin=Sample->Views[i].P[0].r;
 	  Sample->Views[i].rmax=Sample->Views[i].P[nP-1].r;
+	  Sample->Views[i].proxybin[0]=Sample->Views[i].rmin;
+	  Sample->Views[i].proxybin[1]=Sample->Views[i].rmax;
 	}
 	else if(proxy=='E')
 	{
@@ -490,17 +493,12 @@ void count_tracer_radial(Tracer_t *Sample, int nbin, int FlagRLogBin)
   }
 }
 
-void tracer_attach_halo(Halo_t *halo, Tracer_t * Sample)
-{
-  Sample->halo=halo;
-}
-
-void tracer_freeze_energy(Tracer_t *Sample)
+void tracer_set_energy(Tracer_t *Sample)
 {//fix the energy parameter according to initial potential
   int i;
   #pragma omp parallel for
   for(i=0;i<Sample->nP;i++)
-      Sample->P[i].E=-(Sample->P[i].K+halo_pot(Sample->P[i].r, Sample->halo));//differ from previous version
+      Sample->P[i].E=-(Sample->P[i].K+halo_pot(Sample->P[i].r, &Sample->halo));//differ from previous version
 }
 
 void tracer_set_orbits(Tracer_t *Sample, int FlagSetPhase)
@@ -508,5 +506,5 @@ void tracer_set_orbits(Tracer_t *Sample, int FlagSetPhase)
   int i;
   #pragma omp parallel for
   for(i=0;i<Sample->nP;i++)
-    solve_radial_orbit(Sample->P+i,Sample->rmin,Sample->rmax,Sample->halo, FlagSetPhase);
+    solve_radial_orbit(Sample->P+i,Sample->rmin,Sample->rmax,&Sample->halo, FlagSetPhase);
 }

@@ -36,13 +36,11 @@ struct Tracer
   double *RadialCount;
   double rmin, rmax;
   double proxybin[2]; //for the edges of views.
-  Halo_t * halo;
+  Halo_t halo;
   int nView;
   char ViewType;
   TracerView *Views;
 };
-
-extern int SubSampleSize,NumRadialCountBin;
 
 extern void load_tracer_particles(char *datafile, Tracer_t * Sample);
 extern void cut_tracer_particles(Tracer_t *Sample, double rmin, double rmax);
@@ -66,8 +64,7 @@ extern void create_nested_views(int nbin[], char ViewTypes[],  Tracer_t *Sample)
 
 extern void free_tracer(Tracer_t *Sample);
 
-void tracer_attach_halo(Halo_t *halo, Tracer_t * Sample);
-void tracer_freeze_energy(Tracer_t *Sample);
+void tracer_set_energy(Tracer_t *Sample);
 void tracer_set_orbits(Tracer_t *Sample, int FlagSetPhase);
 
 #define TRACER_HEADER_INCLUDED

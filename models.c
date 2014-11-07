@@ -4,6 +4,7 @@
 #include <string.h>
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_integration.h>
+#include <gsl/gsl_multimin.h>
 #include <time.h>
 #include <sys/times.h>
 #include <sys/stat.h>
@@ -237,7 +238,7 @@ void predict_radial_count (double RadialCountPred[], int nbin, int FlagRLogBin, 
 			OrbitPar Fpar;
 			Fpar.E=Sample->P[j].E;
 			Fpar.L2=Sample->P[j].L2;
-			Fpar.halo=Sample->halo;
+			Fpar.halo=&(Sample->halo);
 			F.params = &Fpar;
             gsl_integration_cquad ( &F, MAX ( rbin[0],Sample->P[j].rlim[0] ), MIN ( rbin[1],Sample->P[j].rlim[1] ), 0, Globals.tol.rel, //3,
                                     GSL_workspaceC, &t, &error, &neval );
@@ -298,7 +299,7 @@ double like_radial_bin( Tracer_t *Sample)
 		if(Sample->P[j].rlim[0]>=rbin[1]||Sample->P[j].rlim[1]<=rbin[0]) continue;
 		Fpar.E=Sample->P[j].E; 
 		Fpar.L2=Sample->P[j].L2; 
-		Fpar.halo=Sample->halo;
+		Fpar.halo=&(Sample->halo);
 		F.params = &Fpar;
 		gsl_integration_cquad (&F, MAX(rbin[0],Sample->P[j].rlim[0]), MIN(rbin[1],Sample->P[j].rlim[1]), 0, Globals.tol.rel, //3, 
 			       GSL_workspaceC, &t, &error, &neval);
@@ -334,50 +335,129 @@ double like_eval(Estimator_t estimator, Tracer_t *Sample)
   return lnL;
 }
 
-// double likelihood(Estimator_t estimator, Tracer_t *Sample)
-// {
-//   tracer_freeze_energy(Sample);
-//   tracer_set_orbits(estimator, Sample);
-//   double lnL=like_eval(estimator, Sample);
-//   return lnL;
-// }
-
-double jointLE_like(Estimator_t estimator, int nbinL, int nbinE,  Tracer_t *Sample)
-{//automatically update views if needed; 
-  //this can be more efficient than create_nested_views() and nested_views_like() when nbinL is not changed.
-  //tracer has to be prepare for like upon input
-  int i;
-  double lnL;
-  if(Sample->nView!=nbinL||Sample->ViewType!='L') //already allocated
-	create_tracer_views(Sample, nbinL, 'L');
-  for(i=0,lnL=0;i<nbinL;i++)
-	lnL+=jointE_like(estimator, nbinE, Sample->Views+i);
-  return lnL;
-}
-double jointE_like(Estimator_t estimator, int nbin,  Tracer_t *Sample)
-{//tracer has to be prepared for like upon input
-  int i;
-  double lnL;
-  create_tracer_views(Sample, nbin, 'E');
-  for(i=0,lnL=0;i<nbin;i++)
-  {
-	if(estimator==EID_RBinLike)  count_tracer_radial(Sample->Views+i, NumRadialCountBin, 1);
-	lnL+=like_eval(estimator, Sample->Views+i);
-	if(estimator==EID_RBinLike)  free_tracer_rcounts(Sample->Views+i);
-  }
-  free_tracer_views(Sample);
-  Sample->lnL=lnL;
-  return lnL;
-}
-double nested_views_like(Estimator_t estimator,  Tracer_t *Sample)
+double nested_views_like(Estimator_t estimator,  Tracer_t *Sample, int nbin_r, int FlagRLogBin)
 {//pure like, without freeze_energy()/set_orbits();  prepare them before calling this!
+  //nbin_r and FlagRLogBin are only used when estimator is RBinLike
   double lnL;
   if(!Sample->nView)
-	return like_eval(estimator, Sample);
+  {
+	if(estimator==EID_RBinLike)  count_tracer_radial(Sample, nbin_r, FlagRLogBin);
+	lnL=like_eval(estimator, Sample);
+	if(estimator==EID_RBinLike)  free_tracer_rcounts(Sample);
+	return lnL;
+  }
   
   int i;
   for(i=0,lnL=0.;i<Sample->nView;i++)
-	lnL+=nested_views_like(estimator, Sample->Views+i);
+	lnL+=nested_views_like(estimator, Sample->Views+i, nbin_r, FlagRLogBin);
   Sample->lnL=lnL;
   return lnL;
+}
+
+struct like_args
+{
+  Tracer_t *Sample;
+  Estimator_t estimator;
+};
+static double like_rfunc(const gsl_vector *x, void *params)
+{
+  struct like_args *arg;
+  arg=(struct like_args *)params;
+  double pars[NUM_PAR_MAX];
+  int i;
+  for(i=0;i<x->size;i++)
+	pars[i]=gsl_vector_get(x, i);
+  halo_set_param(pars, &(arg->Sample->halo));
+  tracer_set_energy(arg->Sample);
+  if(arg->estimator==EID_RBinLike)
+	tracer_set_orbits(arg->Sample, 0);
+  else
+	tracer_set_orbits(arg->Sample, 1);
+  double lnL;
+  lnL=like_eval(arg->estimator, arg->Sample);
+  if(arg->estimator==EID_RBinLike)
+	return -lnL;//to be minimized
+  return lnL;
+}
+int DynFit(const double pars[], int npar, double xtol, double ftol_abs, int MaxIter, int verbose, Estimator_t estimator, Tracer_t * Sample)
+{/* MaxLike/MinDist with the given estimator
+  output: sample->lnL, the function value at best-fit
+		  sample->halo.pars, best-fitting parameters
+		  flag_fail, return value, whether the search failed.
+  input: pars, initial guess params
+		 npar, number of pars
+		 xtol, x-err to consider as convergence
+		 ftol_abs, absolute tolerance in function value to consider convergence
+		 MaxIter, maximum number of iterations
+		 verbose, >0 will switch on verbosed printing
+		 estimator, estimator to use
+		 sample, tracer sample.
+		 */
+  const gsl_multimin_fminimizer_type *T =gsl_multimin_fminimizer_nmsimplex2;
+  gsl_multimin_fminimizer *s = NULL;
+  gsl_vector *s0, *x0;
+  gsl_multimin_function like_func;
+
+  int iter = 0;
+  int status, flag_fail=1;
+  double size, f0,f1;
+
+  /* Starting point */
+  x0 = gsl_vector_alloc (npar);
+  int i;
+  for(i=0;i<npar;i++)  gsl_vector_set (x0, i, pars[i]);
+
+  /* Set initial step sizes to 1 */
+  s0 = gsl_vector_alloc (npar);
+  gsl_vector_set_all (s0, 1.);
+  /* Initialize method and iterate */
+  struct like_args args;
+  args.estimator=estimator;
+  args.Sample=Sample;
+  like_func.n = npar;
+  like_func.f = like_rfunc;
+  like_func.params = &args;
+
+  s = gsl_multimin_fminimizer_alloc (T, npar);
+  gsl_multimin_fminimizer_set (s, &like_func, x0, s0);
+
+  f1=like_rfunc(x0, &args);
+  do {
+      iter++;
+      int status_iter = gsl_multimin_fminimizer_iterate(s);
+      size = gsl_multimin_fminimizer_size (s);
+      status = gsl_multimin_test_size (size, xtol);
+	  f0=f1;
+	  f1=s->fval;
+	  if (verbose>0)
+	  { printf("%5d ", iter);
+		for(i=0;i<npar;i++) printf("%g ", gsl_vector_get(s->x, i));
+		printf("f()= %g size=%g\n", s->fval, size);
+	  }
+      if (status == GSL_SUCCESS && fabs(f1-f0)<ftol_abs )
+        {
+          printf ("Optimization terminated successfully.\n");
+		  printf ("\t Current function value: %g\n", f1);
+		  printf ("\t Iterations: %d\n", iter);
+		  printf ("\t x abs err: %g\n", size);
+		  printf ("\t [");
+		  for(i=0;i<npar;i++)
+			printf("%g ", gsl_vector_get(s->x, i));
+		  printf ("\t ]");
+		  flag_fail=0;
+        }
+      else if (status_iter)
+	  {
+		printf("Optimization terminated with error: %d\n", status_iter);
+		printf("Warning: %s\n", gsl_strerror (status_iter));
+		break;
+	  }
+    }
+  while (status == GSL_CONTINUE && iter < MaxIter);
+  
+  gsl_vector_free(x0);
+  gsl_vector_free(s0);
+  gsl_multimin_fminimizer_free (s);
+
+  return flag_fail;
 }

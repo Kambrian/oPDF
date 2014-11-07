@@ -105,7 +105,7 @@ lib: CFLAGS+=-fPIC
 lib: FFLAGS+=-fPIC
 lib: liboPDF.so
 
-liboPDF.so:$(OBJS_COMM)
+liboPDF.so:models.o $(OBJS_COMM)
 	$(CC) -shared -Wl,-soname,liboPDF.so -o liboPDF.so $^ $(LDFLAGS)
 #----------------------
 submit: tmpdir=exe/mockfitFmin_mc$(ESTIMATOR)
@@ -150,12 +150,11 @@ distclean: clean
 # DO NOT DELETE
 
 hdf_util.o: hdf_util.h mymath.h
-globals.o: globals.h
 cosmology.o: cosmology.h globals.h
 mymath.o: mymath.h
 models.o: mymath.h globals.h cosmology.h tracer.h halo.h models.h
-tracer.o: mymath.h globals.h hdf_util.h tracer.h halo.h models.h
-halo.o: globals.h cosmology.h halo.h template.h nfw.h tracer.h
+tracer.o: hdf_util.h tracer.h halo.h models.h
+halo.o: globals.h cosmology.h halo.h template.h nfw.h
 template.o: globals.h cosmology.h halo.h template.h TemplateData.h
 nfw.o: globals.h cosmology.h halo.h tracer.h
 scan.o: mymath.h cosmology.h globals.h models.h

@@ -76,17 +76,18 @@ double NFW_mass(double r, Halo_t *halo)
   return halo->Ms*(log(1+x)-x/(1+x)); 
 }
 
-double NFW_like(double pars[], Tracer_t *T)
+double NFW_like(const double pars[], Tracer_t *T)
 {//halo should already be attached to Tracer before calling this.
   if(pars[0]<=0||pars[1]<=0||isnan(pars[0])||isnan(pars[1])) return -INFINITY;
-  halo_set_param(pars, T->halo);
-  double lnL=log(T->halo->Rhos)*T->nP-(halo_mass(T->rmax, T->halo)-halo_mass(T->rmin, T->halo))/T->mP; //the normalizations
+  halo_set_param(pars, &T->halo);
+  double lnL=log(T->halo.Rhos)*T->nP-(halo_mass(T->rmax, &T->halo)-halo_mass(T->rmin, &T->halo))/T->mP; //the normalizations
   int i;
   #pragma omp parallel for reduction(+: lnL)
   for(i=0;i<T->nP;i++)
   {
-	double r=T->P[i].r/T->halo->Rs;
+	double r=T->P[i].r/T->halo.Rs;
 	lnL+=-log(r)-2.*log(1.+r);
   }
+  T->lnL=lnL;
   return lnL; //loglikelihood
 }

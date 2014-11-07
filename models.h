@@ -22,9 +22,7 @@ extern void solve_radial_orbit(Particle_t *P, double rmin, double rmax, Halo_t *
 extern void predict_radial_count (double RadialCountPred[], int nbin, int FlagRLogBin, Tracer_t *Sample);
 
 extern double like_eval(Estimator_t estimator, Tracer_t *Sample);
-extern double jointLE_like(Estimator_t estimator, int nbinL, int nbinE,  Tracer_t *Sample);
-extern double jointE_like(Estimator_t estimator, int nbin,  Tracer_t *Sample);
-extern double nested_views_like(Estimator_t estimator,  Tracer_t *Sample);
-
+extern double nested_views_like(Estimator_t estimator,  Tracer_t *Sample, int nbin_r, int FlagRLogBin);
+extern int DynFit(const double pars[], int npar, double xtol, double ftol_abs, int MaxIter, int verbose, Estimator_t estimator, Tracer_t * Sample);
 #define MODELS_HEADER_INCLUDED
 #endif
