@@ -75,7 +75,7 @@ class Halo_t(ctypes.Structure):
 			('Ms',ctypes.c_double),#4*pi*rs^3*rhos
 			('RScale',ctypes.c_double),#for TMP profile, Rs/Rs0
 			('PotScale',ctypes.c_double),#for TMP profile, Pots/Pots0
-			('TMPid',ctypes.c_int),#for TMP profile
+			#('TMPid',ctypes.c_int),#for TMP profile
 			('virtype',ctypes.c_int),
 			('type',ctypes.c_int)
 			]
@@ -100,10 +100,10 @@ class Halo(Halo_t):
 	scales: scales of halo parameters, array-like, of the same shape as parameters. default to all-ones if None. physical parameters will be params*scales
 	TMPid: template id. only required when halotype is of template type'''
 	Halo_t.__init__(self)
-	self._pointer=ctypes.byref(self)
+	print "initing halo"
 	self.set_type(halotype, virtype, redshift, scales, TMPid)
 
-  def set_type(halotype=HaloTypes.NFWMC, virtype=VirTypes.VirC200, redshift=0., scales=None, TMPid=-1):
+  def set_type(self, halotype=HaloTypes.NFWMC, virtype=VirTypes.VirC200, redshift=0., scales=None, TMPid=-1):
 	'''set the parametrization, virial definition and redshift of halo
 	halotype: halo parametrization, one of the HaloTypes members
 	virtype: virial definition, one of the VirTypes members
@@ -111,7 +111,7 @@ class Halo(Halo_t):
 	scales: scales of halo parameters, array-like, of the same shape as parameters. default to ones if not specified. physical parameters will be params*scales'''	
 	if scales is None:
 	  scales=np.ones(MaxNPar)
-	lib.halo_set_type(halotype, virtype, redshift, Param_t(*scales), self._pointer)
+	lib.halo_set_type(halotype, virtype, redshift, Param_t(*scales), ctypes.byref(self), TMPid)
 	
   def set_param(self, pars=[1.,1.]):
 	'''set the parameters of the halo
@@ -127,7 +127,7 @@ class Halo(Halo_t):
 	'''get the id of the template currently loaded in the system.
 	this func can be used to check whether the loaded template 
 	is the template of the current halo, just in case the template does not match'''
-	return lib.get_current_TMPid()
+	return lib.get_current_TMPid(ctypes.byref(self))
 
 #tracer.h
 class Particle_t(ctypes.Structure):
@@ -155,7 +155,6 @@ Tracer_p=ctypes.POINTER(Tracer_t)
 Tracer_t._fields_=[('lnL', ctypes.c_double),
 				   ('nP', ctypes.c_int),
 				   ('mP', ctypes.c_double),
-				   ('FlagUseWeight', ctypes.c_int),
 				   ('P', Particle_p),
 				   ('nbin_r', ctypes.c_int),
 				   ('FlagRLogBin', ctypes.c_int),
@@ -223,12 +222,6 @@ lib.alloc_integration_space.restype=None
 lib.alloc_integration_space.argtypes=[]
 lib.free_integration_space.restype=None
 lib.free_integration_space.argtypes=[]
-def lib_open():
-  '''allocate integration space'''
-  lib.alloc_integration_space
-def lib_close():  
-  '''free integration space'''
-  lib.free_integration_space
 
 lib.like_eval.restype=ctypes.c_double
 lib.like_eval.argtypes=[ctypes.c_int, Tracer_p]
@@ -239,14 +232,23 @@ lib.DynFit.argtypes=[ctypes.POINTER(ctypes.c_double), ctypes.c_int, ctypes.c_dou
 lib.predict_radial_count.restype=None
 lib.predict_radial_count.argtypes=[ctypes.POINTER(ctypes.c_double), ctypes.c_int, ctypes.c_int, Tracer_p]
 
+def lib_open():
+  '''initialize the library'''
+  Globals.set_defaults()
+  lib.alloc_integration_space()
+  
+def lib_close():  
+  '''finalize the library'''
+  lib.free_integration_space()
+  
 class Tracer(Tracer_t):
   ''' Tracer: a population of tracer particles.'''
   def __init__(self, datafile=None, rmin=None, rmax=None, shuffle=True, halotype=HaloTypes.NFWMC):
 	Tracer_t.__init__(self)
+	self._pointer=ctypes.byref(self)
 	self.nP=0
 	self.nView=0
-	self.halo.set_type(halotype) #TODO: test without this....
-	self._pointer=ctypes.byref(self)
+	self.halo=Halo()
 	if datafile!=None:
 	  self.load(datafile)
 	  self.radial_cut(rmin,rmax)
@@ -270,16 +272,15 @@ class Tracer(Tracer_t):
 	if self.nP>0:
 	  lib.free_tracer(self._pointer)
 	lib.load_tracer_particles(datafile, self._pointer)
-	self.__update_array(self)
+	print  self.nP, self.P
+	self.__update_array()
 	self.rmin=self.data['r'].min()
 	self.rmax=self.data['r'].max()
-	if shuffle:
-	  self.shuffle()
 
-  def fill(x,v):
-	'''load particles from array'''
+  #def fill(x,v):
+	#'''load particles from array. To be implemented.'''
 	#FIXME.
-	pass
+	#pass
 	
   def clean(self):
 	''' never define it as __del__ and rely on the garbage collector.
@@ -548,12 +549,12 @@ class Tracer(Tracer_t):
 	#like=lambda x: -self.freeze_and_like(x, estimator) #distance
 	#return fmin_gsl(like, x0, xtol=xtol, ftolabs=ftolabs, maxiter=500, full_output=True)
 
-lib_open()
-"""
+lib_open() #allocate integration space
+
 if __name__=="__main__":
-  #lib.open() # common initialization
-  FullSample=Tracer('AqA4',DynSIZE=100)
-  Sample=FullSample.sample()
+  datafile=rootdir+'/data/mockhalo_wenting.hdf5'
+  FullSample=Tracer(datafile=datafile)
+  Sample=FullSample.copy(0,1000)
   FullSample.print_data(10)
   Sample.print_data(10)
   Sample.data[1]['r']=2
@@ -561,18 +562,17 @@ if __name__=="__main__":
   Sample.print_data(1)
   Sample.sort('L2')
   Sample.print_data(1)
-  print Sample.jointLE_like([1,1])
+  Sample.halo.set_type(HaloTypes.NFWMC, scales=[1e12, 10])
+  print Sample.likelihood([1,1], Estimators.MeanPhase)
   FullSample.clean()
   Sample.clean()
   
   #good practice: use with!
-  with Tracer('Mock') as FullSample:
-	with FullSample.sample() as Sample:
+  with Tracer(datafile) as FullSample:
+	with FullSample.copy() as Sample:
 	  FullSample.print_data()
 	  Sample.print_data()
 	  Sample.data[1]['r']=2
 	  Sample.rmin=10
 	  Sample.print_data()
-
   #lib.close()
-"""

@@ -83,6 +83,11 @@ void load_tracer_particles(char *datafile, Tracer_t * Sample)
     else
       sprintf(grpname,"/sample%d/",dataid);
     
+	if(!try_readfile(datafile))
+	{
+	  fprintf(stderr, "Error: fail to open file %s\n", datafile);
+	  exit(1);
+	}
     printf("loading %s...\n",datafile);
     sprintf(A.name,"%sx",grpname);
     load_hdfmatrixF(datafile,&A,1);
