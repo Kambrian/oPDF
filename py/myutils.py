@@ -356,3 +356,24 @@ def skeleton(x,y,nbin=10,alpha=0.683,weights=None):
 			ylim[:,i]=[np.NaN,np.NaN]
 			
 	return {'x':{'median':xmed,'mean':xm,'bin':xbin,'hist':count},'y':{'median':ymed,'mean':ym,'std':ysig,'CI':ylim}}
+
+class Enum(object):
+  def __init__(self, names):
+    for number, name in enumerate(names.split()):
+      setattr(self, name, number)
+      
+class NamedValues(object):
+  def __init__(self, value, name):
+	self.value=value
+	self.name=name
+  def __repr__(self):
+	return self.name
+  def __str__(self):
+	return self.name  
+
+class NamedEnum(object):
+  def __init__(self, names):
+	'''create a named enum object from a list of empty-space separated names'''
+	for number, name in enumerate(names.split()):
+	  setattr(self, name, NamedValues(number, name))
+	  

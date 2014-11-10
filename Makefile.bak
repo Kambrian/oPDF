@@ -72,22 +72,13 @@ LDFLAGS+= -g
 endif
 
 #-----File Dependencies----------------------
-SRC_MAIN=scan.c NumericalConvergence.c saveHDFstars.c mock_stars.c
-EXEC=$(basename $(SRC_MAIN))
-OBJS_MAIN=$(addsuffix .o, $(EXEC))
 SRC_COMM = hdf_util.c globals.c cosmology.c mymath.c models.c tracer.c halo.c template.c nfw.c
 OBJS_COMM= $(patsubst %.f90,%.f.o,$(SRC_COMM:%.c=%.o))
-# OBJS_COMM = $(SRC_COMM:%.c=%.o)
-#any additional OBJS below:
-# SRC = wenting.c wenting.f90
-# OBJS= $(patsubst %.f90,%.f.o,$(SRC:%.c=%.o))
 
 #-----targets and common rules--------------------------------
-default: scan
-all: $(EXEC)
+default: lib
 
 #the default rule will handle the rest
-$(EXEC): $(OBJS_COMM) 
 
 # %.o : %.c
 # 	$(CC) $< $(CFLAGS) -c -o $@
@@ -95,17 +86,11 @@ $(EXEC): $(OBJS_COMM)
 %.f.o : %.f90
 	$(FC) $< $(FFLAGS) -c -o $@
 	
-#mpi flags
-#gama_WL_rand: CC:=$(MPICC)
-
-#Force recompile
-#shear.o: FORCE
-
 lib: CFLAGS+=-fPIC
 lib: FFLAGS+=-fPIC
 lib: liboPDF.so
 
-liboPDF.so:models.o $(OBJS_COMM)
+liboPDF.so:$(OBJS_COMM)
 	$(CC) -shared -Wl,-soname,liboPDF.so -o liboPDF.so $^ $(LDFLAGS)
 #----------------------
 submit: tmpdir=exe/mockfitFmin_mc$(ESTIMATOR)
@@ -145,16 +130,17 @@ clean:
 	rm -f $(OBJS) $(OBJS_COMM) $(OBJS_MAIN)
 	
 distclean: clean
-	rm -f $(EXEC) libdyn.so *~ *.pyc py/*.pyc
+	rm -f $(EXEC) liboPDF.so *~ *.pyc py/*.pyc
 #-----end--- auto dependencies below---------	
 # DO NOT DELETE
 
 hdf_util.o: hdf_util.h mymath.h
+globals.o: globals.h
 cosmology.o: cosmology.h globals.h
 mymath.o: mymath.h
 models.o: mymath.h globals.h cosmology.h tracer.h halo.h models.h
-tracer.o: hdf_util.h tracer.h halo.h models.h
-halo.o: globals.h cosmology.h halo.h template.h nfw.h
+tracer.o: mymath.h globals.h hdf_util.h tracer.h halo.h models.h
+halo.o: globals.h cosmology.h halo.h template.h nfw.h tracer.h
 template.o: globals.h cosmology.h halo.h template.h TemplateData.h
 nfw.o: globals.h cosmology.h halo.h tracer.h
 scan.o: mymath.h cosmology.h globals.h models.h

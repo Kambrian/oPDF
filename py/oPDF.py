@@ -1,31 +1,22 @@
-#TODO: change estimators to a class that auto prints estimator names, and add nbin_r and flagrlog to rbinlike object.
 from math import *
 import numpy as np
-import ctypes,os,ConfigParser,h5py
-from myutils import fmin_gsl,density_of_points,get_extent
-from scipy.optimize import fmin, fmin_powell
+import ctypes,os
+from myutils import fmin_gsl,density_of_points,get_extent,NamedEnum,NamedValues
+#from scipy.optimize import fmin, fmin_powell
 from scipy.stats import norm,chi2
 from iminuit import Minuit
 from iminuit.ConsoleFrontend import ConsoleFrontend
-import copy
+#import copy
 
 if os.uname()[1]=='Medivh':
     rootdir='/work/Projects/DynDistr/'
 else:
     rootdir='/gpfs/data/jvbq85/DynDistr/'
 
-MaxNPar=10
-Param_t=ctypes.c_double*MaxNPar
-
-class Enum(object):
-  def __init__(self, names):
-    for number, name in enumerate(names.split()):
-      setattr(self, name, number)
-
+#=======================load the library===============================
 lib=ctypes.CDLL("../liboPDF.so")
-#=============C complex datatypes=====================
 #=======================prototype the library==========================
-#globals.h
+#==globals.h
 class global_tol(ctypes.Structure):
   _fields_=[('bin', ctypes.c_double),
 			('bin_abs',ctypes.c_double),
@@ -57,10 +48,12 @@ class globals_t(ctypes.Structure):
 	'''set system of units,
 	specify Mass in Msun/h, Length in kpc/h, Velocity in km/s'''
 	lib.set_units(MassInMsunh, LengthInKpch, VelInKms)
-VirTypes=Enum('VirTH VirC200 VirB200')	
+VirTypes=NamedEnum('TH C200 B200')	
 Globals=globals_t.in_dll(lib, 'Globals')
 
-#halo.h
+#===halo.h
+MaxNPar=10
+Param_t=ctypes.c_double*MaxNPar
 class Halo_t(ctypes.Structure):
   '''all quantities are physical'''
   _fields_=[('pars', Param_t), #parameter values
@@ -89,10 +82,10 @@ lib.halo_mass.argtypes=[ctypes.c_double, Halo_p]
 lib.halo_pot.restype=ctypes.c_double
 lib.halo_pot.argtypes=[ctypes.c_double, Halo_p]
 
-HaloTypes=Enum('NFWMC NFWPotsRs NFWRhosRs TMPMC TMPPotScaleRScale CoreRhosRs CorePotsRs')
+HaloTypes=NamedEnum('NFWMC NFWPotsRs NFWRhosRs TMPMC TMPPotScaleRScale CoreRhosRs CorePotsRs')
 class Halo(Halo_t):
   '''general halo'''
-  def __init__(self, halotype=HaloTypes.NFWMC, virtype=VirTypes.VirC200, redshift=0., scales=None, TMPid=-1):
+  def __init__(self, halotype=HaloTypes.NFWMC, virtype=VirTypes.C200, redshift=0., scales=None, TMPid=-1):
 	'''define a halo by specifiying the parametrization, virial definition and redshift of halo
 	halotype: halo parametrization, one of the HaloTypes members
 	virtype: virial definition, one of the VirTypes members
@@ -100,10 +93,10 @@ class Halo(Halo_t):
 	scales: scales of halo parameters, array-like, of the same shape as parameters. default to all-ones if None. physical parameters will be params*scales
 	TMPid: template id. only required when halotype is of template type'''
 	Halo_t.__init__(self)
-	print "initing halo"
+	#print "initing halo"
 	self.set_type(halotype, virtype, redshift, scales, TMPid)
 
-  def set_type(self, halotype=HaloTypes.NFWMC, virtype=VirTypes.VirC200, redshift=0., scales=None, TMPid=-1):
+  def set_type(self, halotype=HaloTypes.NFWMC, virtype=VirTypes.C200, redshift=0., scales=None, TMPid=-1):
 	'''set the parametrization, virial definition and redshift of halo
 	halotype: halo parametrization, one of the HaloTypes members
 	virtype: virial definition, one of the VirTypes members
@@ -111,7 +104,7 @@ class Halo(Halo_t):
 	scales: scales of halo parameters, array-like, of the same shape as parameters. default to ones if not specified. physical parameters will be params*scales'''	
 	if scales is None:
 	  scales=np.ones(MaxNPar)
-	lib.halo_set_type(halotype, virtype, redshift, Param_t(*scales), ctypes.byref(self), TMPid)
+	lib.halo_set_type(halotype.value, virtype.value, redshift, Param_t(*scales), ctypes.byref(self), TMPid)
 	
   def set_param(self, pars=[1.,1.]):
 	'''set the parameters of the halo
@@ -129,7 +122,7 @@ class Halo(Halo_t):
 	is the template of the current halo, just in case the template does not match'''
 	return lib.get_current_TMPid(ctypes.byref(self))
 
-#tracer.h
+#==tracer.h
 class Particle_t(ctypes.Structure):
   _fields_=[('haloid', ctypes.c_int),
 		('subid', ctypes.c_int),
@@ -208,16 +201,28 @@ lib.tracer_set_energy.argtypes=[Tracer_p]
 lib.tracer_set_orbits.restype=None
 lib.tracer_set_orbits.argtypes=[Tracer_p, ctypes.c_int]
 
-#nfw.h
+#==nfw.h
 lib.NFW_like.restype=ctypes.c_double
 lib.NFW_like.argtypes=[Param_t, Tracer_p]
 
-#template.h
+#==template.h
 lib.get_current_TMPid.restype=ctypes.c_int
 lib.get_current_TMPid.argtypes=[]
 
-#models.h
-Estimators=Enum('RBinLike AD MeanPhase MeanPhaseRaw')
+#==models.h
+class NamedValuesEst(NamedValues):
+  def __init__(self, value, name):
+	NamedValues.__init__(self,value, name)
+	self.need_phase=True
+class NamedEstimators(object):
+  def __init__(self, names):
+	for number, name in enumerate(names.split()):
+	  setattr(self, name, NamedValuesEst(number, name))
+Estimators=NamedEstimators('RBinLike AD MeanPhase MeanPhaseRaw')
+Estimators.RBinLike.need_phase=False
+Estimators.RBinLike.nbin_r=20
+Estimators.RBinLike.logscale=True
+
 lib.alloc_integration_space.restype=None
 lib.alloc_integration_space.argtypes=[]
 lib.free_integration_space.restype=None
@@ -243,7 +248,11 @@ def lib_close():
   
 class Tracer(Tracer_t):
   ''' Tracer: a population of tracer particles.'''
-  def __init__(self, datafile=None, rmin=None, rmax=None, shuffle=True, halotype=HaloTypes.NFWMC):
+  def __init__(self, datafile=None, rmin=None, rmax=None, shuffle=True):
+	'''load a tracer from the datafile. 
+	optionally, can apply radial cut given by rmin and rmax
+	by default, the tracer particles will be shuffled after loading, for easy creation of subsamples by copying later.
+	to keep the original ordering of particles, set shuffle=False'''
 	Tracer_t.__init__(self)
 	self._pointer=ctypes.byref(self)
 	self.nP=0
@@ -337,11 +346,11 @@ class Tracer(Tracer_t):
   def radial_cut(self, rmin=None, rmax=None):
 	'''cut the tracer with bounds [rmin, rmax]. 
 	if only rmin or rmax is given, the other bound is not changed.'''
-	if rmin is None:
-	  rmin=self.rmin
-	if rmax is None:
-	  rmax=self.rmax
 	if not ((rmin is None) and (rmax is None)):
+	  if rmin is None:
+		rmin=self.rmin
+	  if rmax is None:
+		rmax=self.rmax
 	  lib.cut_tracer_particles(self._pointer, rmin, rmax)
 	  self.__update_array()
 	  
@@ -420,16 +429,13 @@ class Tracer(Tracer_t):
 	'''evaluate likelihood or fig of merit with the given estimator in the attached halo.
 	one has to call set_energy() and set_orbits() before this.
 	'''
-	return lib.like_eval(estimator, self._pointer)
+	return lib.like_eval(estimator.value, self._pointer)
   
   def likelihood(self, pars, estimator):
 	'''calculate likelihood. automatically attach halo, prepare orbits and eval like'''
 	self.halo.set_param(pars)
 	self.set_energy()
-	set_phase=True
-	if estimator==Estimators.RBinLike:
-	  set_phase=False
-	self.set_orbits(set_phase)
+	self.set_orbits(estimator.need_phase)
 	return self.like_eval(estimator)
 
   def create_nested_views(self, viewtypes='EL', nbins=[10,10]):
@@ -444,11 +450,15 @@ class Tracer(Tracer_t):
 	  nbins=[nbins]
 	lib.create_nested_views((ctypes.c_int*(len(nbins)+1))(*nbins), ctypes.c_char_p(viewtypes), self._pointer)
   
-  def nested_views_like(self, estimator=Estimators.AD, nbin_r=10, logscale=True):
+  def nested_views_like(self, estimator=Estimators.AD):
 	'''evaluate likelihood in at the deepest views, and return the sum of them.
-	The likelihood for each view is also availabel in Views[i].lnL
-	nbin_r and logscale are only used when estimator is RBinLike'''
-	return lib.nested_views_like(estimator, self._pointer, nbin_r, logscale)
+	The likelihood for each view is also availabel in Views[i].lnL'''
+	nbin_r=0
+	logscale=False
+	if estimator==Estimators.RBinLike:
+	  nbin_r=estimator.nbin
+	  logscale=estimator.logscale
+	return lib.nested_views_like(estimator.value, self._pointer, nbin_r, logscale)
   
   def scan_like(self, estimator, x, y):
 	'''scan a likelihood surface to be used for contour plots as contour(x,y,z)'''
@@ -507,7 +517,12 @@ class Tracer(Tracer_t):
 	return np.array(bins),np.array(ts),np.array(n)
 
   def NFW_fit(self, x0=[1,1], minuittol=1):
-	''' to fit an NFW density PDF with maximum likelihood,
+	''' to fit an NFW density PDF with maximum likelihood.
+	This is only intended for fitting the Dark Matter density profile to get the NFW parameters.
+	The tracer particle mass should have been properly assigned or adjusted, 
+	so that mP*number_density=physical_density.
+	If you have sampled n particles from the full sample of n0 particles, 
+	remember to adjust the mP of the sample to be mP0*n0/n, so that total mass is conserved.
 	results will be printed on screen.
 	also return minuit result and the minuit minimizer'''
 	like=lambda m,c: -self.NFW_like([m,c])
@@ -520,10 +535,22 @@ class Tracer(Tracer_t):
 	return result,m
   
   def dyn_fit(self, estimator, x0=[1,1], xtol=1e-3, ftol_abs=0.01, maxiter=500, verbose=0):
-	''' dynamical fit with the given estimator'''
-	status_fail=lib.DynFit(Param_t(*x0), len(x0), xtol, ftol_abs, maxiter, verbose, estimator, self._pointer)	
-	x=np.array(self.halo.pars)[:len(x0)]
-	return x,self.lnL,status_fail
+	''' dynamical fit with the given estimator
+	input: 	estimator: estimator to use. select one from Estimators.
+			x0: initial parameter values
+			xtol: tolerance in x to consider convergence
+			ftol_abs: tolerance in function values to consider convergence. 
+			          convergence is reached when both dx<xtol and df<ftol_abs between subsequent steps in the search.
+			maxiter: maximum number of iterations
+			verbose: whether to print during each step.
+	return: [x, fval, status_success], 
+			x: the best fit parameter  
+			fval: log-likelihood or fig of merit, depending on estimator
+			status_success: whether the search converged successfully, 1 if yes, 0 if no.
+			'''
+	status_success=lib.DynFit(Param_t(*x0), len(x0), xtol, ftol_abs, maxiter, verbose, estimator.value, self._pointer)	
+	x=np.array(self.halo.pars[:len(x0)])
+	return x,self.lnL,status_success
 
   def phase_density(self, proxy='E', bins=100, method='hist', logscale=False, weight=False):
 	'''estimate density in proxy-theta space'''
@@ -557,22 +584,24 @@ if __name__=="__main__":
   Sample=FullSample.copy(0,1000)
   FullSample.print_data(10)
   Sample.print_data(10)
-  Sample.data[1]['r']=2
-  Sample.rmin=10
+  #Sample.data[1]['r']=2
+  Sample.radial_cut(1,1000)
   Sample.print_data(1)
   Sample.sort('L2')
   Sample.print_data(1)
-  Sample.halo.set_type(HaloTypes.NFWMC, scales=[1e12, 10])
+  Sample.halo.set_type(HaloTypes.NFWMC, scales=[183.5017,16.1560])
+  Sample.radial_count(10)
+  result=Sample.dyn_fit(Estimators.RBinLike,verbose=1)
   print Sample.likelihood([1,1], Estimators.MeanPhase)
-  FullSample.clean()
-  Sample.clean()
+  #FullSample.clean()
+  #Sample.clean()
   
   #good practice: use with!
-  with Tracer(datafile) as FullSample:
-	with FullSample.copy() as Sample:
-	  FullSample.print_data()
-	  Sample.print_data()
-	  Sample.data[1]['r']=2
-	  Sample.rmin=10
-	  Sample.print_data()
+  #with Tracer(datafile) as FullSample:
+	#with FullSample.copy() as Sample:
+	  #FullSample.print_data()
+	  #Sample.print_data()
+	  #Sample.data[1]['r']=2
+	  #Sample.radial_cut(rmin=10)
+	  #Sample.print_data()
   #lib.close()

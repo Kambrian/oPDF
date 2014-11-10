@@ -383,7 +383,7 @@ int DynFit(const double pars[], int npar, double xtol, double ftol_abs, int MaxI
 {/* MaxLike/MinDist with the given estimator
   output: sample->lnL, the function value at best-fit
 		  sample->halo.pars, best-fitting parameters
-		  flag_fail, return value, whether the search failed.
+		  flag_success, return value, whether the search succeeded.
   input: pars, initial guess params
 		 npar, number of pars
 		 xtol, x-err to consider as convergence
@@ -399,7 +399,7 @@ int DynFit(const double pars[], int npar, double xtol, double ftol_abs, int MaxI
   gsl_multimin_function like_func;
 
   int iter = 0;
-  int status, flag_fail=1;
+  int status, flag_success=0;
   double size, f0,f1;
 
   /* Starting point */
@@ -444,7 +444,7 @@ int DynFit(const double pars[], int npar, double xtol, double ftol_abs, int MaxI
 		  for(i=0;i<npar;i++)
 			printf("%g ", gsl_vector_get(s->x, i));
 		  printf ("\t ]");
-		  flag_fail=0;
+		  flag_success=1;
         }
       else if (status_iter)
 	  {
@@ -459,5 +459,5 @@ int DynFit(const double pars[], int npar, double xtol, double ftol_abs, int MaxI
   gsl_vector_free(s0);
   gsl_multimin_fminimizer_free (s);
 
-  return flag_fail;
+  return flag_success;
 }

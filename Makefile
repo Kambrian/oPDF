@@ -16,10 +16,6 @@ ifeq ($(Platform), COSMA)
 	CC = icc
 	FC = ifort
 	#CC=h5cc
-	MPICC=mpicc 	
-	ROOTDIR='"/cosma/home/jvbq85/data/DynDistr"'
-# 	LAPACKLIB=-mkl #no longer needed.
-# 	LAPACKINC=-I$(MKLINCLUDE)
 endif
 
 ifeq ($(Platform), Bright)
@@ -28,8 +24,6 @@ ifeq ($(Platform), Bright)
 	GSLLIB=-L/data/raid3/jxhan/opt/lib -lgsl -lgslcblas #shao
 	CC = icc
 	FC = ifort
-	MPICC:=mpicc -cc=$(CC)
-	ROOTDIR='"/data/raid3/jxhan/Lensing"'
 endif
 
 ifeq ($(Platform), Medivh)
@@ -39,10 +33,6 @@ ifeq ($(Platform), Medivh)
 	CC = icc
 	FC = ifort
 	#CC=h5cc
-	MPICC=icc -lmpi
-# 	LAPACKLIB=-mkl
-# 	LAPACKINC=-I$(MKLINCLUDE)
-	ROOTDIR='"/work/Projects/DynDistr"' 	
 endif
 #--------other flags----------------------------
 DEBUG=on
@@ -72,35 +62,19 @@ LDFLAGS+= -g
 endif
 
 #-----File Dependencies----------------------
-SRC_MAIN=scan.c NumericalConvergence.c saveHDFstars.c mock_stars.c
-EXEC=$(basename $(SRC_MAIN))
-OBJS_MAIN=$(addsuffix .o, $(EXEC))
 SRC_COMM = hdf_util.c globals.c cosmology.c mymath.c models.c tracer.c halo.c template.c nfw.c
 OBJS_COMM= $(patsubst %.f90,%.f.o,$(SRC_COMM:%.c=%.o))
-# OBJS_COMM = $(SRC_COMM:%.c=%.o)
-#any additional OBJS below:
-# SRC = wenting.c wenting.f90
-# OBJS= $(patsubst %.f90,%.f.o,$(SRC:%.c=%.o))
 
 #-----targets and common rules--------------------------------
-default: scan
-all: $(EXEC)
+default: lib
 
 #the default rule will handle the rest
-$(EXEC): $(OBJS_COMM) 
-
 # %.o : %.c
 # 	$(CC) $< $(CFLAGS) -c -o $@
 # 
 %.f.o : %.f90
 	$(FC) $< $(FFLAGS) -c -o $@
 	
-#mpi flags
-#gama_WL_rand: CC:=$(MPICC)
-
-#Force recompile
-#shear.o: FORCE
-
 lib: CFLAGS+=-fPIC
 lib: FFLAGS+=-fPIC
 lib: liboPDF.so
@@ -118,9 +92,7 @@ submit: FORCE
 # 	@$(MAKE) -C $(tmpdir) job #to use this, a makefile has to be in the subdir first.
 	
 #-----Other stuff----------------------------
-.PHONY : clean depend distclean FORCE
-
-FORCE:
+.PHONY : clean depend distclean
 
 synccosma:
 	rsync -avz $(shell pwd)/../ jvbq85@login.cosma.dur.ac.uk:data/DynDistr/code
@@ -128,15 +100,6 @@ synccosma:
 synccosmalocal:
 	rsync -e "ssh -p 4800" -avz $(shell pwd)/../ jvbq85@localhost:data/DynDistr/code
 
-syncuv2:
-	rsync -e "ssh -p 4702" -avz $(shell pwd)/../ jxhan@localhost:data/DynDistr/code
-	
-syncbright:
-	rsync -e "ssh -p 4700" -avz $(shell pwd)/../ jxhan@localhost:DynDistr/code
-
-module:
-	module add intel_comp/2012.0.032
-	module add hdf5/intel_2012.0.032/1.8.9
 
 depend:
 	makedepend --$(CFLAGS)-- -Y $(SRC_COMM) $(SRC_MAIN) $(SRC)
@@ -155,10 +118,6 @@ cosmology.o: cosmology.h globals.h
 mymath.o: mymath.h
 models.o: mymath.h globals.h cosmology.h tracer.h halo.h models.h
 tracer.o: mymath.h globals.h hdf_util.h tracer.h halo.h models.h
-halo.o: globals.h cosmology.h halo.h template.h nfw.h tracer.h
-template.o: globals.h cosmology.h halo.h template.h TemplateData.h
+halo.o: mymath.h globals.h cosmology.h halo.h template.h nfw.h tracer.h
+template.o: mymath.h globals.h cosmology.h halo.h template.h TemplateData.h
 nfw.o: globals.h cosmology.h halo.h tracer.h
-scan.o: mymath.h cosmology.h globals.h models.h
-NumericalConvergence.o: mymath.h cosmology.h globals.h models.h
-saveHDFstars.o: mymath.h hdf_util.h
-mock_stars.o: mymath.h cosmology.h globals.h tracer.h halo.h models.h

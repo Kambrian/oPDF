@@ -15,7 +15,6 @@ void halo_set_type(HaloType_t t, VirType_t virtype, double Redshift, const doubl
   halo->type=t;
   halo->z=Redshift;
   halo->virtype=virtype;
-  printf("halovir=%d\n", halo->virtype);
   memcpy(halo->scales, scales, NUM_PAR_MAX*sizeof(double));
   if(t==HT_TMPMC||t==HT_TMPPotScaleRScale)//use template, allocate it
   {
