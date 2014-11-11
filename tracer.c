@@ -209,6 +209,7 @@ void load_tracer_particles(char *datafile, Tracer_t * Sample)
       Sample->P[i].r=sqrt(VecNorm(Sample->P[i].x));
       Sample->P[i].K=VecNorm(Sample->P[i].v)/2.;
       Sample->P[i].L2=cross_product_norm2(Sample->P[i].x,Sample->P[i].v);
+	  Sample->P[i].L=sqrt(Sample->P[i].L2);
       Sample->P[i].vr=VecProd(Sample->P[i].x,Sample->P[i].v)/Sample->P[i].r; //radial vel
     }
     //sort

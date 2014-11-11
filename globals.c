@@ -14,8 +14,6 @@ void default_global_pars()
   Globals.cosmology.OmegaL0=0.7;
   double h=0.73;
   set_units(1e10*h, h, 1.);//default units set to 1e10Msun, kpc, km/s
-//   Globals.misc.views_NBinR=10;
-//   Globals.misc.views_RBinLog=1;
 }
 
 void set_units(double MassInMsunh, double LengthInKpch, double VelInKms)

@@ -106,6 +106,10 @@ def Sig2TS(sig,dof=1):
   '''convert a sigma value to the 2*likelihood ratio'''
   return chi2.ppf(chi2.cdf(np.array(sig)**2,1),dof)
 
+def Chi2Sig(x, dof):
+  '''convert chi-square value to significance level, for dof degrees of freedom'''
+  return P2Sig(chi2.sf(x,dof))
+
 def fmin_gsl(func, x0, args=[], xtol=1e-3, ftolabs=0.01, xstep=1.0, maxiter=1000, full_output=False):
     '''
     minimize function with gsl_simplex method

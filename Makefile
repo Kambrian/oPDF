@@ -14,7 +14,6 @@ ifeq ($(Platform), COSMA)
 	HDFLIB= -lhdf5_hl -lhdf5
 	GSLLIB=-lgsl -lgslcblas
 	CC = icc
-	FC = ifort
 	#CC=h5cc
 endif
 
@@ -23,7 +22,6 @@ ifeq ($(Platform), Bright)
 	GSLINC=-I/data/raid3/jxhan/opt/include #shao
 	GSLLIB=-L/data/raid3/jxhan/opt/lib -lgsl -lgslcblas #shao
 	CC = icc
-	FC = ifort
 endif
 
 ifeq ($(Platform), Medivh)
@@ -31,7 +29,6 @@ ifeq ($(Platform), Medivh)
 	HDFINC= -I/usr/include/mpi
 	GSLLIB=-lgsl -lgslcblas
 	CC = icc
-	FC = ifort
 	#CC=h5cc
 endif
 #--------other flags----------------------------

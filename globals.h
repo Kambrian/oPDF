@@ -27,11 +27,6 @@ struct global
 	  double G, H0;
 	} Const;
   } units;
-//   struct
-//   {
-// 	int views_NBinR;
-// 	int views_RBinLog;
-//   } misc;
 };
 extern struct global Globals;
 extern void default_global_pars();

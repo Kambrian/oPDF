@@ -11,7 +11,8 @@ typedef struct
   double w; //weight (particle mass normalized by average mass), mostly for tagged stars.
   double r;
   double K;
-  double L2;
+  double L2;//L^2
+  double L;//L
   double x[3];
   double v[3];
   double E; //-(K+psi), binding energy; differ from previous version

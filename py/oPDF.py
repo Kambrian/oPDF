@@ -1,9 +1,10 @@
 from math import *
 import numpy as np
 import ctypes,os
-from myutils import fmin_gsl,density_of_points,get_extent,NamedEnum,NamedValues
+from myutils import Chi2Sig,AD2Sig,density_of_points,get_extent,NamedEnum,NamedValues
+#from myutils import fmin_gsl
 #from scipy.optimize import fmin, fmin_powell
-from scipy.stats import norm,chi2
+import matplotlib.pyplot as plt
 from iminuit import Minuit
 from iminuit.ConsoleFrontend import ConsoleFrontend
 #import copy
@@ -130,8 +131,9 @@ class Particle_t(ctypes.Structure):
 		('flag', ctypes.c_int),
 		('w', ctypes.c_double),
 	    ('r', ctypes.c_double),
-	    ('K', ctypes.c_double),
+	    ('K', ctypes.c_double), #kinetic energy
 	    ('L2', ctypes.c_double),#L^2
+	    ('L', ctypes.c_double), #angular momentum
 	    ('x', ctypes.c_double*3),
 	    ('v', ctypes.c_double*3),
 	    ('E', ctypes.c_double),
@@ -220,7 +222,7 @@ class NamedEstimators(object):
 	  setattr(self, name, NamedValuesEst(number, name))
 Estimators=NamedEstimators('RBinLike AD MeanPhase MeanPhaseRaw')
 Estimators.RBinLike.need_phase=False
-Estimators.RBinLike.nbin_r=20
+Estimators.RBinLike.nbin=20
 Estimators.RBinLike.logscale=True
 
 lib.alloc_integration_space.restype=None
@@ -431,11 +433,17 @@ class Tracer(Tracer_t):
 	'''
 	return lib.like_eval(estimator.value, self._pointer)
   
-  def likelihood(self, pars, estimator):
-	'''calculate likelihood. automatically attach halo, prepare orbits and eval like'''
+  def set_phase(self, pars, need_theta=True):
+	'''prepare the phases for phase-related calculations such as like_eval or phase_density'''
 	self.halo.set_param(pars)
 	self.set_energy()
-	self.set_orbits(estimator.need_phase)
+	self.set_orbits(need_theta)
+	
+  def likelihood(self, pars, estimator, auto_rbin=True):
+	'''calculate likelihood. automatically prepare binning, orbits and eval like.'''
+	if auto_rbin and estimator==Estimators.RBinLike:
+	  self.radial_count(estimator.nbin, estimator.logscale)
+	self.set_phase(pars, estimator.need_phase)
 	return self.like_eval(estimator)
 
   def create_nested_views(self, viewtypes='EL', nbins=[10,10]):
@@ -461,11 +469,44 @@ class Tracer(Tracer_t):
 	return lib.nested_views_like(estimator.value, self._pointer, nbin_r, logscale)
   
   def scan_like(self, estimator, x, y):
-	'''scan a likelihood surface to be used for contour plots as contour(x,y,z)'''
-	z=[self.likelihood([m,c], estimator) for m in x for c in y]
-	return x,y,np.array(z).reshape([len(y),len(x)], order="F")
+	'''scan a likelihood surface to be used for contour plots as contour(x,y,z)
+	x,y are the vectors specifying the binning along x and y dimensions'''
+	if estimator==Estimators.RBinLike:
+	  self.radial_count(estimator.nbin, estimator.logscale)
+	z=[self.likelihood([m,c], estimator, False) for m in x for c in y]
+	return np.array(z).reshape([len(y),len(x)], order="F")
+  
+  def scan_confidence(self, estimator, x0, ngrids=[10,10], dx=[0.5, 0.5], logscale=False, maxlike=None):
+	'''scan significance levels around parameter value x0. 
+	it scans ngrids linear bins from x0-dx to x0+dx if logscale=False,
+	or ngrids log bins from log10(x0)-dx to log10(x0)+dx if logscale=True.
+	If maxlike is given, it is interpreted as the global maximum log-likelihood, and is used to determine significance for RBinLike estimator;
+	otherwise the maximum likelihood is automatically scanned for RBinLike.
+	'''
+	if logscale:
+	  xl=np.log10(x0)-dx
+	  xu=np.log10(x0)+dx
+	  x=np.logspace(xl[0], xu[0], ngrids[0])
+	  y=np.logspace(xl[1], xu[1], ngrids[1])
+	else:
+	  xl=x0-dx
+	  xu=x0+dx
+	  x=np.linspace(xl[0], xu[0], ngrids[0])
+	  y=np.linspace(xl[1], xu[1], ngrids[1])
+	like=self.scan_like(estimator, x, y)
+	if estimator==Estimators.RBinLike:
+	  if maxlike is None:
+		xfit,maxlike,status=self.dyn_fit(estimator, x0)
+	  sig=Chi2Sig(2*(maxlike-like), 2)
+	elif estimator==Estimators.AD:
+	  sig=AD2Sig(like)
+	elif estimator==Estimators.MeanPhase:
+	  sig=np.sqrt(like)
+	elif estimator==Estimators.MeanPhaseRaw:
+	  sig=np.abs(like)
+	return x,y,sig
     
-  def TSprof(self, pars, estimator=Estimators.MeanPhase, proxy='L', nbin=100):
+  def TSprof(self, pars, proxy='L', nbin=100, estimator=Estimators.MeanPhaseRaw):
 	'''calculate the likelihood inside equal-count bins of proxy.
 	return the loglike or f.o.m. for the estimator in each bin, and the bin edges.
 	proxy and nbin can also be of len>1; in that case, use 
@@ -473,18 +514,40 @@ class Tracer(Tracer_t):
 	to get the likelihood and bins in each node'''
 	self.halo.set_param(pars)
 	self.set_energy()
-	self.set_orbits()
-	if viewtype=='L2':
-	  viewtype='L'
-	self.create_nested_views(viewtype, nbin)
+	if proxy!='r': #r-view orbits will be updated internally.
+	  self.set_orbits()
+	self.create_nested_views(proxy, nbin)
 	self.nested_views_like(estimator)
-	ts=[self.Views[i].lnL for i in xrange(self.nView)] #these are like_eval, not chi2
-	ts.append(np.nan)
+	ts=[self.Views[i].lnL for i in xrange(self.nView)]
 	ts=np.array(ts)
-	x=self.gen_bin(viewtypes, nbins, equalcount=True)
+	x=self.gen_bin(proxy, nbin, equalcount=True)
 	return ts,x
   
-  def TSprofCum(self, pars, estimator=Estimators.AD, proxy='r', bins=100):
+  def plot_TSprof(self, pars, proxy='L', nbin=100, estimator=Estimators.MeanPhaseRaw, xtype='percent-phys', linestyle='r-'):
+	'''plot the TS profile
+	xtype can be one of 'percent', 'physical', and 'percent-phys'. when xtype='percent', plot the x-axis with percents.
+	if xtype='phys', plot x-axis with physical values. 
+	if xtype='percent-phys', plot xaxis in percent scale but label with physical values.
+	'''
+	ts,x=self.TSprof(pars, proxy, nbin, estimator)
+	percents=(np.arange(nbin)+0.5)/nbin*100
+	xmid=(x[:-1]+x[1:])/2
+	if xtype=='percent':
+	  h,=plt.plot(percents, ts, linestyle)
+	  plt.xlabel('Percentile in '+proxy)
+	if xtype=='percent-phys':
+	  h,=plt.plot(percents, ts, linestyle)
+	  plt.xticks(percents[1::3],['%.1f'%np.log10(a) for a in x][1::3])
+	  plt.xlabel(r'$\log('+proxy+')$')
+	if xtype=='phys':
+	  h,=plt.plot(xmid, ts, linestyle)
+	  plt.xlabel(r'$%s$'%proxy)
+	plt.ylabel(estimator)
+	if estimator==Estimators.MeanPhaseRaw:
+	  plt.plot(plt.xlim(), [0, 0], 'k--')
+	return h 
+	
+  def TSprofCum(self, pars, proxy='r', bins=100, estimator=Estimators.AD):
 	'''cumulative TS profile
 	reuturn bin edges, ts, counts'''
 	self.halo.set_param(pars)
@@ -548,11 +611,13 @@ class Tracer(Tracer_t):
 			fval: log-likelihood or fig of merit, depending on estimator
 			status_success: whether the search converged successfully, 1 if yes, 0 if no.
 			'''
+	if estimator==Estimators.RBinLike:
+	  self.radial_count(estimator.nbin, estimator.logscale)
 	status_success=lib.DynFit(Param_t(*x0), len(x0), xtol, ftol_abs, maxiter, verbose, estimator.value, self._pointer)	
 	x=np.array(self.halo.pars[:len(x0)])
 	return x,self.lnL,status_success
 
-  def phase_density(self, proxy='E', bins=100, method='hist', logscale=False, weight=False):
+  def phase_density(self, proxy='E', bins=100, method='hist', logscale=False, weight=False, return_data=False):
 	'''estimate density in proxy-theta space'''
 	if logscale:
 	  f=self.data[proxy]>0
@@ -566,7 +631,22 @@ class Tracer(Tracer_t):
 	else:
 	  X,Y,Z=density_of_points(data, bins=bins, method=method)
 	extent=get_extent(X,Y)
-	return X,Y,Z,extent,data
+	if return_data:
+	  return X,Y,Z,extent,data
+	else:
+	  return X,Y,Z,extent
+	
+  def phase_image(self, pars, proxy, bins=30, logscale=True):
+	'''plot an image of the particle distribution in proxy-theta space'''
+	self.set_phase(pars) #determine the phase-angles with the real halo parameters x0
+	X,Y,Z,extent=self.phase_density(proxy, bins=bins, logscale=logscale)
+	plt.imshow(Z,extent=extent)
+	plt.axis('tight')
+	if logscale:
+	  plt.xlabel(r'$\log('+proxy+')$')
+	else:
+	  plt.xlabel(r'$'+proxy+'$')
+	plt.ylabel(r'$\theta$')
 
   #def gfmin_like(self, estimator, x0=[1,1], xtol=1e-3, ftolabs=0.01):
 	#like=lambda x: lib.like_to_chi2(self.freeze_and_like(x, estimator), estimator) #the real likelihood prob

@@ -336,7 +336,7 @@ double like_eval(Estimator_t estimator, Tracer_t *Sample)
 }
 
 double nested_views_like(Estimator_t estimator,  Tracer_t *Sample, int nbin_r, int FlagRLogBin)
-{//pure like, without freeze_energy()/set_orbits();  prepare them before calling this!
+{//pure like, without freeze_energy()/set_orbits() (except for set_orbits() for r-Views);  prepare them before calling this!
   //nbin_r and FlagRLogBin are only used when estimator is RBinLike
   double lnL;
   if(!Sample->nView)
@@ -349,7 +349,11 @@ double nested_views_like(Estimator_t estimator,  Tracer_t *Sample, int nbin_r, i
   
   int i;
   for(i=0,lnL=0.;i<Sample->nView;i++)
+  {
+	if(Sample->ViewType=='r')
+	  tracer_set_orbits(Sample->Views+i, estimator!=EID_RBinLike);//update radial bounds
 	lnL+=nested_views_like(estimator, Sample->Views+i, nbin_r, FlagRLogBin);
+  }
   Sample->lnL=lnL;
   return lnL;
 }
