@@ -10,7 +10,7 @@ You can use this tutorial interactively (i.e., run the codes in-place) if you ca
 
     ipython notebook --pylab=inline
 
-If that doesn't work, you can read it online as a webpage [here](http://nbviewer.ipython.org/github/Kambrian/oPDF/blob/master/py/tutorial.ipynb). 
+If that doesn't work, you can read it online [as a webpage here](http://nbviewer.ipython.org/github/Kambrian/oPDF/blob/master/py/tutorial.ipynb). 
 
 
 Please consult the science paper on how these work. 
