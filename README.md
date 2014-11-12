@@ -1,7 +1,7 @@
 ## [Orbital Probability Density Function (oPDF)](http://kambrian.github.io/oPDF)
 `oPDF` is a code for modelling the phase space distribution of steady-state tracers in spherical potentials. It is written in `C` and parallelized with `OpenMP`, with a `Python` frontend. In other words, it is both **fast** and **convenient**!
 
-##Documentation
+##Tutorial
 To get started, check the tutorial in the file 
 
     py/tutorial.ipynb
