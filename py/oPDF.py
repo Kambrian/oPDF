@@ -24,8 +24,7 @@ class global_tol(ctypes.Structure):
 			('rel', ctypes.c_double)]
 class global_cosm(ctypes.Structure):
   _fields_=[('OmegaM0',ctypes.c_double),
-			('OmegaL0',ctypes.c_double),
-			('Redshift',ctypes.c_double)]
+			('OmegaL0',ctypes.c_double)]
 class global_const(ctypes.Structure):
   _fields_=[('G',ctypes.c_double),
 			('H0',ctypes.c_double)]
@@ -49,6 +48,13 @@ class globals_t(ctypes.Structure):
 	'''set system of units,
 	specify Mass in Msun/h, Length in kpc/h, Velocity in km/s'''
 	lib.set_units(MassInMsunh, LengthInKpch, VelInKms)
+
+  def get_units(self):
+	'''query the units'''
+	print 'Mass  :', self.units.MassInMsunh, 'Msun/h'
+	print 'Length:', self.units.LengthInKpch, 'kpc/h'
+	print 'Vel   :', self.units.VelInKms, 'km/s'
+	return (self.units.MassInMsunh, self.units.LengthInKpch, self.units.VelInKms)
 VirTypes=NamedEnum('TH C200 B200')	
 Globals=globals_t.in_dll(lib, 'Globals')
 
@@ -69,7 +75,6 @@ class Halo_t(ctypes.Structure):
 			('Ms',ctypes.c_double),#4*pi*rs^3*rhos
 			('RScale',ctypes.c_double),#for TMP profile, Rs/Rs0
 			('PotScale',ctypes.c_double),#for TMP profile, Pots/Pots0
-			#('TMPid',ctypes.c_int),#for TMP profile
 			('virtype',ctypes.c_int),
 			('type',ctypes.c_int)
 			]
@@ -113,10 +118,18 @@ class Halo(Halo_t):
 	lib.halo_set_param(Param_t(*pars), ctypes.byref(self))
   def mass(self, r):
 	'''cumulative mass profile'''
-	return lib.halo_mass(r, ctypes.byref(self))
+	try:
+	  m=lib.halo_mass(r, ctypes.byref(self))
+	except:
+	  m=np.array([lib.halo_mass(x, ctypes.byref(self)) for x in r])
+	return m
   def pot(self, r):
 	'''potential'''
-	return lib.halo_pot(r, ctypes.byref(self))
+	try:
+	  m=lib.halo_pot(r, ctypes.byref(self))
+	except:
+	  m=np.array([lib.halo_pot(x, ctypes.byref(self)) for x in r])
+	return m
   def get_current_TMPid():
 	'''get the id of the template currently loaded in the system.
 	this func can be used to check whether the loaded template 

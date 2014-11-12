@@ -2,12 +2,10 @@
 import sys
 import numpy as np
 from scipy.stats import gaussian_kde,norm,chi2
-import ctypesGsl as cgsl
 import matplotlib
 #matplotlib.user('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
-#matplotlib.rcParams.update({'font.name', ''font.size': 18, 'axis.labelsize': 20, 'legend.fontsize': 18, 'ps.fonttype' : 42 , 'pdf.fonttype' : 42 ,' image.origin': 'lower', 'image.interpolation': 'None'})
 
 from matplotlib.ticker import MaxNLocator # added 
 
@@ -110,6 +108,7 @@ def Chi2Sig(x, dof):
   '''convert chi-square value to significance level, for dof degrees of freedom'''
   return P2Sig(chi2.sf(x,dof))
 
+import ctypesGsl as cgsl
 def fmin_gsl(func, x0, args=[], xtol=1e-3, ftolabs=0.01, xstep=1.0, maxiter=1000, full_output=False):
     '''
     minimize function with gsl_simplex method
