@@ -22,7 +22,8 @@ endif
 
 ifeq ($(Platform), Medivh)
 	HDFLIB= -lhdf5_hl -lhdf5
-	HDFINC= -I/usr/include/mpi
+	HDFINC= -I/usr/include/mpi 
+	#HDFINC+=-DHDF_V16 #uncomment this if you have HDF version 1.6 or less
 	GSLLIB=-lgsl -lgslcblas
 	CC = icc
 	#CC=h5cc
@@ -43,11 +44,6 @@ endif
 
 CFLAGS += $(HDFINC) $(GSLINC) -DROOTDIR=$(ROOTDIR) $(OMPLIB)
 LDFLAGS += $(HDFLIB) $(GSLLIB) $(OMPLIB)
-
-#~ ifeq ($(USER),kam)      #my laptop has hdf v1.6
-ifeq ($(shell uname -n),kam-laptop)
-CFLAGS+= -DHDF_V16
-endif
 
 ifeq ($(DEBUG),on)
 CFLAGS+= -g -Wall
@@ -86,13 +82,6 @@ submit: FORCE
 	
 #-----Other stuff----------------------------
 .PHONY : clean depend distclean
-
-synccosma:
-	rsync -avz $(shell pwd)/../ jvbq85@login.cosma.dur.ac.uk:data/DynDistr/code
-
-synccosmalocal:
-	rsync -e "ssh -p 4800" -avz $(shell pwd)/../ jvbq85@localhost:data/DynDistr/code
-
 
 depend:
 	makedepend --$(CFLAGS)-- -Y $(SRC_COMM) $(SRC_MAIN) $(SRC)
