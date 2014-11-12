@@ -1,14 +1,10 @@
 #-----------setup server env ------------------
-Platform=Medivh
-#Platform=COSMA
+# Platform=Medivh
+Platform=COSMA
 #Platform=Bright
 ifeq ($(shell uname -n), Medivh)
 	Platform=Medivh
 endif
-ifeq ($(USER), jvbq85)
-	Platform=COSMA
-endif
-
 
 ifeq ($(Platform), COSMA)
 	HDFLIB= -lhdf5_hl -lhdf5
