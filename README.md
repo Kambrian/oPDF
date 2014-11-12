@@ -17,4 +17,4 @@ Please consult the science paper on how these work.
 
 
 ##Authors
-Jiaxin Han (ICC, Durham)
+Jiaxin Han (@Kambrian)[ICC, Durham]
