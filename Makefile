@@ -50,6 +50,7 @@ CFLAGS+= -g -Wall
 LDFLAGS+= -g
 endif
 
+VPATH=C
 #-----File Dependencies----------------------
 SRC_COMM = hdf_util.c globals.c cosmology.c mymath.c models.c tracer.c halo.c template.c nfw.c
 OBJS_COMM= $(patsubst %.f90,%.f.o,$(SRC_COMM:%.c=%.o))
@@ -57,8 +58,11 @@ OBJS_COMM= $(patsubst %.f90,%.f.o,$(SRC_COMM:%.c=%.o))
 #-----targets and common rules--------------------------------
 default: lib
 
-tutorial: py/tutorial.ipynb
-	cd py;ipython nbconvert --to html tutorial.ipynb
+tutorial: doc/tutorial.html
+doc/tutorial.html: tutorial.ipynb
+	ipython nbconvert --to html $^
+	mv tutorial.html $@
+
 #the default rule will handle the rest
 # %.o : %.c
 # 	$(CC) $< $(CFLAGS) -c -o $@
@@ -72,15 +76,6 @@ lib: liboPDF.so
 
 liboPDF.so:$(OBJS_COMM)
 	$(CC) -shared -Wl,-soname,liboPDF.so -o liboPDF.so $^ $(LDFLAGS)
-#----------------------
-submit: tmpdir=exe/mockfitFmin_mc$(ESTIMATOR)
-submit: FORCE
-	mkdir -p $(tmpdir)
-	@$(MAKE) lib -B
-	cp dynio.py libdyn.so mockFmin.py job.bsub $(tmpdir)
-	cd $(tmpdir);\
-	bsub <job.bsub #do something immediately after the previous command; keep in same line so that the same subshell is used.
-# 	@$(MAKE) -C $(tmpdir) job #to use this, a makefile has to be in the subdir first.
 	
 #-----Other stuff----------------------------
 .PHONY : clean depend distclean

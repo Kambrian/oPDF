@@ -1689,11 +1689,11 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>oPDF</code> is a code for modelling the phase space distribution of steady-state tracers in spherical potentials. It is written in <code>C</code> and parallelized with <code>OpenMP</code>, with a <code>Python</code> frontend. In other words, it is both fast and convenient! It is also highly modulized and easily extensible.</p>
-<p>You can use this tutorial interactively (i.e., run the codes in-place) if you can run the following command from the <code>py/</code> directory of the code:</p>
-<pre><code>ipython notebook --pylab=inline</code></pre>
-<p>If that doesn't work, you can still read it as a html tutorial <a href="http://nbviewer.ipython.org/github/Kambrian/oPDF/blob/master/py/tutorial.ipynb">here</a>.</p>
+<p><code>oPDF</code> is a code for modelling the phase space distribution of steady-state tracers in spherical potentials. For more information, check the <a href="http://kambrian.github.io/oPDF">website</a>.</p>
 <p>Please consult the science paper on how it works.</p>
+<p>You can use this tutorial interactively in ipython notebook by running</p>
+<pre><code>ipython notebook</code></pre>
+<p>from the root directory of the oPDF code. If that does not work, then simply continue reading this document as a html.</p>
 </div>
 </div>
 </div>
@@ -3740,7 +3740,7 @@ In&nbsp;[16]:
 <li>HaloTypes.TMPMC: Template profile, \((M,c)\) parametrization</li>
 <li>HaloTypes.TMPPotScaleRScale: Template, \(\psi_s/\psi_{s0}, r_s/r_{s0}\)</li>
 </ul>
-<p>To use template profiles, you have to creates them first, in the form of (\(r,\psi,\rho(\lt r)\)) arrays and the real \(r_s\) parameter to be added to TemplateData.h. You need to recompile the C library once this is done. PotentialProf.py can help you in generating the templates from DM distributions.</p>
+<p>To use template profiles, you have to creates them first, in the form of (\(r,\psi,\rho(\lt r)\)) arrays and the real \(r_s\) parameter to be added to C/TemplateData.h. You need to recompile the C library once this is done. PotentialProf.py can help you in generating the templates from DM distributions.</p>
 <p>If you use template profiles, you also need to specify the template id, to tell the code which template in TemplateData.h to use. For example,</p>
 </div>
 </div>
@@ -4303,22 +4303,22 @@ In&nbsp;[24]:
 <h3 id="extending-the-code">Extending the code</h3>
 <ul>
 <li><p>To add new types of potential</p></li>
-<li>in halo.h: add your HaloType identifier in HaloType_t</li>
-<li>in halo.c:
+<li>in C/halo.h: add your HaloType identifier in HaloType_t</li>
+<li>in C/halo.c:
 <ul>
 <li>write your halo initializer in halo_set_param()</li>
 <li>write your potential function in halo_pot()</li>
 <li>optionally, write your cumulative mass profile in halo_mass(), and add any initilization in halo_set_type() if needed.</li>
 </ul></li>
-<li>in py/oPDF.py:
+<li>in oPDF.py:
 <ul>
 <li>add your newly defined halotype to the following line <code>HaloTypes=NamedEnum(...</code></li>
 </ul></li>
 <li>To add new template profiles</li>
-<li>Generate your template in the form of (\(r,\psi,\rho(\lt r)\)) arrays, and append to PotentialTemplate in TemplateData.h</li>
-<li><p>Append the scale radius of the new template to TemplateScale in TemplateData.h. This is only used if you want to use TMPMC parametrization. In this case the scale radius must be the radius where the logrithmic slope of density equals to -2. If you only want to use TMPPotScaleRScale parametrization, you can put any arbitrary value here.</p></li>
+<li>Generate your template in the form of (\(r,\psi,\rho(\lt r)\)) arrays, and append to C/PotentialTemplate in TemplateData.h</li>
+<li><p>Append the scale radius of the new template to TemplateScale in C/TemplateData.h. This is only used if you want to use TMPMC parametrization. In this case the scale radius must be the radius where the logrithmic slope of density equals to -2. If you only want to use TMPPotScaleRScale parametrization, you can put any arbitrary value here.</p></li>
 <li>To add new estimators</li>
-<li><p>check modules.c</p></li>
+<li><p>check C/models.c</p></li>
 </ul>
 <p>You need to recompile the C library once this is done. PotentialProf.py can help you in generating the templates from DM distributions.</p>
 </div>

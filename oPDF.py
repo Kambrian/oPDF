@@ -9,13 +9,10 @@ from iminuit import Minuit
 from iminuit.ConsoleFrontend import ConsoleFrontend
 #import copy
 
-if os.uname()[1]=='Medivh':
-    rootdir='/work/Projects/DynDistr/'
-else:
-    rootdir='/gpfs/data/jvbq85/DynDistr/'
+rootdir=os.path.dirname(__file__)
 
 #=======================load the library===============================
-lib=ctypes.CDLL("../liboPDF.so")
+lib=ctypes.CDLL(rootdir+"/liboPDF.so")
 #=======================prototype the library==========================
 #==globals.h
 class global_tol(ctypes.Structure):
@@ -672,7 +669,7 @@ class Tracer(Tracer_t):
 lib_open() #allocate integration space
 
 if __name__=="__main__":
-  datafile=rootdir+'/data/mockhalo_wenting.hdf5'
+  datafile=rootdir+'/data/mockhalo.hdf5'
   FullSample=Tracer(datafile=datafile)
   Sample=FullSample.copy(0,1000)
   FullSample.print_data(10)
