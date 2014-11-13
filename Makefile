@@ -57,6 +57,8 @@ OBJS_COMM= $(patsubst %.f90,%.f.o,$(SRC_COMM:%.c=%.o))
 #-----targets and common rules--------------------------------
 default: lib
 
+tutorial: py/tutorial.ipynb
+	cd py;ipython nbconvert --to html tutorial.ipynb
 #the default rule will handle the rest
 # %.o : %.c
 # 	$(CC) $< $(CFLAGS) -c -o $@
