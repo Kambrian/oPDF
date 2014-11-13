@@ -1717,9 +1717,10 @@ div#notebook {
 <li><a href="https://pypi.python.org/pypi/iminuit">iminuit</a> (optional, only needed if you want to do NFW-likelihood fit to the density profile of dark matter.)</li>
 </ul></li>
 </ul>
-<p>You can customize the makefile to specify how to compile and link against the GSL and HDF5 libraries, by specifying the <code>GSLINC,GSLLIB,HDFINC,HDFLIB</code> flags. ###build the library under the root directory of the C code, run</p>
+<p>You can customize the makefile to specify how to compile and link against the GSL and HDF5 libraries, by specifying the <code>GSLINC,GSLLIB,HDFINC,HDFLIB</code> flags. ###build the library under the root directory of the code, run</p>
 <pre><code>make</code></pre>
-<p>This will generate the library <code>liboPDF.so</code>, the backend of the python module. Now you are all set up for the analysis. Change to the <code>py/</code> directory, open your python shell, and get ready for the modelling.</p>
+<p>This will generate the library <code>liboPDF.so</code>, the backend of the python module. Now you are all set up for the analysis. Open your python shell in the code directory, and get ready for the modelling. If you want to get rid of all the <code>*.o</code> files, you can clean them by</p>
+<pre><code>make clean</code></pre>
 <h3 id="prepare-the-data-files">Prepare the data files</h3>
 <p>The data files are <a href="http://www.hdfgroup.org/HDF5/">hdf5</a> files listing the positions and velocities of tracer particles, relative to the position and velocity of the center of the halo. The code comes with two sample files under data/:</p>
 <ul>
