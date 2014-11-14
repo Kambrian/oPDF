@@ -4,7 +4,9 @@
 ## Documentation
 
 - [Full HTML documentations](http://kambrian.github.io/oPDF/doc). 
-  The [tutorial](http://kambrian.github.io/oPDF/doc/tutorial) is the best place to start. 
+
+  The [tutorial](http://kambrian.github.io/oPDF/doc/tutorial) is the best place to start from. 
+
 - PDF versions are available in the doc/ directory.
 
 Please consult the science paper (coming soon) on how it works. 
