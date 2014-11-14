@@ -62,7 +62,6 @@ default: lib
 
 lib: $(OPDF_LIB)
 
-
 doc: $(DOC)
 
 #the default rule will handle the rest
@@ -80,7 +79,7 @@ $(OPDF_LIB):$(OBJS_COMM)
 
 DOC_DIR=Doc
 DOC_SRC_DIR=$(DOC_DIR)/source
-$(DOC): doc.rst tutorial.rst api.rst $(OPDF_LIB)
+$(DOC): index.rst tutorial.rst api.rst $(OPDF_LIB)
 	$(MAKE) $@ -C $(DOC_DIR)
 
 $(DOC_SRC_DIR)/tutorial.rst: tutorial.ipynb docclean
