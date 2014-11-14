@@ -1,0 +1,817 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Full API Documentation &mdash; oPDF 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="oPDF 1.0 documentation" href="doc.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="doc.html">oPDF 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="full-api-documentation">
+<h1>Full API Documentation<a class="headerlink" href="#full-api-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-oPDF">
+<span id="opdf-module"></span><h2>oPDF module<a class="headerlink" href="#module-oPDF" title="Permalink to this headline">¶</a></h2>
+<p>Python interface to the C code for oPDF modelling.</p>
+<p>It wraps the C functions into python classes with ctypes.</p>
+<div class="section" id="variables-and-constants">
+<h3>Variables and Constants<a class="headerlink" href="#variables-and-constants" title="Permalink to this headline">¶</a></h3>
+<dl class="data">
+<dt id="oPDF.Globals">
+<code class="descclassname">oPDF.</code><code class="descname">Globals</code><a class="headerlink" href="#oPDF.Globals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collection of global variables of the module, of class <a class="reference internal" href="#oPDF.globals_t" title="oPDF.globals_t"><code class="xref py py-class docutils literal"><span class="pre">globals_t</span></code></a>. It controls numerical precision, internal units, and cosmology.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="oPDF.VirTypes">
+<code class="descclassname">oPDF.</code><code class="descname">VirTypes</code><a class="headerlink" href="#oPDF.VirTypes" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Collection of virial definitions. It contains</dt>
+<dd><ul class="first last simple">
+<li><code class="docutils literal"><span class="pre">VirTH</span></code>: the spherical collapse prediction (i.e, Bryan &amp; Norman 98 fitting).</li>
+<li><code class="docutils literal"><span class="pre">VirB200</span></code>: the 200 times mean density deifinition.</li>
+<li><code class="docutils literal"><span class="pre">VirC200</span></code>: the 200 times critical density definition.</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="data">
+<dt id="oPDF.HaloTypes">
+<code class="descclassname">oPDF.</code><code class="descname">HaloTypes</code><a class="headerlink" href="#oPDF.HaloTypes" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Collection of halo parametrizations. It contains</dt>
+<dd><ul class="first last simple">
+<li><code class="docutils literal"><span class="pre">NFWMC</span></code>: NFW halo parametrized by <img class="math" src="_images/math/ebfe80b31de3ff59c32669ad5a92686427629d21.png" alt="(M,c)"/></li>
+<li><code class="docutils literal"><span class="pre">NFWRhosRs</span></code>: NFW, <img class="math" src="_images/math/98b221d714b31c14edce2f33ab6be0c23164c6f0.png" alt="(\rho_s,r_s)"/></li>
+<li><code class="docutils literal"><span class="pre">NFWPotsRs</span></code>: NFW, (<img class="math" src="_images/math/34f07bb6c51d693ccf6809c687856f428391ae4d.png" alt="\psi_s, r_s"/>), with <img class="math" src="_images/math/58461b5beddd43d20087fdee4121fb4f49795f49.png" alt="\psi_s=4\pi G\rho_s r_s^2"/>.</li>
+<li><code class="docutils literal"><span class="pre">CorePotsRs</span></code>: Cored Generalized NFW Potential (inner density slope=0), parametrized by (<img class="math" src="_images/math/80f3e7ed57c124be00759e699b1c8d8beb2fd8ff.png" alt="\psi_s,r_s"/>)</li>
+<li><code class="docutils literal"><span class="pre">CoreRhosRs</span></code>: Cored GNFW, <img class="math" src="_images/math/98b221d714b31c14edce2f33ab6be0c23164c6f0.png" alt="(\rho_s,r_s)"/></li>
+<li><code class="docutils literal"><span class="pre">TMPMC</span></code>: Template profile, <img class="math" src="_images/math/ebfe80b31de3ff59c32669ad5a92686427629d21.png" alt="(M,c)"/> parametrization</li>
+<li><code class="docutils literal"><span class="pre">TMPPotScaleRScale</span></code>: Template, <img class="math" src="_images/math/7a947bb3fb1e0cc69d0b627a2307ad16cc89e7bf.png" alt="\psi_s/\psi_{s0}, r_s/r_{s0}"/></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="data">
+<dt id="oPDF.Estimators">
+<code class="descclassname">oPDF.</code><code class="descname">Estimators</code><a class="headerlink" href="#oPDF.Estimators" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Collection of dynamical estimators. It contains</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt><code class="docutils literal"><span class="pre">RBinLike</span></code>: binned radial likelihood.</dt>
+<dd><p class="first last">Use <code class="docutils literal"><span class="pre">RBinLike.nbin</span></code> (<code class="docutils literal"><span class="pre">integer</span></code>) and <code class="docutils literal"><span class="pre">RBinLike.logscale</span></code> (<code class="docutils literal"><span class="pre">True</span></code> or <code class="docutils literal"><span class="pre">False</span></code>) to control the number and scale of bins.</p>
+</dd>
+</dl>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">AD</span></code>: Anderson-Darling distance.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">MeanPhaseRaw</span></code>: Normalized mean phase deviation <img class="math" src="_images/math/da7abec9fa29ca2da405162d47ce419e5338b5d0.png" alt="\bar{\Theta}=(\bar{\theta}-0.5)/\sigma_{\theta}"/>, to be compared to a standard normal variable.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">MeanPhase</span></code>: <img class="math" src="_images/math/08dd2b672dd3b757c173f61047fed6f9e4dae575.png" alt="\bar{\Theta}^2"/>, to be compared to a chi-square variable.</p>
+</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="global-parameters">
+<h4>Global Parameters<a class="headerlink" href="#global-parameters" title="Permalink to this headline">¶</a></h4>
+<dl class="class">
+<dt id="oPDF.globals_t">
+<em class="property">class </em><code class="descclassname">oPDF.</code><code class="descname">globals_t</code><a class="reference internal" href="_modules/oPDF.html#globals_t"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.globals_t" title="Permalink to this definition">¶</a></dt>
+<dd><p>global variables of the module. It controls numerical precision, internal units, and cosmology.</p>
+<dl class="method">
+<dt id="oPDF.globals_t.get_units">
+<code class="descname">get_units</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#globals_t.get_units"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.globals_t.get_units" title="Permalink to this definition">¶</a></dt>
+<dd><p>query the units</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.globals_t.set_defaults">
+<code class="descname">set_defaults</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#globals_t.set_defaults"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.globals_t.set_defaults" title="Permalink to this definition">¶</a></dt>
+<dd><p>set default global parameters, 
+including precision, cosmology and units</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.globals_t.set_units">
+<code class="descname">set_units</code><span class="sig-paren">(</span><em>MassInMsunh=7300000000.0</em>, <em>LengthInKpch=0.73</em>, <em>VelInKms=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#globals_t.set_units"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.globals_t.set_units" title="Permalink to this definition">¶</a></dt>
+<dd><p>set system of units.
+specify Mass in Msun/h, Length in kpc/h, Velocity in km/s</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="halo">
+<h4>Halo<a class="headerlink" href="#halo" title="Permalink to this headline">¶</a></h4>
+<dl class="class">
+<dt id="oPDF.Halo">
+<em class="property">class </em><code class="descclassname">oPDF.</code><code class="descname">Halo</code><span class="sig-paren">(</span><em>halotype=NFWMC</em>, <em>virtype=C200</em>, <em>redshift=0.0</em>, <em>scales=None</em>, <em>TMPid=-1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Halo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Halo" title="Permalink to this definition">¶</a></dt>
+<dd><p>a general halo describing the potential. It has the following properties</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pars</strong> &#8211; raw parameter values. do not change them manually, use <a class="reference internal" href="#oPDF.Halo.set_param" title="oPDF.Halo.set_param"><code class="xref py py-func docutils literal"><span class="pre">set_param()</span></code></a> to set them.</li>
+<li><strong>scales</strong> &#8211; parameter scales. use <a class="reference internal" href="#oPDF.Halo.set_type" title="oPDF.Halo.set_type"><code class="xref py py-func docutils literal"><span class="pre">set_type()</span></code></a> to set them.</li>
+<li><strong>virtype</strong> &#8211; virial definition</li>
+<li><strong>type</strong> &#8211; parametrization type. One of <a class="reference internal" href="#oPDF.HaloTypes" title="oPDF.HaloTypes"><code class="xref py py-data docutils literal"><span class="pre">HaloTypes</span></code></a>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Depending on the type of the halo, some of the following properties may be calculated during <a class="reference internal" href="#oPDF.Halo.set_param" title="oPDF.Halo.set_param"><code class="xref py py-func docutils literal"><span class="pre">set_param()</span></code></a>:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>M</strong> &#8211; mass</li>
+<li><strong>c</strong> &#8211; concentration</li>
+<li><strong>Rv</strong> &#8211; virial radius</li>
+<li><strong>Pots</strong> &#8211; Pots=4*pi*G*Rhos*Rs^2.</li>
+<li><strong>Rhos</strong> &#8211; scale density for NFW</li>
+<li><strong>Rs</strong> &#8211; scale radius</li>
+<li><strong>RScale</strong> &#8211; Rs/Rs0 for TMP profile</li>
+<li><strong>PotScale</strong> &#8211; Pots/Pots0 for TMP profile</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>define a halo by specifiying the parametrization, virial definition and redshift of halo</p>
+<p>halotype: halo parametrization, one of the <a class="reference internal" href="#oPDF.HaloTypes" title="oPDF.HaloTypes"><code class="xref py py-data docutils literal"><span class="pre">HaloTypes</span></code></a> members</p>
+<p>virtype: virial definition, one of the VirTypes members</p>
+<p>redshift: redshift of halo</p>
+<p>scales: scales of halo parameters, array-like, of the same shape as parameters. default to all-ones if None. physical parameters will be params*scales</p>
+<p>TMPid: template id. only required when halotype is of template type</p>
+<dl class="method">
+<dt id="oPDF.Halo.get_current_TMPid">
+<code class="descname">get_current_TMPid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Halo.get_current_TMPid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Halo.get_current_TMPid" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the id of the template currently loaded in the system.</p>
+<p>this func can be used to check whether the loaded template 
+is the template of the current halo, just in case the template does not match</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Halo.mass">
+<code class="descname">mass</code><span class="sig-paren">(</span><em>r</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Halo.mass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Halo.mass" title="Permalink to this definition">¶</a></dt>
+<dd><p>cumulative mass profile</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Halo.pot">
+<code class="descname">pot</code><span class="sig-paren">(</span><em>r</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Halo.pot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Halo.pot" title="Permalink to this definition">¶</a></dt>
+<dd><p>potential</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Halo.set_param">
+<code class="descname">set_param</code><span class="sig-paren">(</span><em>pars=[1.0, 1.0]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Halo.set_param"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Halo.set_param" title="Permalink to this definition">¶</a></dt>
+<dd><p>set the parameters of the halo</p>
+<p>pars: parameters describing the halo</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Halo.set_type">
+<code class="descname">set_type</code><span class="sig-paren">(</span><em>halotype=NFWMC</em>, <em>virtype=C200</em>, <em>redshift=0.0</em>, <em>scales=None</em>, <em>TMPid=-1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Halo.set_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Halo.set_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>set the parametrization, virial definition and redshift of halo</p>
+<p>halotype: halo parametrization, one of the <a class="reference internal" href="#oPDF.HaloTypes" title="oPDF.HaloTypes"><code class="xref py py-data docutils literal"><span class="pre">HaloTypes</span></code></a> members</p>
+<p>virtype: virial definition, one of the VirTypes members</p>
+<p>redshift: redshift of halo</p>
+<p>scales: scales of halo parameters, array-like, of the same shape as parameters. default to ones if not specified. physical parameters will be params*scales</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="tracer">
+<h4>Tracer<a class="headerlink" href="#tracer" title="Permalink to this headline">¶</a></h4>
+<dl class="class">
+<dt id="oPDF.Tracer">
+<em class="property">class </em><code class="descclassname">oPDF.</code><code class="descname">Tracer</code><span class="sig-paren">(</span><em>datafile=None</em>, <em>rmin=None</em>, <em>rmax=None</em>, <em>shuffle=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tracer: a population of tracer particles.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>halo</strong> &#8211; the halo (potential, :py:class:oPDF.Halo) for the tracer.</li>
+<li><strong>lnL</strong> &#8211; likelihood or distance for the sample from the previous likelihood calculation, depending on estimator.</li>
+<li><strong>nP</strong> &#8211; number of particles.</li>
+<li><strong>mP</strong> &#8211; average particle mass.</li>
+<li><strong>data</strong> &#8211; particle data, numpy record array format. It includes the following fields:
+(&#8216;haloid&#8217;, &#8216;subid&#8217;, &#8216;flag&#8217;, &#8216;w&#8217;, &#8216;r&#8217;, &#8216;K&#8217;, &#8216;L2&#8217;, &#8216;L&#8217;, &#8216;x&#8217;, &#8216;v&#8217;, &#8216;E&#8217;, &#8216;T&#8217;, &#8216;vr&#8217;, &#8216;theta&#8217;, &#8216;rlim&#8217;)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<ul class="last simple">
+<li>The <cite>w</cite> field is the particle mass in units of the average particle mass. These are all ones if no particle mass is given in the datafile.</li>
+<li>the <cite>haloid</cite> and <cite>subid</cite> fields are only filled if you have <cite>SubID</cite> and <cite>HaloID</cite> datasets in the datafile when loading.</li>
+<li>The <cite>E</cite>,`theta` and <cite>rlim</cite> fields are the energy, phase-angle, and radial limits (peri and apo-center distances) of the orbits.These depend on the potential, and are only filled when you have done some calculation in a halo, or have filled them explicitly with <a class="reference internal" href="#oPDF.Tracer.set_phase" title="oPDF.Tracer.set_phase"><code class="xref py py-func docutils literal"><span class="pre">set_phase()</span></code></a>.</li>
+</ul>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The following members are provided for information, but do not manually assign to them. use <a class="reference internal" href="#oPDF.Tracer.radial_count" title="oPDF.Tracer.radial_count"><code class="xref py py-func docutils literal"><span class="pre">radial_count()</span></code></a> and <a class="reference internal" href="#oPDF.Tracer.radial_cut" title="oPDF.Tracer.radial_cut"><code class="xref py py-func docutils literal"><span class="pre">radial_cut()</span></code></a> to set them.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>nbin_r</strong> &#8211; number of radial bins.</li>
+<li><strong>FlagRLogBin</strong> &#8211; whether radial binning is in logspace.</li>
+<li><strong>RadialCount</strong> &#8211; counts in radial bins.</li>
+<li><strong>rmin</strong> &#8211; lower radial cut.</li>
+<li><strong>rmax</strong> &#8211; upper radial cut.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>it loads a tracer from the datafile.</p>
+<p>optionally, can apply radial cut given by rmin and rmax</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">by default, the tracer particles will be shuffled after loading, for easy creation of subsamples by copying later.
+to keep the original ordering of particles, set shuffle=False</p>
+</div>
+<dl class="method">
+<dt id="oPDF.Tracer.NFW_fit">
+<code class="descname">NFW_fit</code><span class="sig-paren">(</span><em>x0=[1, 1], minuittol=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.NFW_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.NFW_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>to fit an NFW density PDF with maximum likelihood.
+results will be printed on screen.
+also return minuit result and the minuit minimizer.</p>
+<p>..note:
+This is only intended for fitting the Dark Matter density profile to get the NFW parameters.
+The tracer particle mass should have been properly assigned or adjusted, 
+so that mP*number_density=physical_density.
+If you have sampled n particles from the full sample of n0 particles, 
+remember to adjust the mP of the sample to be mP0*n0/n, so that total mass is conserved.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.NFW_like">
+<code class="descname">NFW_like</code><span class="sig-paren">(</span><em>pars=[1, 1]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.NFW_like"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.NFW_like" title="Permalink to this definition">¶</a></dt>
+<dd><p>NFW log-likelihood. the halo should have been set to one of the NFW types before calling this.</p>
+<p>pars are the parameters to be passed to the halo.</p>
+<p>return log(likelihood)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.TSprof">
+<code class="descname">TSprof</code><span class="sig-paren">(</span><em>pars</em>, <em>proxy='L'</em>, <em>nbin=100</em>, <em>estimator=MeanPhaseRaw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.TSprof"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.TSprof" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate the likelihood inside equal-count bins of proxy.</p>
+<p>return the loglike or f.o.m. for the estimator in each bin, and the bin edges.</p>
+<p>proxy and nbin can also be of len&gt;1; in that case, use 
+self.Views[i].Views[j].lnL and self.Views[i].Views[j].proxybin
+to get the likelihood and bins in each node</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.TSprofCum">
+<code class="descname">TSprofCum</code><span class="sig-paren">(</span><em>pars</em>, <em>proxy='r'</em>, <em>bins=100</em>, <em>estimator=AD</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.TSprofCum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.TSprofCum" title="Permalink to this definition">¶</a></dt>
+<dd><p>cumulative TS profile.
+reuturn bin edges, ts, counts</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.clean">
+<code class="descname">clean</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.clean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.clean" title="Permalink to this definition">¶</a></dt>
+<dd><p>release the C-allocated memory for the tracer</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><em>offset=0</em>, <em>n=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>create a subsample by copying n particles starting from offset.
+if n==0, then copy all the particles starting from offset.</p>
+<p>return the subsample</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.create_nested_views">
+<code class="descname">create_nested_views</code><span class="sig-paren">(</span><em>viewtypes='EL', nbins=[10, 10]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.create_nested_views"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.create_nested_views" title="Permalink to this definition">¶</a></dt>
+<dd><p>create nested views, i.e., create views according to first proxy,
+then create sub-views for each view according to the second proxy and so on.</p>
+<p>viewtypes can be one, two or more proxies, e.g, &#8216;E&#8217;,&#8217;EL&#8217;,&#8217;LEr&#8217;.</p>
+<p>len(nbins) must match len(viewtypes).</p>
+<p>the energy need to be set before calling if creating E views</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.create_views">
+<code class="descname">create_views</code><span class="sig-paren">(</span><em>n=10</em>, <em>proxy='L'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.create_views"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.create_views" title="Permalink to this definition">¶</a></dt>
+<dd><p>sort the particles according to proxy, 
+and divide into n equal-size subsamples sequentially.
+these subsamples does not copy the particle data,
+but only points to the corresponding segments of data in the parent sample,
+so they are called views, and can be accessed through Tracer.Views[i] from
+the parent sample.
+the energy need to have been set before calling if proxy is E</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.destroy_views">
+<code class="descname">destroy_views</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.destroy_views"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.destroy_views" title="Permalink to this definition">¶</a></dt>
+<dd><p>erase any views from a tracer</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.dyn_fit">
+<code class="descname">dyn_fit</code><span class="sig-paren">(</span><em>estimator=RBinLike, x0=[1, 1], xtol=0.001, ftol_abs=0.01, maxiter=500, verbose=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.dyn_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.dyn_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>dynamical fit with the given estimator</p>
+<dl class="docutils">
+<dt>Parameters</dt>
+<dd><p class="first">estimator(Estimator): estimator to use. select one from <a class="reference internal" href="#oPDF.Estimators" title="oPDF.Estimators"><code class="xref py py-data docutils literal"><span class="pre">Estimators</span></code></a>.</p>
+<p>x0(array-like): initial parameter values</p>
+<p>xtol: tolerance in x to consider convergence</p>
+<p>ftol_abs: tolerance in function values to consider convergence.</p>
+<p>convergence is reached when both dx&lt;xtol and df&lt;ftol_abs between subsequent steps in the search.</p>
+<p>maxiter: maximum number of iterations</p>
+<p class="last">verbose: whether to print during each step.</p>
+</dd>
+<dt>Returns</dt>
+<dd><dl class="first last docutils">
+<dt>[x, fval, status_success] </dt>
+<dd><p class="first">x(array): the best fit parameter</p>
+<p>fval(float): log-likelihood or fig of merit, depending on estimator</p>
+<p class="last">status_success(bool): whether the search converged successfully, 1 if yes, 0 if no.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.gen_bin">
+<code class="descname">gen_bin</code><span class="sig-paren">(</span><em>bintype</em>, <em>nbin=30</em>, <em>logscale=True</em>, <em>equalcount=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.gen_bin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.gen_bin" title="Permalink to this definition">¶</a></dt>
+<dd><p>return bin edges. divide into nbin bins, with nbin+1 edges.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.like_eval">
+<code class="descname">like_eval</code><span class="sig-paren">(</span><em>estimator</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.like_eval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.like_eval" title="Permalink to this definition">¶</a></dt>
+<dd><p>evaluate likelihood or fig of merit with the given estimator in the attached halo.
+one has to call <a class="reference internal" href="#oPDF.Tracer.set_phase" title="oPDF.Tracer.set_phase"><code class="xref py py-func docutils literal"><span class="pre">set_phase()</span></code></a> before this.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.likelihood">
+<code class="descname">likelihood</code><span class="sig-paren">(</span><em>pars</em>, <em>estimator</em>, <em>auto_rbin=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.likelihood"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.likelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate likelihood. automatically prepare binning, orbits and eval like.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.load">
+<code class="descname">load</code><span class="sig-paren">(</span><em>datafile</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>load particles from datafile</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.nested_views_like">
+<code class="descname">nested_views_like</code><span class="sig-paren">(</span><em>estimator=AD</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.nested_views_like"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.nested_views_like" title="Permalink to this definition">¶</a></dt>
+<dd><p>evaluate likelihood in at the deepest views, and return the sum of them.
+The likelihood for each view is also availabel in Views[i].lnL</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.phase_density">
+<code class="descname">phase_density</code><span class="sig-paren">(</span><em>proxy='E'</em>, <em>bins=100</em>, <em>method='hist'</em>, <em>logscale=False</em>, <em>weight=False</em>, <em>return_data=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.phase_density"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.phase_density" title="Permalink to this definition">¶</a></dt>
+<dd><p>estimate density in proxy-theta space</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.phase_image">
+<code class="descname">phase_image</code><span class="sig-paren">(</span><em>pars</em>, <em>proxy</em>, <em>bins=30</em>, <em>logscale=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.phase_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.phase_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot an image of the particle distribution in proxy-theta space</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.plot_TSprof">
+<code class="descname">plot_TSprof</code><span class="sig-paren">(</span><em>pars</em>, <em>proxy='L'</em>, <em>nbin=100</em>, <em>estimator=MeanPhaseRaw</em>, <em>xtype='percent-phys'</em>, <em>linestyle='r-'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.plot_TSprof"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.plot_TSprof" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot the TS profile</p>
+<p>xtype: can be one of &#8216;percent&#8217;, &#8216;physical&#8217;, and &#8216;percent-phys&#8217;.</p>
+<blockquote>
+<div><p>when xtype=&#8217;percent&#8217;, plot the x-axis with percents.</p>
+<p>if xtype=&#8217;phys&#8217;, plot x-axis with physical values.</p>
+<p>if xtype=&#8217;percent-phys&#8217;, plot xaxis in percent scale but label with physical values.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.predict_radial_count">
+<code class="descname">predict_radial_count</code><span class="sig-paren">(</span><em>nbin=100</em>, <em>logscale=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.predict_radial_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.predict_radial_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>predict radial counts according to oPDF.</p>
+<p><a class="reference internal" href="#oPDF.Tracer.set_phase" title="oPDF.Tracer.set_phase"><code class="xref py py-func docutils literal"><span class="pre">set_phase()</span></code></a> must have been called prior to calling this.</p>
+<p>return predicted counts.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.print_data">
+<code class="descname">print_data</code><span class="sig-paren">(</span><em>i=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.print_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.print_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>print information of particle i</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.radial_count">
+<code class="descname">radial_count</code><span class="sig-paren">(</span><em>nbin=10</em>, <em>logscale=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.radial_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.radial_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>bin the particles radially, to be used for radial likelihood calculation.
+The histogram will be recorded in Tracer.RadialCount[].</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.radial_cut">
+<code class="descname">radial_cut</code><span class="sig-paren">(</span><em>rmin=None</em>, <em>rmax=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.radial_cut"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.radial_cut" title="Permalink to this definition">¶</a></dt>
+<dd><p>cut the tracer with bounds [rmin, rmax]. 
+if only rmin or rmax is given, the other bound is not changed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.resample">
+<code class="descname">resample</code><span class="sig-paren">(</span><em>seed=1024</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.resample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.resample" title="Permalink to this definition">¶</a></dt>
+<dd><p>create a bootstrap sample (sampling with replacement) of the same size from tracer
+return the new sample</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.scan_confidence">
+<code class="descname">scan_confidence</code><span class="sig-paren">(</span><em>estimator, x0, ngrids=[10, 10], dx=[0.5, 0.5], logscale=False, maxlike=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.scan_confidence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.scan_confidence" title="Permalink to this definition">¶</a></dt>
+<dd><p>scan significance levels around parameter value x0.</p>
+<p>it scans ngrids linear bins from x0-dx to x0+dx if logscale=False,
+or ngrids log bins from log10(x0)-dx to log10(x0)+dx if logscale=True.</p>
+<p>If maxlike is given, it is interpreted as the global maximum log-likelihood, and is used to determine significance for RBinLike estimator;
+otherwise the maximum likelihood is automatically scanned for RBinLike.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.scan_like">
+<code class="descname">scan_like</code><span class="sig-paren">(</span><em>estimator</em>, <em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.scan_like"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.scan_like" title="Permalink to this definition">¶</a></dt>
+<dd><p>scan a likelihood surface.</p>
+<p>x,y are the vectors specifying the binning along x and y dimensions</p>
+<dl class="docutils">
+<dt>return the likelihood value z on grids, to be used for contour plots as </dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">contour</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.select">
+<code class="descname">select</code><span class="sig-paren">(</span><em>flags</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.select"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.select" title="Permalink to this definition">¶</a></dt>
+<dd><p>select particles according to flags array, to create a subsample</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.set_energy">
+<code class="descname">set_energy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.set_energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.set_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>determine particle energy in the attached halo</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.set_orbits">
+<code class="descname">set_orbits</code><span class="sig-paren">(</span><em>set_phase=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.set_orbits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.set_orbits" title="Permalink to this definition">¶</a></dt>
+<dd><p>prepare particle orbits inside the attached halo</p>
+<dl class="docutils">
+<dt>set_phase: whether to calculate the phase-angle of each particle. </dt>
+<dd>phase angle is needed by AD and MeanPhase estimators, but not by RBinLike
+see estimator.need_phase for each estimator.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.set_phase">
+<code class="descname">set_phase</code><span class="sig-paren">(</span><em>pars</em>, <em>need_theta=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.set_phase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.set_phase" title="Permalink to this definition">¶</a></dt>
+<dd><p>prepare the phases for phase-related calculations such as like_eval or phase_density</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.shuffle">
+<code class="descname">shuffle</code><span class="sig-paren">(</span><em>seed=1024</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.shuffle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.shuffle" title="Permalink to this definition">¶</a></dt>
+<dd><p>shuffle particles randomly.</p>
+<p>seed: optional, seeds the random number generator for the shuffle</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.sort">
+<code class="descname">sort</code><span class="sig-paren">(</span><em>proxy</em>, <em>offset=0</em>, <em>n=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.sort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.sort" title="Permalink to this definition">¶</a></dt>
+<dd><p>sort the particles according to proxy</p>
+<p>proxy can be &#8216;E&#8217;,&#8217;L&#8217;,&#8217;r&#8217; or &#8216;flag&#8217;.</p>
+<dl class="docutils">
+<dt>offset, n: optional, sort n particles starting from offset.</dt>
+<dd>n=0 means sort all particles starting from offset.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.squeeze">
+<code class="descname">squeeze</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.squeeze"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.squeeze" title="Permalink to this definition">¶</a></dt>
+<dd><p>remove P.flag==0 (data[&#8216;flag&#8217;]==0) particles</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+<div class="section" id="module-myutils">
+<span id="utility-functions"></span><h2>Utility functions<a class="headerlink" href="#module-myutils" title="Permalink to this headline">¶</a></h2>
+<p>These utility functions may or may not be related to the oPDF method. Some of them are just general-purpose plotting or monitoring functions.</p>
+<dl class="function">
+<dt id="myutils.AD2Sig">
+<code class="descclassname">myutils.</code><code class="descname">AD2Sig</code><span class="sig-paren">(</span><em>AD</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/myutils.html#AD2Sig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#myutils.AD2Sig" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert AndersonDarling TS to sigma</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="myutils.ADSurvFunc">
+<code class="descclassname">myutils.</code><code class="descname">ADSurvFunc</code><span class="sig-paren">(</span><em>AD</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/myutils.html#ADSurvFunc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#myutils.ADSurvFunc" title="Permalink to this definition">¶</a></dt>
+<dd><p>survival function for AD test on uniform distributions</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="myutils.Chi2Sig">
+<code class="descclassname">myutils.</code><code class="descname">Chi2Sig</code><span class="sig-paren">(</span><em>x</em>, <em>dof</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/myutils.html#Chi2Sig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#myutils.Chi2Sig" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert chi-square value to significance level, for dof degrees of freedom</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="myutils.P2Sig">
+<code class="descclassname">myutils.</code><code class="descname">P2Sig</code><span class="sig-paren">(</span><em>pval</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/myutils.html#P2Sig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#myutils.P2Sig" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert pval to sigma</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="myutils.ProgressMonitor">
+<em class="property">class </em><code class="descclassname">myutils.</code><code class="descname">ProgressMonitor</code><span class="sig-paren">(</span><em>total_steps</em>, <em>total_show=100</em>, <em>init_show=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/myutils.html#ProgressMonitor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#myutils.ProgressMonitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>monitor progress of your loops</p>
+<p>init_show: initial value progress percentage, set to 0 if no reason
+total_steps: maximum iteration steps to monitor
+total_show: number of revealing times</p>
+<dl class="method">
+<dt id="myutils.ProgressMonitor.monitor_progress">
+<code class="descname">monitor_progress</code><span class="sig-paren">(</span><em>current_step</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/myutils.html#ProgressMonitor.monitor_progress"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#myutils.ProgressMonitor.monitor_progress" title="Permalink to this definition">¶</a></dt>
+<dd><p>put this inside loop to monitor progress, to print the percent of
+job finished.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="myutils.Sig2TS">
+<code class="descclassname">myutils.</code><code class="descname">Sig2TS</code><span class="sig-paren">(</span><em>sig</em>, <em>dof=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/myutils.html#Sig2TS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#myutils.Sig2TS" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert a sigma value to the 2*likelihood ratio</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="myutils.contour_handle">
+<code class="descclassname">myutils.</code><code class="descname">contour_handle</code><span class="sig-paren">(</span><em>color</em>, <em>linestyle='solid'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/myutils.html#contour_handle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#myutils.contour_handle" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a patch object to be used for labelling patch objects in legends</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="myutils.create31fig">
+<code class="descclassname">myutils.</code><code class="descname">create31fig</code><span class="sig-paren">(</span><em>sharex=True</em>, <em>sharey=False</em>, <em>figsize=(8</em>, <em>8)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/myutils.html#create31fig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#myutils.create31fig" title="Permalink to this definition">¶</a></dt>
+<dd><p>create a figure with 3 tightly packed subplots</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="myutils.density_of_points">
+<code class="descclassname">myutils.</code><code class="descname">density_of_points</code><span class="sig-paren">(</span><em>data</em>, <em>bins=100</em>, <em>method='kde'</em>, <em>weights=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/myutils.html#density_of_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#myutils.density_of_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>estimate density of points with kde or histogram2d</p>
+<p>data: should be shape [2,n] array</p>
+<p>bins: can be an integer or [nx,ny] for number of bins, an ndarray or a list of two arrays  for bin edges</p>
+<p>method: &#8216;kde&#8217; or &#8216;hist&#8217;, kernel-density-estimate or 2d-histogram estimate</p>
+<p>weights: whether to use weights or not. currently only supports hist method.</p>
+<dl class="docutils">
+<dt>return: (X,Y,Z)</dt>
+<dd>ready to be used for contour plots as contour(X, Y, Z). 
+X and Y are mid points of the bins on which Z is calculated.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="myutils.get_extent">
+<code class="descclassname">myutils.</code><code class="descname">get_extent</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/myutils.html#get_extent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#myutils.get_extent" title="Permalink to this definition">¶</a></dt>
+<dd><p>get extent for X,Y vectors or meshgrids.</p>
+<dl class="docutils">
+<dt>the output is (xmin,xmax,ymin,ymax), the edge-padded boudaries,</dt>
+<dd>assuming X,Y specifies the mid points of bins and uniformly spaced.</dd>
+</dl>
+<p>can be used to specify extent for imshow()</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="myutils.percent2level">
+<code class="descclassname">myutils.</code><code class="descname">percent2level</code><span class="sig-paren">(</span><em>p</em>, <em>z</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/myutils.html#percent2level"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#myutils.percent2level" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert percentiles to levels</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="myutils.percentile_contour">
+<code class="descclassname">myutils.</code><code class="descname">percentile_contour</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>Z</em>, <em>percents=0.683</em>, <em>colors=None</em>, <em>fill=False</em>, <em>linestyles='solid'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/myutils.html#percentile_contour"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#myutils.percentile_contour" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot contour at specific percentile levels</p>
+<blockquote>
+<div><p>X,Y can be both 2-d arrays as Z, or 1-d array specifying the column(horizontally varying) and row coordinates for Z.</p>
+<p>percents can be a list, specify the contour percentile levels</p>
+<p>colors should be a tuple, e.g, (r,)</p>
+<p>fill: bool, whether to plot filled contours</p>
+<p>kwargs specify linestyles</p>
+</div></blockquote>
+<dl class="docutils">
+<dt>return:</dt>
+<dd>a handle artist of the same linestyle (but not the contour object) to be used in legends</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="myutils.plot_circle">
+<code class="descclassname">myutils.</code><code class="descname">plot_circle</code><span class="sig-paren">(</span><em>cen=[0, 0], r=1, **kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/myutils.html#plot_circle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#myutils.plot_circle" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot a circle</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="myutils.plot_cov_ellipse">
+<code class="descclassname">myutils.</code><code class="descname">plot_cov_ellipse</code><span class="sig-paren">(</span><em>cov</em>, <em>pos</em>, <em>nstd=1</em>, <em>fill=False</em>, <em>ax=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/myutils.html#plot_cov_ellipse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#myutils.plot_cov_ellipse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots an <cite>nstd</cite> sigma error ellipse based on the specified covariance
+matrix (<cite>cov</cite>). Additional keyword arguments are passed on to the 
+ellipse patch artist.</p>
+<p>Parameters</p>
+<blockquote>
+<div><p>cov : The 2x2 covariance matrix to base the ellipse on</p>
+<dl class="docutils">
+<dt>pos <span class="classifier-delimiter">:</span> <span class="classifier">The location of the center of the ellipse. Expects a 2-element</span></dt>
+<dd>sequence of [x0, y0].</dd>
+<dt>nstd <span class="classifier-delimiter">:</span> <span class="classifier">The radius of the ellipse in numbers of standard deviations.</span></dt>
+<dd>Defaults to 1 standard deviations.</dd>
+</dl>
+<p>ax : The axis that the ellipse will be plotted on. Defaults to the current axis.</p>
+<p>Additional keyword arguments are pass on to the ellipse patch.</p>
+</div></blockquote>
+<dl class="docutils">
+<dt>Returns</dt>
+<dd>A matplotlib ellipse artist</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="myutils.shiftedColorMap">
+<code class="descclassname">myutils.</code><code class="descname">shiftedColorMap</code><span class="sig-paren">(</span><em>cmap</em>, <em>start=0</em>, <em>midpoint=0.5</em>, <em>stop=1.0</em>, <em>name='shiftedcmap'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/myutils.html#shiftedColorMap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#myutils.shiftedColorMap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to offset the &#8220;center&#8221; of a colormap. Useful for
+data with a negative min and positive max and you want the
+middle of the colormap&#8217;s dynamic range to be at zero</p>
+<p>Input</p>
+<blockquote>
+<div><p>cmap : The matplotlib colormap to be altered</p>
+<dl class="docutils">
+<dt>start <span class="classifier-delimiter">:</span> <span class="classifier">Offset from lowest point in the colormap&#8217;s range.</span></dt>
+<dd>Defaults to 0.0 (no lower ofset). Should be between
+0.0 and <cite>midpoint</cite>.</dd>
+<dt>midpoint <span class="classifier-delimiter">:</span> <span class="classifier">The new center of the colormap. Defaults to </span></dt>
+<dd>0.5 (no shift). Should be between 0.0 and 1.0. In
+general, this should be  1 - vmax/(vmax + abs(vmin))
+For example if your data range from -15.0 to +5.0 and
+you want the center of the colormap at 0.0, <cite>midpoint</cite>
+should be set to  1 - 5/(5 + 15)) or 0.75</dd>
+<dt>stop <span class="classifier-delimiter">:</span> <span class="classifier">Offset from highets point in the colormap&#8217;s range.</span></dt>
+<dd>Defaults to 1.0 (no upper ofset). Should be between
+<cite>midpoint</cite> and 1.0.</dd>
+</dl>
+<p>Credit: <a class="reference external" href="http://stackoverflow.com/questions/7404116/defining-the-midpoint-of-a-colormap-in-matplotlib">http://stackoverflow.com/questions/7404116/defining-the-midpoint-of-a-colormap-in-matplotlib</a></p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="myutils.skeleton">
+<code class="descclassname">myutils.</code><code class="descname">skeleton</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>nbin=10</em>, <em>alpha=0.683</em>, <em>weights=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/myutils.html#skeleton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#myutils.skeleton" title="Permalink to this definition">¶</a></dt>
+<dd><p>to divide x into bins and give estimation of center and variance of y inside each bin</p>
+<dl class="docutils">
+<dt>input:</dt>
+<dd><p class="first">x,y: column vectors to extract skeleton from</p>
+<p>nbin: number of bins or bin edges for x</p>
+<p class="last">alpha: confidence level for boundary estimation</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="doc.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Full API Documentation</a><ul>
+<li><a class="reference internal" href="#module-oPDF">oPDF module</a><ul>
+<li><a class="reference internal" href="#variables-and-constants">Variables and Constants</a></li>
+<li><a class="reference internal" href="#classes">Classes</a><ul>
+<li><a class="reference internal" href="#global-parameters">Global Parameters</a></li>
+<li><a class="reference internal" href="#halo">Halo</a></li>
+<li><a class="reference internal" href="#tracer">Tracer</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-myutils">Utility functions</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/api.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="doc.html">oPDF 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2014, Jiaxin Han.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3b1.
+    </div>
+  </body>
+</html>
