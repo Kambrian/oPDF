@@ -1,6 +1,6 @@
 
-`oPDF <http://kambrian.github.io/oPDF>`_ tutorial
-=================================================
+oPDF tutorial
+=============
 
 ``oPDF`` is a code for modelling the phase space distribution of
 steady-state tracers in spherical potentials. For more information,
@@ -17,7 +17,8 @@ You can use this tutorial interactively in ipython notebook by running
 from the root directory of the oPDF code. This will open your browser,
 and you can click ``tutorial.ipynb`` in the opened webpage. If that does
 not work, then simply continue reading this document as a webpage. For
-the full API documentation, check here.
+the full API documentation, check
+`here <http://kambrian.github.io/oPDF/doc/api>`_.
 
 Getting Started
 ---------------
