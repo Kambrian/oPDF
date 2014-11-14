@@ -240,7 +240,8 @@ void resample_tracer_particles(unsigned long int seed, Tracer_t *ReSample, Trace
     gsl_rng * r;
 	
 	copy_tracer_particles(0, -1, ReSample, Sample); //null copy
-	ReSample->P=malloc(sizeof(Particle_t)*Sample->nP);
+	ReSample->nP=Sample->nP;
+	ReSample->P=malloc(sizeof(Particle_t)*ReSample->nP);
     /* create a generator chosen by the
        environment variable GSL_RNG_TYPE */
     gsl_rng_env_setup();
@@ -248,7 +249,7 @@ void resample_tracer_particles(unsigned long int seed, Tracer_t *ReSample, Trace
     r = gsl_rng_alloc (T);
     gsl_rng_set(r,seed);
     
-    gsl_ran_sample(r, ReSample->P, Sample->nP, Sample->P, Sample->nP, sizeof(Particle_t));
+    gsl_ran_sample(r, ReSample->P, ReSample->nP, Sample->P, Sample->nP, sizeof(Particle_t));
     
     gsl_rng_free (r);
 	

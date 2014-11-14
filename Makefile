@@ -50,18 +50,20 @@ CFLAGS+= -g -Wall
 LDFLAGS+= -g
 endif
 
-VPATH=C
+VPATH=C $(DOC_SRC_DIR)
 #-----File Dependencies----------------------
 SRC_COMM = hdf_util.c globals.c cosmology.c mymath.c models.c tracer.c halo.c template.c nfw.c
 OBJS_COMM= $(patsubst %.f90,%.f.o,$(SRC_COMM:%.c=%.o))
+DOC= html latexpdf
 
+OPDF_LIB=liboPDF.so
 #-----targets and common rules--------------------------------
 default: lib
 
-tutorial: doc/tutorial.html
-doc/tutorial.html: tutorial.ipynb
-	ipython nbconvert --to html $^
-	mv tutorial.html $@
+lib: $(OPDF_LIB)
+
+
+doc: $(DOC)
 
 #the default rule will handle the rest
 # %.o : %.c
@@ -70,15 +72,30 @@ doc/tutorial.html: tutorial.ipynb
 %.f.o : %.f90
 	$(FC) $< $(FFLAGS) -c -o $@
 	
-lib: CFLAGS+=-fPIC
-lib: FFLAGS+=-fPIC
-lib: liboPDF.so
+$(OPDF_LIB): CFLAGS+=-fPIC
+$(OPDF_LIB): FFLAGS+=-fPIC
+$(OPDF_LIB):$(OBJS_COMM)
+	$(CC) -shared -Wl,-soname,$(OPDF_LIB) -o $(OPDF_LIB) $^ $(LDFLAGS)
+#------documentation----------------------
 
-liboPDF.so:$(OBJS_COMM)
-	$(CC) -shared -Wl,-soname,liboPDF.so -o liboPDF.so $^ $(LDFLAGS)
-	
+DOC_DIR=Doc
+DOC_SRC_DIR=$(DOC_DIR)/source
+$(DOC): doc.rst tutorial.rst api.rst $(OPDF_LIB)
+	$(MAKE) $@ -C $(DOC_DIR)
+
+$(DOC_SRC_DIR)/tutorial.rst: tutorial.ipynb docclean
+	ipython nbconvert --to rst $^
+	mv tutorial.rst tutorial_files $(DOC_SRC_DIR)/
+
+html_tutorial: $(DOC_DIR)/tutorial.html
+$(DOC_DIR)/tutorial.html: tutorial.ipynb
+	ipython nbconvert --to html $^
+	mv tutorial.html $@
+
+docclean:
+	cd $(DOC_SRC_DIR) && rm -rf tutorial.rst tutorial_files
 #-----Other stuff----------------------------
-.PHONY : clean depend distclean
+.PHONY : clean depend distclean docclean
 
 depend:
 	makedepend --$(CFLAGS)-- -Y $(SRC_COMM) $(SRC_MAIN) $(SRC)
@@ -86,8 +103,8 @@ depend:
 clean:
 	rm -f $(OBJS) $(OBJS_COMM) $(OBJS_MAIN)
 	
-distclean: clean
-	rm -f $(EXEC) liboPDF.so *~ *.pyc py/*.pyc
+distclean: clean docclean
+	rm -f $(EXEC) $(OPDF_LIB) *~ *.pyc py/*.pyc
 #-----end--- auto dependencies below---------	
 # DO NOT DELETE
 

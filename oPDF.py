@@ -1,3 +1,6 @@
+""" Python interface to the C code for oPDF modelling.
+
+It wraps the C functions into python classes with ctypes."""
 from math import *
 import numpy as np
 import ctypes,os
@@ -10,7 +13,8 @@ from iminuit.ConsoleFrontend import ConsoleFrontend
 #import copy
 
 rootdir=os.path.dirname(__file__)
-
+if rootdir=='':
+  rootdir='.'
 #=======================load the library===============================
 lib=ctypes.CDLL(rootdir+"/liboPDF.so")
 #=======================prototype the library==========================
@@ -33,6 +37,7 @@ class global_units(ctypes.Structure):
 lib.set_units.restype=None
 lib.set_units.argtypes=[ctypes.c_double, ctypes.c_double, ctypes.c_double]
 class globals_t(ctypes.Structure):
+  ''' global variables of the module. It controls numerical precision, internal units, and cosmology. '''
   _fields_=[('tol',global_tol),
 			('cosmology',global_cosm),
 			('units',global_units)]
@@ -42,7 +47,7 @@ class globals_t(ctypes.Structure):
 	lib.default_global_pars()
   
   def set_units(self, MassInMsunh=0.73e10, LengthInKpch=0.73, VelInKms=1.):
-	'''set system of units,
+	'''set system of units.
 	specify Mass in Msun/h, Length in kpc/h, Velocity in km/s'''
 	lib.set_units(MassInMsunh, LengthInKpch, VelInKms)
 
@@ -59,7 +64,6 @@ Globals=globals_t.in_dll(lib, 'Globals')
 MaxNPar=10
 Param_t=ctypes.c_double*MaxNPar
 class Halo_t(ctypes.Structure):
-  '''all quantities are physical'''
   _fields_=[('pars', Param_t), #parameter values
 			('scales', Param_t), #parameter scales. real parameters are set by pars*scales
 			('z', ctypes.c_double),
@@ -87,13 +91,35 @@ lib.halo_pot.argtypes=[ctypes.c_double, Halo_p]
 
 HaloTypes=NamedEnum('NFWMC NFWPotsRs NFWRhosRs TMPMC TMPPotScaleRScale CoreRhosRs CorePotsRs')
 class Halo(Halo_t):
-  '''general halo'''
+  '''a general halo describing the potential. It has the following properties
+  
+  :ivar pars: raw parameter values. do not change them manually, use :func:`set_param` to set them.
+  :ivar scales: parameter scales. use :func:`set_type` to set them.
+  :ivar virtype: virial definition
+  :ivar type: parametrization type. One of :data:`HaloTypes`.
+  
+  Depending on the type of the halo, some of the following properties may be calculated during :func:`set_param`:
+  
+  :ivar M: mass 
+  :ivar c: concentration
+  :ivar Rv: virial radius
+  :ivar Pots: Pots=4*pi*G*Rhos*Rs^2.
+  :ivar Rhos: scale density for NFW
+  :ivar Rs: scale radius 
+  :ivar RScale: Rs/Rs0 for TMP profile
+  :ivar PotScale: Pots/Pots0 for TMP profile
+  '''
   def __init__(self, halotype=HaloTypes.NFWMC, virtype=VirTypes.C200, redshift=0., scales=None, TMPid=-1):
 	'''define a halo by specifiying the parametrization, virial definition and redshift of halo
-	halotype: halo parametrization, one of the HaloTypes members
+	
+	halotype: halo parametrization, one of the :data:`HaloTypes` members
+	
 	virtype: virial definition, one of the VirTypes members
+	
 	redshift: redshift of halo
+	
 	scales: scales of halo parameters, array-like, of the same shape as parameters. default to all-ones if None. physical parameters will be params*scales
+	
 	TMPid: template id. only required when halotype is of template type'''
 	Halo_t.__init__(self)
 	#print "initing halo"
@@ -101,9 +127,13 @@ class Halo(Halo_t):
 
   def set_type(self, halotype=HaloTypes.NFWMC, virtype=VirTypes.C200, redshift=0., scales=None, TMPid=-1):
 	'''set the parametrization, virial definition and redshift of halo
-	halotype: halo parametrization, one of the HaloTypes members
+	
+	halotype: halo parametrization, one of the :data:`HaloTypes` members
+	
 	virtype: virial definition, one of the VirTypes members
+	
 	redshift: redshift of halo
+	
 	scales: scales of halo parameters, array-like, of the same shape as parameters. default to ones if not specified. physical parameters will be params*scales'''	
 	if scales is None:
 	  scales=np.ones(MaxNPar)
@@ -111,6 +141,7 @@ class Halo(Halo_t):
 	
   def set_param(self, pars=[1.,1.]):
 	'''set the parameters of the halo
+	
 	pars: parameters describing the halo'''
 	lib.halo_set_param(Param_t(*pars), ctypes.byref(self))
   def mass(self, r):
@@ -129,6 +160,7 @@ class Halo(Halo_t):
 	return m
   def get_current_TMPid():
 	'''get the id of the template currently loaded in the system.
+	
 	this func can be used to check whether the loaded template 
 	is the template of the current halo, just in case the template does not match'''
 	return lib.get_current_TMPid(ctypes.byref(self))
@@ -151,7 +183,8 @@ class Particle_t(ctypes.Structure):
 	    ('vr', ctypes.c_double),
 	    ('theta', ctypes.c_double),
 	    ('rlim', ctypes.c_double*2)
-	    ]  
+	    ]
+  
 Particle_p=ctypes.POINTER(Particle_t)  
 
 class Tracer_t(ctypes.Structure):
@@ -171,7 +204,7 @@ Tracer_t._fields_=[('lnL', ctypes.c_double),
 				   ('nView', ctypes.c_int),
 				   ('ViewType', ctypes.c_char),
 				   ('Views', Tracer_p)
-				  ]
+				  ]#: Tracer fields
 lib.load_tracer_particles.restype=None
 lib.load_tracer_particles.argtypes=[ctypes.c_char_p, Tracer_p]
 lib.cut_tracer_particles.restype=None
@@ -249,22 +282,47 @@ lib.DynFit.argtypes=[ctypes.POINTER(ctypes.c_double), ctypes.c_int, ctypes.c_dou
 lib.predict_radial_count.restype=None
 lib.predict_radial_count.argtypes=[ctypes.POINTER(ctypes.c_double), ctypes.c_int, ctypes.c_int, Tracer_p]
 
-def lib_open():
+def _lib_open():
   '''initialize the library'''
   Globals.set_defaults()
   lib.alloc_integration_space()
   
-def lib_close():  
+def _lib_close():  
   '''finalize the library'''
   lib.free_integration_space()
   
 class Tracer(Tracer_t):
-  ''' Tracer: a population of tracer particles.'''
+  ''' Tracer: a population of tracer particles.
+    
+  :ivar halo: the halo (potential, :py:class:oPDF.Halo) for the tracer.
+  :ivar lnL: likelihood or distance for the sample from the previous likelihood calculation, depending on estimator.
+  :ivar nP: number of particles.
+  :ivar mP: average particle mass.
+  :ivar data: particle data, numpy record array format. It includes the following fields:
+	 ('haloid', 'subid', 'flag', 'w', 'r', 'K', 'L2', 'L', 'x', 'v', 'E', 'T', 'vr', 'theta', 'rlim')
+	 
+  .. note::
+	 - The `w` field is the particle mass in units of the average particle mass. These are all ones if no particle mass is given in the datafile.
+	 - the `haloid` and `subid` fields are only filled if you have `SubID` and `HaloID` datasets in the datafile when loading. 
+	 - The `E`,`theta` and `rlim` fields are the energy, phase-angle, and radial limits (peri and apo-center distances) of the orbits.These depend on the potential, and are only filled when you have done some calculation in a halo, or have filled them explicitly with :py:func:`set_phase`.
+  
+  .. note::
+     The following members are provided for information, but do not manually assign to them. use :py:func:`radial_count` and :py:func:`radial_cut` to set them.
+  
+  :ivar nbin_r: number of radial bins.
+  :ivar FlagRLogBin: whether radial binning is in logspace.
+  :ivar RadialCount: counts in radial bins. 
+  :ivar rmin: lower radial cut.
+  :ivar rmax: upper radial cut.
+  '''
   def __init__(self, datafile=None, rmin=None, rmax=None, shuffle=True):
-	'''load a tracer from the datafile. 
+	'''it loads a tracer from the datafile. 
+	
 	optionally, can apply radial cut given by rmin and rmax
-	by default, the tracer particles will be shuffled after loading, for easy creation of subsamples by copying later.
-	to keep the original ordering of particles, set shuffle=False'''
+	
+	.. note:: 
+	   by default, the tracer particles will be shuffled after loading, for easy creation of subsamples by copying later.
+	   to keep the original ordering of particles, set shuffle=False'''
 	Tracer_t.__init__(self)
 	self._pointer=ctypes.byref(self)
 	self.nP=0
@@ -304,9 +362,10 @@ class Tracer(Tracer_t):
 	#pass
 	
   def clean(self):
-	''' never define it as __del__ and rely on the garbage collector.
-	it's dangerous. gc may never call your __del__.
-	call it yourself.'''
+	'''release the C-allocated memory for the tracer'''
+	#never define it as __del__ and rely on the garbage collector.
+	#it's dangerous. gc may never call your __del__.
+	#call it yourself.
 	#print "cleaning Tracer ", id(self)
 	lib.free_tracer(self._pointer)
 	#print self.nView
@@ -314,6 +373,7 @@ class Tracer(Tracer_t):
   def copy(self, offset=0, n=0):
 	'''create a subsample by copying n particles starting from offset.
 	if n==0, then copy all the particles starting from offset.
+	
 	return the subsample'''
 	newsample=Tracer()
 	lib.copy_tracer_particles(int(offset), int(n), newsample._pointer, self._pointer)
@@ -334,17 +394,20 @@ class Tracer(Tracer_t):
 	
   def shuffle(self, seed=1024):
 	'''shuffle particles randomly.
+	
 	seed: optional, seeds the random number generator for the shuffle'''
 	lib.shuffle_tracer_particles(ctypes.c_ulong(seed), self._pointer)
 
   def sort(self, proxy, offset=0,n=0):
 	'''sort the particles according to proxy
-	proxy can be 'E','L2','r' or 'flag'.
+	
+	proxy can be 'E','L','r' or 'flag'.
+	
 	offset, n: optional, sort n particles starting from offset.
-	n=0 means sort all particles starting from offset.'''
+	  n=0 means sort all particles starting from offset.'''
 	if n==0:
 	  n=self.nP-offset
-	sort_func={'flag': lib.sort_part_flag, 'E': lib.sort_part_E, 'L2': lib.sort_part_L, 'r': lib.sort_part_R}
+	sort_func={'flag': lib.sort_part_flag, 'E': lib.sort_part_E, 'L': lib.sort_part_L, 'r': lib.sort_part_R}
 	sort_func[proxy](ctypes.byref(Particle_t.from_buffer(self.P[offset])), n)
 
   def resample(self, seed=1024):
@@ -367,14 +430,15 @@ class Tracer(Tracer_t):
 	  self.__update_array()
 	  
   def radial_count(self, nbin=10, logscale=True):
-	'''bin the particles radially, to be used for radial likelihood calculation
+	'''bin the particles radially, to be used for radial likelihood calculation.
 	The histogram will be recorded in Tracer.RadialCount[].'''
 	lib.count_tracer_radial(self._pointer, nbin, logscale)
 
   def predict_radial_count(self, nbin=100, logscale=True):
 	'''predict radial counts according to oPDF.
-	Tracer must be prepared with a halo (set_energy,set_orbits) 
-	before predicting.
+	
+	:func:`set_phase` must have been called prior to calling this.
+	
 	return predicted counts.'''
 	n=np.empty(nbin,dtype='f8')
 	lib.predict_radial_count(n.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), nbin, logscale, self._pointer)
@@ -402,7 +466,7 @@ class Tracer(Tracer_t):
 	these subsamples does not copy the particle data,
 	but only points to the corresponding segments of data in the parent sample,
 	so they are called views, and can be accessed through Tracer.Views[i] from
-	the parent sample
+	the parent sample.
 	the energy need to have been set before calling if proxy is E'''
 	lib.create_tracer_views(self._pointer, n, proxy)
 	
@@ -421,8 +485,10 @@ class Tracer(Tracer_t):
 	print '================='
 
   def NFW_like(self, pars=[1,1]):
-	'''NFW log-likelihood. a NFW halo should have been attached before calling this
+	'''NFW log-likelihood. the halo should have been set to one of the NFW types before calling this.
+	
 	pars are the parameters to be passed to the halo.
+	
 	return log(likelihood)'''
 	return lib.NFW_like(Param_t(*pars), self._pointer)
 	
@@ -432,23 +498,25 @@ class Tracer(Tracer_t):
 
   def set_orbits(self, set_phase=True):
 	'''prepare particle orbits inside the attached halo
+	
 	set_phase: whether to calculate the phase-angle of each particle. 
-	           phase angle is needed by AD and MeanPhase estimators,
-	           but not by RBinLike'''
+	  phase angle is needed by AD and MeanPhase estimators, but not by RBinLike
+	  see estimator.need_phase for each estimator.
+	'''
 	lib.tracer_set_orbits(self._pointer, set_phase)
 
-  def like_eval(self, estimator):
-	'''evaluate likelihood or fig of merit with the given estimator in the attached halo.
-	one has to call set_energy() and set_orbits() before this.
-	'''
-	return lib.like_eval(estimator.value, self._pointer)
-  
   def set_phase(self, pars, need_theta=True):
 	'''prepare the phases for phase-related calculations such as like_eval or phase_density'''
 	self.halo.set_param(pars)
 	self.set_energy()
 	self.set_orbits(need_theta)
-	
+
+  def like_eval(self, estimator):
+	'''evaluate likelihood or fig of merit with the given estimator in the attached halo.
+	one has to call :func:`set_phase` before this.
+	'''
+	return lib.like_eval(estimator.value, self._pointer)
+  	
   def likelihood(self, pars, estimator, auto_rbin=True):
 	'''calculate likelihood. automatically prepare binning, orbits and eval like.'''
 	if auto_rbin and estimator==Estimators.RBinLike:
@@ -459,8 +527,11 @@ class Tracer(Tracer_t):
   def create_nested_views(self, viewtypes='EL', nbins=[10,10]):
 	'''create nested views, i.e., create views according to first proxy,
 	then create sub-views for each view according to the second proxy and so on.
+	
 	viewtypes can be one, two or more proxies, e.g, 'E','EL','LEr'.
+	
 	len(nbins) must match len(viewtypes).
+	
 	the energy need to be set before calling if creating E views'''
 	try:
 	  nbins=list(nbins)
@@ -479,17 +550,24 @@ class Tracer(Tracer_t):
 	return lib.nested_views_like(estimator.value, self._pointer, nbin_r, logscale)
   
   def scan_like(self, estimator, x, y):
-	'''scan a likelihood surface to be used for contour plots as contour(x,y,z)
-	x,y are the vectors specifying the binning along x and y dimensions'''
+	'''scan a likelihood surface.
+	
+	x,y are the vectors specifying the binning along x and y dimensions
+	
+	return the likelihood value z on grids, to be used for contour plots as 
+	  >>> contour(x,y,z)
+	'''
 	if estimator==Estimators.RBinLike:
 	  self.radial_count(estimator.nbin, estimator.logscale)
 	z=[self.likelihood([m,c], estimator, False) for m in x for c in y]
 	return np.array(z).reshape([len(y),len(x)], order="F")
   
   def scan_confidence(self, estimator, x0, ngrids=[10,10], dx=[0.5, 0.5], logscale=False, maxlike=None):
-	'''scan significance levels around parameter value x0. 
+	'''scan significance levels around parameter value x0.
+	
 	it scans ngrids linear bins from x0-dx to x0+dx if logscale=False,
 	or ngrids log bins from log10(x0)-dx to log10(x0)+dx if logscale=True.
+	
 	If maxlike is given, it is interpreted as the global maximum log-likelihood, and is used to determine significance for RBinLike estimator;
 	otherwise the maximum likelihood is automatically scanned for RBinLike.
 	'''
@@ -518,7 +596,9 @@ class Tracer(Tracer_t):
     
   def TSprof(self, pars, proxy='L', nbin=100, estimator=Estimators.MeanPhaseRaw):
 	'''calculate the likelihood inside equal-count bins of proxy.
+	
 	return the loglike or f.o.m. for the estimator in each bin, and the bin edges.
+	
 	proxy and nbin can also be of len>1; in that case, use 
 	self.Views[i].Views[j].lnL and self.Views[i].Views[j].proxybin
 	to get the likelihood and bins in each node'''
@@ -535,9 +615,14 @@ class Tracer(Tracer_t):
   
   def plot_TSprof(self, pars, proxy='L', nbin=100, estimator=Estimators.MeanPhaseRaw, xtype='percent-phys', linestyle='r-'):
 	'''plot the TS profile
-	xtype can be one of 'percent', 'physical', and 'percent-phys'. when xtype='percent', plot the x-axis with percents.
-	if xtype='phys', plot x-axis with physical values. 
-	if xtype='percent-phys', plot xaxis in percent scale but label with physical values.
+	
+	xtype: can be one of 'percent', 'physical', and 'percent-phys'. 
+	  
+	  when xtype='percent', plot the x-axis with percents.
+	  
+	  if xtype='phys', plot x-axis with physical values. 
+	  
+	  if xtype='percent-phys', plot xaxis in percent scale but label with physical values.
 	'''
 	ts,x=self.TSprof(pars, proxy, nbin, estimator)
 	percents=(np.arange(nbin)+0.5)/nbin*100
@@ -558,7 +643,7 @@ class Tracer(Tracer_t):
 	return h 
 	
   def TSprofCum(self, pars, proxy='r', bins=100, estimator=Estimators.AD):
-	'''cumulative TS profile
+	'''cumulative TS profile.
 	reuturn bin edges, ts, counts'''
 	self.halo.set_param(pars)
 	self.set_energy()
@@ -591,13 +676,16 @@ class Tracer(Tracer_t):
 
   def NFW_fit(self, x0=[1,1], minuittol=1):
 	''' to fit an NFW density PDF with maximum likelihood.
+	results will be printed on screen.
+	also return minuit result and the minuit minimizer.
+	
+	..note:
 	This is only intended for fitting the Dark Matter density profile to get the NFW parameters.
 	The tracer particle mass should have been properly assigned or adjusted, 
 	so that mP*number_density=physical_density.
 	If you have sampled n particles from the full sample of n0 particles, 
 	remember to adjust the mP of the sample to be mP0*n0/n, so that total mass is conserved.
-	results will be printed on screen.
-	also return minuit result and the minuit minimizer'''
+	'''
 	like=lambda m,c: -self.NFW_like([m,c])
 	#profilelikelihood ratio error-def: chi-square1
 	m=Minuit(like, m=x0[0], c=x0[1], print_level=0, pedantic=False, error_m=0.1, error_c=0.1, errordef=0.5,frontend=ConsoleFrontend())
@@ -607,20 +695,33 @@ class Tracer(Tracer_t):
 	m.print_matrix()
 	return result,m
   
-  def dyn_fit(self, estimator, x0=[1,1], xtol=1e-3, ftol_abs=0.01, maxiter=500, verbose=0):
-	''' dynamical fit with the given estimator
-	input: 	estimator: estimator to use. select one from Estimators.
-			x0: initial parameter values
-			xtol: tolerance in x to consider convergence
-			ftol_abs: tolerance in function values to consider convergence. 
-			          convergence is reached when both dx<xtol and df<ftol_abs between subsequent steps in the search.
-			maxiter: maximum number of iterations
-			verbose: whether to print during each step.
-	return: [x, fval, status_success], 
-			x: the best fit parameter  
-			fval: log-likelihood or fig of merit, depending on estimator
-			status_success: whether the search converged successfully, 1 if yes, 0 if no.
-			'''
+  def dyn_fit(self, estimator=Estimators.RBinLike, x0=[1,1], xtol=1e-3, ftol_abs=0.01, maxiter=500, verbose=0):
+	''' 
+	dynamical fit with the given estimator
+	
+	Parameters
+		estimator(Estimator): estimator to use. select one from :data:`Estimators`.
+		
+		x0(array-like): initial parameter values
+		
+		xtol: tolerance in x to consider convergence
+		
+		ftol_abs: tolerance in function values to consider convergence. 
+		
+		convergence is reached when both dx<xtol and df<ftol_abs between subsequent steps in the search.
+		
+		maxiter: maximum number of iterations
+		
+		verbose: whether to print during each step.
+	
+	Returns
+	  [x, fval, status_success] 
+		x(array): the best fit parameter  
+		
+		fval(float): log-likelihood or fig of merit, depending on estimator
+		
+		status_success(bool): whether the search converged successfully, 1 if yes, 0 if no.
+	'''
 	if estimator==Estimators.RBinLike:
 	  self.radial_count(estimator.nbin, estimator.logscale)
 	status_success=lib.DynFit(Param_t(*x0), len(x0), xtol, ftol_abs, maxiter, verbose, estimator.value, self._pointer)	
@@ -666,7 +767,7 @@ class Tracer(Tracer_t):
 	#like=lambda x: -self.freeze_and_like(x, estimator) #distance
 	#return fmin_gsl(like, x0, xtol=xtol, ftolabs=ftolabs, maxiter=500, full_output=True)
 
-lib_open() #allocate integration space
+_lib_open() #allocate integration space
 
 if __name__=="__main__":
   datafile=rootdir+'/data/mockhalo.hdf5'
@@ -677,7 +778,7 @@ if __name__=="__main__":
   #Sample.data[1]['r']=2
   Sample.radial_cut(1,1000)
   Sample.print_data(1)
-  Sample.sort('L2')
+  Sample.sort('L')
   Sample.print_data(1)
   Sample.halo.set_type(HaloTypes.NFWMC, scales=[183.5017,16.1560])
   Sample.radial_count(10)
@@ -694,4 +795,4 @@ if __name__=="__main__":
 	  #Sample.data[1]['r']=2
 	  #Sample.radial_cut(rmin=10)
 	  #Sample.print_data()
-  #lib.close()
+#_lib_close()

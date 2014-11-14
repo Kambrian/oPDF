@@ -1,4 +1,5 @@
-""" utility functions """
+""" These utility functions may or may not be related to the oPDF method. Some of them are just general-purpose plotting or monitoring functions.
+"""
 import sys
 import numpy as np
 from scipy.stats import gaussian_kde,norm,chi2
@@ -6,10 +7,10 @@ import matplotlib
 #matplotlib.user('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
-
 from matplotlib.ticker import MaxNLocator # added 
 
 def create31fig(sharex=True, sharey=False, figsize=(8,8)):
+    '''create a figure with 3 tightly packed subplots'''
     f,ax = plt.subplots(3, sharex=sharex, sharey=sharey, figsize=figsize)
     f.subplots_adjust(hspace=0)
     plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
@@ -24,20 +25,24 @@ def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
     middle of the colormap's dynamic range to be at zero
 
     Input
-    -----
+    
       cmap : The matplotlib colormap to be altered
+      
       start : Offset from lowest point in the colormap's range.
           Defaults to 0.0 (no lower ofset). Should be between
           0.0 and `midpoint`.
+      
       midpoint : The new center of the colormap. Defaults to 
           0.5 (no shift). Should be between 0.0 and 1.0. In
           general, this should be  1 - vmax/(vmax + abs(vmin))
           For example if your data range from -15.0 to +5.0 and
           you want the center of the colormap at 0.0, `midpoint`
           should be set to  1 - 5/(5 + 15)) or 0.75
+      
       stop : Offset from highets point in the colormap's range.
           Defaults to 1.0 (no upper ofset). Should be between
           `midpoint` and 1.0.
+      
       Credit: http://stackoverflow.com/questions/7404116/defining-the-midpoint-of-a-colormap-in-matplotlib
     '''
     cdict = {
@@ -70,6 +75,7 @@ def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
     return newcmap
   
 def plot_circle(cen=[0,0], r=1, **kwargs):
+	'''plot a circle'''
 	phi=np.arange(0,2*np.pi+0.11,0.1)
 	x=cen[0]+r*np.cos(phi)
 	y=cen[1]+r*np.sin(phi)
@@ -82,6 +88,7 @@ def lnADPDF(lnAD):
   return p
   
 def ADSurvFunc(AD):
+  '''survival function for AD test on uniform distributions'''
   gpar=[[0.569,   -0.570,    0.511], [ 0.431,    0.227,    0.569]] #w, mu, sigma, bi-normal fit
   lnAD=np.log(AD)
   p=gpar[0][0]*norm.sf(lnAD,gpar[0][1],gpar[0][2])+gpar[1][0]*norm.sf(lnAD, gpar[1][1], gpar[1][2])
@@ -107,55 +114,6 @@ def Sig2TS(sig,dof=1):
 def Chi2Sig(x, dof):
   '''convert chi-square value to significance level, for dof degrees of freedom'''
   return P2Sig(chi2.sf(x,dof))
-
-import ctypesGsl as cgsl
-def fmin_gsl(func, x0, args=[], xtol=1e-3, ftolabs=0.01, xstep=1.0, maxiter=1000, full_output=False):
-    '''
-    minimize function with gsl_simplex method
-    func(x [,args]): function to be minimized
-    x0: [a,b,c...], initial parameter
-    args: list of additional parameter if any
-    xstep: initial simplex size
-    mimics scipy.optimize.fmin() interface
-    this fmin() is faster and more accurate than the scipy.optimize.fmin(), also better than fmin_powell() in scipy.
-    '''
-    args=list(args)
-    if args is []:
-	  myfunc=lambda x,arg: func(x)
-    else:
-	  myfunc=lambda x,arg: func(x, *arg)
-    F = cgsl.gsl_multimin_function(myfunc, len(x0), args)
-    x = cgsl.vector(x0)
-    T = cgsl.multimin_fminimizer_nmsimplex
-    s = cgsl.multimin_fminimizer(T, F)
-    s.init(x, cgsl.vector([xstep] * F.n))
-    it = 0
-    f1=F(x)
-    while True:
-        it += 1
-        s.iterate()
-        f0=f1
-        f1=s.minimum()
-        status = s.test_size(xtol)
-        xx = s.x()
-        if status and abs(f1-f0)<ftolabs:
-            print "Optimization terminated successfully."
-            print "\t Current function value: ", f1
-            print "\t Iterations: ", it
-            print "\t x abs err: ", s.size()
-            print "\t", xx
-            status=0
-            break
-        if it >= maxiter:
-            print "Maximum number of %d iterations reached"%maxiter
-            print "Failed to converge"
-            status=1
-            break
-    x=np.array([xx[i] for i in xrange(F.n)])
-    if full_output:
-      return x,f1,it,status
-    else:
-      return x
   
 class ProgressMonitor:
 	"""monitor progress of your loops"""
@@ -199,11 +157,16 @@ def density_of_points(data, bins=100, method='kde', weights=None):
   ''' estimate density of points with kde or histogram2d 
   
   data: should be shape [2,n] array
+  
   bins: can be an integer or [nx,ny] for number of bins, an ndarray or a list of two arrays  for bin edges
+  
   method: 'kde' or 'hist', kernel-density-estimate or 2d-histogram estimate
+  
   weights: whether to use weights or not. currently only supports hist method.
-  return: X,Y,Z; ready to be used for contour plots as contour(X, Y, Z). 
-                X and Y are mid points of the bins on which Z is calculated.
+  
+  return: (X,Y,Z)
+	  ready to be used for contour plots as contour(X, Y, Z). 
+	  X and Y are mid points of the bins on which Z is calculated.
   '''
   if data.shape[0]!=2 and data.shape[1]==2:
 	data=data.T
@@ -237,12 +200,18 @@ def percentile_contour(X,Y,Z, percents=0.683, colors=None, fill=False, linestyle
   """
   plot contour at specific percentile levels
 
-  X,Y can be both 2-d arrays as Z, or 1-d array specifying the column(horizontally varying) and row coordinates for Z
-  percents can be a list, specify the contour percentile levels
-  colors should be a tuple, e.g, (r,) 
-  fill: bool, whether to plot filled contours
-  **kwargs specify linestyles
-  return a handle artist of the same linestyle (but not the contour object) to be used in legends
+	  X,Y can be both 2-d arrays as Z, or 1-d array specifying the column(horizontally varying) and row coordinates for Z.
+  
+	  percents can be a list, specify the contour percentile levels
+  
+	  colors should be a tuple, e.g, (r,) 
+  
+	  fill: bool, whether to plot filled contours
+  
+	  kwargs specify linestyles
+  
+  return:
+	  a handle artist of the same linestyle (but not the contour object) to be used in legends
   """    
   #if type is 'image':
 	#extent=(x.min()-(x[1]-x[0])/2, x.max()+(x[1]-x[0])/2, y.min()-(y[1]-y[0])/2, y.max()+(y[1]-y[0])/2)
@@ -266,8 +235,10 @@ def percentile_contour(X,Y,Z, percents=0.683, colors=None, fill=False, linestyle
 
 def get_extent(X,Y):
   ''' get extent for X,Y vectors or meshgrids. 
+  
   the output is (xmin,xmax,ymin,ymax), the edge-padded boudaries,
       assuming X,Y specifies the mid points of bins and uniformly spaced.
+      
   can be used to specify extent for imshow()'''
   if X.squeeze().ndim==2:
 	dx=X[0,1]-X[0,0]
@@ -285,18 +256,20 @@ def plot_cov_ellipse(cov, pos, nstd=1, fill=False, ax=None, **kwargs):
     ellipse patch artist.
 
     Parameters
-    ----------
+    
         cov : The 2x2 covariance matrix to base the ellipse on
+        
         pos : The location of the center of the ellipse. Expects a 2-element
             sequence of [x0, y0].
+        
         nstd : The radius of the ellipse in numbers of standard deviations.
             Defaults to 1 standard deviations.
-        ax : The axis that the ellipse will be plotted on. Defaults to the 
-            current axis.
+        
+        ax : The axis that the ellipse will be plotted on. Defaults to the current axis.
+        
         Additional keyword arguments are pass on to the ellipse patch.
 
     Returns
-    -------
         A matplotlib ellipse artist
     """
     def eigsorted(cov):
@@ -319,14 +292,16 @@ def plot_cov_ellipse(cov, pos, nstd=1, fill=False, ax=None, **kwargs):
     return ellip
   
 def skeleton(x,y,nbin=10,alpha=0.683,weights=None):
-	"""function [xmed,ymed,ylim,xm,ym,ysig,count]=skeleton(x,y,nbin,alpha)
-	% to divide x into bins and give estimation of center and variance of y
-	% inside each bin
-	%input:
-	% x,y: column vectors to extract skeleton from
-	% nbin: number of bins or bin edges for x
-	% alpha: confidence level for boundary estimation
-	%"""
+	"""
+	to divide x into bins and give estimation of center and variance of y inside each bin
+	
+	input:
+		x,y: column vectors to extract skeleton from
+		
+		nbin: number of bins or bin edges for x
+		
+		alpha: confidence level for boundary estimation
+	"""
 
 	x=np.array(x)
 	y=np.array(y)
@@ -379,4 +354,52 @@ class NamedEnum(object):
 	'''create a named enum object from a list of empty-space separated names'''
 	for number, name in enumerate(names.split()):
 	  setattr(self, name, NamedValues(number, name))
-	  
+
+#import ctypesGsl as cgsl
+#def fmin_gsl(func, x0, args=[], xtol=1e-3, ftolabs=0.01, xstep=1.0, maxiter=1000, full_output=False):
+    #'''
+    #minimize function with gsl_simplex method
+    #func(x [,args]): function to be minimized
+    #x0: [a,b,c...], initial parameter
+    #args: list of additional parameter if any
+    #xstep: initial simplex size
+    #mimics scipy.optimize.fmin() interface
+    #this fmin() is faster and more accurate than the scipy.optimize.fmin(), also better than fmin_powell() in scipy.
+    #'''
+    #args=list(args)
+    #if args is []:
+	  #myfunc=lambda x,arg: func(x)
+    #else:
+	  #myfunc=lambda x,arg: func(x, *arg)
+    #F = cgsl.gsl_multimin_function(myfunc, len(x0), args)
+    #x = cgsl.vector(x0)
+    #T = cgsl.multimin_fminimizer_nmsimplex
+    #s = cgsl.multimin_fminimizer(T, F)
+    #s.init(x, cgsl.vector([xstep] * F.n))
+    #it = 0
+    #f1=F(x)
+    #while True:
+        #it += 1
+        #s.iterate()
+        #f0=f1
+        #f1=s.minimum()
+        #status = s.test_size(xtol)
+        #xx = s.x()
+        #if status and abs(f1-f0)<ftolabs:
+            #print "Optimization terminated successfully."
+            #print "\t Current function value: ", f1
+            #print "\t Iterations: ", it
+            #print "\t x abs err: ", s.size()
+            #print "\t", xx
+            #status=0
+            #break
+        #if it >= maxiter:
+            #print "Maximum number of %d iterations reached"%maxiter
+            #print "Failed to converge"
+            #status=1
+            #break
+    #x=np.array([xx[i] for i in xrange(F.n)])
+    #if full_output:
+      #return x,f1,it,status
+    #else:
+      #return x	  
