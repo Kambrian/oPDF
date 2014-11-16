@@ -430,7 +430,11 @@
 	<span class="k">return</span> <span class="n">newsample</span>
   </div>
 <div class="viewcode-block" id="Tracer.select"><a class="viewcode-back" href="../api.html#oPDF.Tracer.select">[docs]</a>  <span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flags</span><span class="p">):</span>
-	<span class="sd">&#39;&#39;&#39;select particles according to flags array, to create a subsample&#39;&#39;&#39;</span>
+	<span class="sd">&#39;&#39;&#39;select particles according to flags array, to create a subsample.</span>
+<span class="sd">	</span>
+<span class="sd">	.. note::</span>
+<span class="sd">	   When doing dynamical tests, one should avoid distorting the radial distribution with any radial selection. One can still apply radial cuts, but should only do this with the :function:`radial_cut` function. So never use :function:`select` on data[&#39;r&#39;].&#39;&#39;&#39;</span>
+	   
 	<span class="n">sample</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
 	<span class="n">sample</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;flag&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">flags</span>
 	<span class="n">sample</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span> <span class="c"># __update_array() is called automatically</span>
@@ -469,7 +473,11 @@
 </div>
 <div class="viewcode-block" id="Tracer.radial_cut"><a class="viewcode-back" href="../api.html#oPDF.Tracer.radial_cut">[docs]</a>  <span class="k">def</span> <span class="nf">radial_cut</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rmin</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">rmax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;cut the tracer with bounds [rmin, rmax]. </span>
-<span class="sd">	if only rmin or rmax is given, the other bound is not changed.&#39;&#39;&#39;</span>
+<span class="sd">	if only rmin or rmax is given, the other bound is not changed.</span>
+<span class="sd">	</span>
+<span class="sd">	.. note::</span>
+<span class="sd">	   This function not only selects particles within (rmin,rmax), but also sets the radial boundary for the dynamical model, so that only dyanmical consistency inside the selected radial range is checked. So always use this function if you want to change radial cuts. This function is automatically called when initializing a :class:`Tracer` with rmin/rmax.&#39;&#39;&#39;</span>
+	   
 	<span class="k">if</span> <span class="ow">not</span> <span class="p">((</span><span class="n">rmin</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">rmax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)):</span>
 	  <span class="k">if</span> <span class="n">rmin</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
 		<span class="n">rmin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rmin</span>

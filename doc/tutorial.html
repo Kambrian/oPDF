@@ -467,7 +467,10 @@ You can set_type(), set_param(), get the mass and potential profiles</p>
 </div>
 <div class="section" id="selecting-and-cutting">
 <h3>selecting and cutting<a class="headerlink" href="#selecting-and-cutting" title="Permalink to this headline">¶</a></h3>
-<p>This applies a radial cut from 1 to 100 in system unit :</p>
+<p>The following line applies a radial cut from 1 to 100 in system unit.
+Note it not only selects particles to have <img class="math" src="_images/math/243befebd4375a61835c07606366646562ddbec2.png" alt="1&lt;r&lt;100"/>, but also
+sets the radial boundary for the dynamical model, so that only dyanmical
+consistency inside the selected radial range is checked.</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="n">Sample</span><span class="o">.</span><span class="n">radial_cut</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -478,8 +481,8 @@ particles:</p>
 </div>
 <p>All the particle data can be accessed from the record array Sample.data.
 You can do similar selections (and many other operations) on any
-available fields of the data. Have a look at the datatype or
-<code class="docutils literal"><span class="pre">Particle_t._fields_</span></code> to see the available fields</p>
+available fields of the data (except for radial selection). Have a look
+at the datatype or <code class="docutils literal"><span class="pre">Particle_t._fields_</span></code> to see the available fields</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="k">print</span> <span class="n">Sample</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span>
 </pre></div>
 </div>
@@ -488,6 +491,10 @@ available fields of the data. Have a look at the datatype or
 </div>
 <p>Note:</p>
 <ul class="simple">
+<li>The dynamical method tests the radial distribution, so one should
+avoid distorting the radial distribution with any radial selection.
+One can still apply radial cuts, but should only do this with the
+Sample.radial_cut(rmin,rmax) function.</li>
 <li>The <code class="docutils literal"><span class="pre">w</span></code> field is the particle mass in units of the average particle
 mass. The average particle mass is <code class="docutils literal"><span class="pre">Sample.mP</span></code>. These are all ones
 if no particle mass is given in the datafile.</li>

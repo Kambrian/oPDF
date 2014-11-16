@@ -515,7 +515,10 @@ You can set\_type(), set\_param(), get the mass and potential profiles
 selecting and cutting
 ~~~~~~~~~~~~~~~~~~~~~
 
-This applies a radial cut from 1 to 100 in system unit :
+The following line applies a radial cut from 1 to 100 in system unit.
+Note it not only selects particles to have :math:`1<r<100`\ , but also
+sets the radial boundary for the dynamical model, so that only dyanmical
+consistency inside the selected radial range is checked.
 
 .. code:: python
 
@@ -528,8 +531,8 @@ particles:
     SubSample=Sample.select(Sample.data['L']>1e4)
 All the particle data can be accessed from the record array Sample.data.
 You can do similar selections (and many other operations) on any
-available fields of the data. Have a look at the datatype or
-``Particle_t._fields_`` to see the available fields
+available fields of the data (except for radial selection). Have a look
+at the datatype or ``Particle_t._fields_`` to see the available fields
 
 .. code:: python
 
@@ -542,6 +545,10 @@ available fields of the data. Have a look at the datatype or
 
 Note:
 
+-  The dynamical method tests the radial distribution, so one should
+   avoid distorting the radial distribution with any radial selection.
+   One can still apply radial cuts, but should only do this with the
+   Sample.radial\_cut(rmin,rmax) function.
 -  The ``w`` field is the particle mass in units of the average particle
    mass. The average particle mass is ``Sample.mP``. These are all ones
    if no particle mass is given in the datafile.
