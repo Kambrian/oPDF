@@ -570,6 +570,11 @@ class Tracer(Tracer_t):
 	
 	If maxlike is given, it is interpreted as the global maximum log-likelihood, and is used to determine significance for RBinLike estimator;
 	otherwise the maximum likelihood is automatically scanned for RBinLike.
+	
+	:returns: [x,y,sig,like]
+		x,y: the scanned grid points, vectors.
+		sig: the significance on the grids, of shape [len(x),len(y)]
+		like: the likelihood or figure of merits on the grids. same shape as sig.
 	'''
 	if logscale:
 	  xl=np.log10(x0)-dx
@@ -592,7 +597,7 @@ class Tracer(Tracer_t):
 	  sig=np.sqrt(like)
 	elif estimator==Estimators.MeanPhaseRaw:
 	  sig=np.abs(like)
-	return x,y,sig
+	return x,y,sig,like
     
   def TSprof(self, pars, proxy='L', nbin=100, estimator=Estimators.MeanPhaseRaw):
 	'''calculate the likelihood inside equal-count bins of proxy.
