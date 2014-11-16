@@ -384,7 +384,7 @@ class Tracer(Tracer_t):
 	'''select particles according to flags array, to create a subsample.
 	
 	.. note::
-	   When doing dynamical tests, one should avoid distorting the radial distribution with any radial selection. One can still apply radial cuts, but should only do this with the :function:`radial_cut` function. So never use :function:`select` on data['r'].'''
+	   When doing dynamical tests, one should avoid distorting the radial distribution with any radial selection. One can still apply radial cuts, but should only do this with the :func:`radial_cut` function. So never use :func:`select` on data['r'].'''
 	   
 	sample=self.copy(0,0)
 	sample.data['flag']=flags
