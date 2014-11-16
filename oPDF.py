@@ -572,8 +572,11 @@ class Tracer(Tracer_t):
 	otherwise the maximum likelihood is automatically scanned for RBinLike.
 	
 	:returns: [x,y,sig,like]
+	
 		x,y: the scanned grid points, vectors.
+		
 		sig: the significance on the grids, of shape [len(x),len(y)]
+		
 		like: the likelihood or figure of merits on the grids. same shape as sig.
 	'''
 	if logscale:
