@@ -619,6 +619,14 @@
 <span class="sd">	</span>
 <span class="sd">	If maxlike is given, it is interpreted as the global maximum log-likelihood, and is used to determine significance for RBinLike estimator;</span>
 <span class="sd">	otherwise the maximum likelihood is automatically scanned for RBinLike.</span>
+<span class="sd">	</span>
+<span class="sd">	:returns: [x,y,sig,like]</span>
+<span class="sd">	</span>
+<span class="sd">		x,y: the scanned grid points, vectors.</span>
+<span class="sd">		</span>
+<span class="sd">		sig: the significance on the grids, of shape [len(x),len(y)]</span>
+<span class="sd">		</span>
+<span class="sd">		like: the likelihood or figure of merits on the grids. same shape as sig.</span>
 <span class="sd">	&#39;&#39;&#39;</span>
 	<span class="k">if</span> <span class="n">logscale</span><span class="p">:</span>
 	  <span class="n">xl</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span><span class="o">-</span><span class="n">dx</span>
@@ -641,7 +649,7 @@
 	  <span class="n">sig</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">like</span><span class="p">)</span>
 	<span class="k">elif</span> <span class="n">estimator</span><span class="o">==</span><span class="n">Estimators</span><span class="o">.</span><span class="n">MeanPhaseRaw</span><span class="p">:</span>
 	  <span class="n">sig</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">like</span><span class="p">)</span>
-	<span class="k">return</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">sig</span>
+	<span class="k">return</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">sig</span><span class="p">,</span><span class="n">like</span>
     </div>
 <div class="viewcode-block" id="Tracer.TSprof"><a class="viewcode-back" href="../api.html#oPDF.Tracer.TSprof">[docs]</a>  <span class="k">def</span> <span class="nf">TSprof</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">,</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">Estimators</span><span class="o">.</span><span class="n">MeanPhaseRaw</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;calculate the likelihood inside equal-count bins of proxy.</span>

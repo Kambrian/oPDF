@@ -103,6 +103,9 @@ get rid of all the <code class="docutils literal"><span class="pre">*.o</span></
 <div class="highlight-python"><div class="highlight"><pre>make clean
 </pre></div>
 </div>
+</div>
+<div class="section" id="set-pythonpath">
+<h3>Set PYTHONPATH<a class="headerlink" href="#set-pythonpath" title="Permalink to this headline">¶</a></h3>
 <p>From now on, you should either work under the current directory, or have
 added the <code class="docutils literal"><span class="pre">oPDF</span></code> path to your <code class="docutils literal"><span class="pre">PYTHONPATH</span></code> before using <code class="docutils literal"><span class="pre">oPDF</span></code> in
 python. To add the path, do</p>
@@ -153,10 +156,12 @@ according to their separations, but not dynamics.</p>
 <h2>A simple example: Fit the mock halo with RBinLike<a class="headerlink" href="#a-simple-example-fit-the-mock-halo-with-rbinlike" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="load-the-data">
 <h3>Load the data<a class="headerlink" href="#load-the-data" title="Permalink to this headline">¶</a></h3>
-<p>From the root directory of the code, do</p>
+<p>Let&#8217;s import the module first</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">oPDF</span> <span class="kn">import</span> <span class="o">*</span>
 </pre></div>
 </div>
+<p>Now the <code class="docutils literal"><span class="pre">rootdir</span></code> should have been automatically set to the directory
+of the <code class="docutils literal"><span class="pre">oPDF</span></code> code. Let&#8217;s load the sample data</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="n">datafile</span><span class="o">=</span><span class="n">rootdir</span><span class="o">+</span><span class="s">&quot;/data/mockhalo.hdf5&quot;</span>
 <span class="n">FullSample</span><span class="o">=</span><span class="n">Tracer</span><span class="p">(</span><span class="n">datafile</span><span class="p">)</span>
 <span class="n">Sample</span><span class="o">=</span><span class="n">FullSample</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1000</span><span class="p">)</span>
@@ -236,10 +241,13 @@ best-fitting parameters <code class="docutils literal"><span class="pre">x</span
 levels of RBinLike, we can provide the maximum likelihood value that we
 obtained above, to save the function from searching for maxlike itself.
 Be prepared that the scan can be slow.</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">m</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">sig</span><span class="o">=</span><span class="n">Sample</span><span class="o">.</span><span class="n">scan_confidence</span><span class="p">(</span><span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">ngrids</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span><span class="mi">20</span><span class="p">],</span> <span class="n">dx</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">],</span> <span class="n">logscale</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">maxlike</span><span class="o">=</span><span class="n">fval</span><span class="p">)</span>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">m</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">sig</span><span class="p">,</span><span class="n">like</span><span class="o">=</span><span class="n">Sample</span><span class="o">.</span><span class="n">scan_confidence</span><span class="p">(</span><span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">ngrids</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span><span class="mi">20</span><span class="p">],</span> <span class="n">dx</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">],</span> <span class="n">logscale</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">maxlike</span><span class="o">=</span><span class="n">fval</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Now let&#8217;s plot them in units of the real parameter values:</p>
+<p>The returned <code class="docutils literal"><span class="pre">m,c</span></code> are the grids (1-d vectors) of the scan, and
+<code class="docutils literal"><span class="pre">sig,like</span></code> are the significance levels and likelihood values on the
+grids (2-d array). Now let&#8217;s plot them in units of the real parameter
+values:</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="n">plt</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">m</span><span class="o">/</span><span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">c</span><span class="o">/</span><span class="n">x0</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">sig</span><span class="p">,</span><span class="n">levels</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span> <span class="c">#1,2,3sigma contours.</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">x0</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="s">&#39;ro&#39;</span><span class="p">)</span> <span class="c">#the best-fitting</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(),[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="s">&#39;k--&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(),</span>  <span class="s">&#39;k--&#39;</span><span class="p">)</span><span class="c"># the real parameters</span>
@@ -251,7 +259,7 @@ Be prepared that the scan can be slow.</p>
 <div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x4fa4fd0&gt;
 </pre></div>
 </div>
-<img alt="_images/tutorial_15_1.png" src="_images/tutorial_15_1.png" />
+<img alt="_images/tutorial_16_1.png" src="_images/tutorial_16_1.png" />
 </div>
 <div class="section" id="phase-images">
 <h3>Phase Images<a class="headerlink" href="#phase-images" title="Permalink to this headline">¶</a></h3>
@@ -280,7 +288,7 @@ potential with parameters <code class="docutils literal"><span class="pre">x0</s
 <div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x524ee90&gt;
 </pre></div>
 </div>
-<img alt="_images/tutorial_18_1.png" src="_images/tutorial_18_1.png" />
+<img alt="_images/tutorial_19_1.png" src="_images/tutorial_19_1.png" />
 <p>We can see that the particle distribution is indeed uniform (roughly
 given the current resolution) along the <img class="math" src="_images/math/a9cfbeb8ebee1f365919e147a79e242dcb67ee5d.png" alt="\theta"/>-direction,
 irrespective of the energy and angular momentum.</p>
@@ -300,7 +308,7 @@ phase deviation or AD distance (Test Statistics, or TS) inside different
     <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="s">&#39;k--&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<img alt="_images/tutorial_21_0.png" src="_images/tutorial_21_0.png" />
+<img alt="_images/tutorial_22_0.png" src="_images/tutorial_22_0.png" />
 <p>See, the mean phase deviations are within 3:math:<cite>sigma</cite> everywhere.
 Note that the raw mean phase is a standard normal variable if the tracer
 is in steady-state under the potential.</p>
@@ -454,7 +462,7 @@ You can set_type(), set_param(), get the mass and potential profiles</p>
 <div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x5e48510&gt;
 </pre></div>
 </div>
-<img alt="_images/tutorial_46_1.png" src="_images/tutorial_46_1.png" />
+<img alt="_images/tutorial_47_1.png" src="_images/tutorial_47_1.png" />
 </div>
 </div>
 <div class="section" id="selecting-and-cutting">
@@ -652,6 +660,7 @@ function. If you don&#8217;t have that, you need to comment out the
 <li><a class="reference internal" href="#">oPDF tutorial</a><ul>
 <li><a class="reference internal" href="#getting-started">Getting Started</a><ul>
 <li><a class="reference internal" href="#prerequisites">prerequisites</a></li>
+<li><a class="reference internal" href="#set-pythonpath">Set PYTHONPATH</a></li>
 <li><a class="reference internal" href="#prepare-the-data-files">Prepare the data files</a></li>
 </ul>
 </li>

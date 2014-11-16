@@ -61,6 +61,9 @@ get rid of all the ``*.o`` files, you can clean them by
 
     make clean
 
+Set PYTHONPATH
+~~~~~~~~~~~~~~
+
 From now on, you should either work under the current directory, or have
 added the ``oPDF`` path to your ``PYTHONPATH`` before using ``oPDF`` in
 python. To add the path, do
@@ -118,11 +121,14 @@ A simple example: Fit the mock halo with RBinLike
 Load the data
 ~~~~~~~~~~~~~
 
-From the root directory of the code, do
+Let's import the module first
 
 .. code:: python
 
     from oPDF import *
+Now the ``rootdir`` should have been automatically set to the directory
+of the ``oPDF`` code. Let's load the sample data
+
 .. code:: python
 
     datafile=rootdir+"/data/mockhalo.hdf5"
@@ -222,8 +228,11 @@ Be prepared that the scan can be slow.
 
 .. code:: python
 
-    m,c,sig=Sample.scan_confidence(Estimators.RBinLike, x, ngrids=[20,20], dx=[0.5,0.5], logscale=True, maxlike=fval)
-Now let's plot them in units of the real parameter values:
+    m,c,sig,like=Sample.scan_confidence(Estimators.RBinLike, x, ngrids=[20,20], dx=[0.5,0.5], logscale=True, maxlike=fval)
+The returned ``m,c`` are the grids (1-d vectors) of the scan, and
+``sig,like`` are the significance levels and likelihood values on the
+grids (2-d array). Now let's plot them in units of the real parameter
+values:
 
 .. code:: python
 
@@ -243,7 +252,7 @@ Now let's plot them in units of the real parameter values:
 
 
 
-.. image:: tutorial_files/tutorial_15_1.png
+.. image:: tutorial_files/tutorial_16_1.png
 
 
 Phase Images
@@ -283,7 +292,7 @@ potential with parameters ``x0``.
 
 
 
-.. image:: tutorial_files/tutorial_18_1.png
+.. image:: tutorial_files/tutorial_19_1.png
 
 
 We can see that the particle distribution is indeed uniform (roughly
@@ -309,7 +318,7 @@ phase deviation or AD distance (Test Statistics, or TS) inside different
         plt.plot(plt.xlim(), [0,0], 'k--')
 
 
-.. image:: tutorial_files/tutorial_21_0.png
+.. image:: tutorial_files/tutorial_22_0.png
 
 
 See, the mean phase deviations are within 3:math:`\sigma` everywhere.
@@ -500,7 +509,7 @@ You can set\_type(), set\_param(), get the mass and potential profiles
 
 
 
-.. image:: tutorial_files/tutorial_46_1.png
+.. image:: tutorial_files/tutorial_47_1.png
 
 
 selecting and cutting

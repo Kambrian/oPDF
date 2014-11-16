@@ -496,6 +496,17 @@ return the new sample</p>
 or ngrids log bins from log10(x0)-dx to log10(x0)+dx if logscale=True.</p>
 <p>If maxlike is given, it is interpreted as the global maximum log-likelihood, and is used to determine significance for RBinLike estimator;
 otherwise the maximum likelihood is automatically scanned for RBinLike.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">[x,y,sig,like]<p>x,y: the scanned grid points, vectors.</p>
+<p>sig: the significance on the grids, of shape [len(x),len(y)]</p>
+<p>like: the likelihood or figure of merits on the grids. same shape as sig.</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
