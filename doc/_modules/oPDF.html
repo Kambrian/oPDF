@@ -433,7 +433,7 @@
 	<span class="sd">&#39;&#39;&#39;select particles according to flags array, to create a subsample.</span>
 <span class="sd">	</span>
 <span class="sd">	.. note::</span>
-<span class="sd">	   When doing dynamical tests, one should avoid distorting the radial distribution with any radial selection. One can still apply radial cuts, but should only do this with the :function:`radial_cut` function. So never use :function:`select` on data[&#39;r&#39;].&#39;&#39;&#39;</span>
+<span class="sd">	   When doing dynamical tests, one should avoid distorting the radial distribution with any radial selection. One can still apply radial cuts, but should only do this with the :func:`radial_cut` function. So never use :func:`select` on data[&#39;r&#39;].&#39;&#39;&#39;</span>
 	   
 	<span class="n">sample</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
 	<span class="n">sample</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;flag&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">flags</span>
