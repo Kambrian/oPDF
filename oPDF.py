@@ -381,7 +381,11 @@ class Tracer(Tracer_t):
 	return newsample
   
   def select(self, flags):
-	'''select particles according to flags array, to create a subsample'''
+	'''select particles according to flags array, to create a subsample.
+	
+	.. note::
+	   When doing dynamical tests, one should avoid distorting the radial distribution with any radial selection. One can still apply radial cuts, but should only do this with the :function:`radial_cut` function. So never use :function:`select` on data['r'].'''
+	   
 	sample=self.copy(0,0)
 	sample.data['flag']=flags
 	sample.squeeze() # __update_array() is called automatically
@@ -420,7 +424,11 @@ class Tracer(Tracer_t):
 
   def radial_cut(self, rmin=None, rmax=None):
 	'''cut the tracer with bounds [rmin, rmax]. 
-	if only rmin or rmax is given, the other bound is not changed.'''
+	if only rmin or rmax is given, the other bound is not changed.
+	
+	.. note::
+	   This function not only selects particles within (rmin,rmax), but also sets the radial boundary for the dynamical model, so that only dyanmical consistency inside the selected radial range is checked. So always use this function if you want to change radial cuts. This function is automatically called when initializing a :class:`Tracer` with rmin/rmax.'''
+	   
 	if not ((rmin is None) and (rmax is None)):
 	  if rmin is None:
 		rmin=self.rmin
