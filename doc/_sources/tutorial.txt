@@ -580,7 +580,7 @@ Extending the code
 -  in C/halo.h: add your HaloType identifier in HaloType\_t
 -  in C/halo.c:
 
-   -  write your halo initializer in halo\_set\_param()
+   -  write your halo initializer in halo\_set\_param().
    -  write your potential function in halo\_pot()
    -  optionally, write your cumulative mass profile in halo\_mass(),
       and add any initilization in halo\_set\_type() if needed.
