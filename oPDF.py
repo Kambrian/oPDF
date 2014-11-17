@@ -146,14 +146,16 @@ class Halo(Halo_t):
 	pars: parameters describing the halo'''
 	lib.halo_set_param(Param_t(*pars), ctypes.byref(self))
   def mass(self, r):
-	'''cumulative mass profile'''
+	'''cumulative mass profile
+	:param r: array-like or float, the radius'''
 	try:
 	  m=lib.halo_mass(r, ctypes.byref(self))
 	except:
 	  m=np.array([lib.halo_mass(x, ctypes.byref(self)) for x in r])
 	return m
   def pot(self, r):
-	'''potential'''
+	'''potential
+	:param r: array-like or float, the radius'''
 	try:
 	  m=lib.halo_pot(r, ctypes.byref(self))
 	except:
@@ -352,7 +354,6 @@ class Tracer(Tracer_t):
 	if self.nP>0:
 	  lib.free_tracer(self._pointer)
 	lib.load_tracer_particles(datafile, self._pointer)
-	print  self.nP, self.P
 	self.__update_array()
 	self.rmin=self.data['r'].min()
 	self.rmax=self.data['r'].max()
