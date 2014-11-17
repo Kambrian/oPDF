@@ -195,14 +195,16 @@
 <span class="sd">	pars: parameters describing the halo&#39;&#39;&#39;</span>
 	<span class="n">lib</span><span class="o">.</span><span class="n">halo_set_param</span><span class="p">(</span><span class="n">Param_t</span><span class="p">(</span><span class="o">*</span><span class="n">pars</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">byref</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 <div class="viewcode-block" id="Halo.mass"><a class="viewcode-back" href="../api.html#oPDF.Halo.mass">[docs]</a>  <span class="k">def</span> <span class="nf">mass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
-	<span class="sd">&#39;&#39;&#39;cumulative mass profile&#39;&#39;&#39;</span>
+	<span class="sd">&#39;&#39;&#39;cumulative mass profile</span>
+<span class="sd">	:param r: array-like or float, the radius&#39;&#39;&#39;</span>
 	<span class="k">try</span><span class="p">:</span>
 	  <span class="n">m</span><span class="o">=</span><span class="n">lib</span><span class="o">.</span><span class="n">halo_mass</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">byref</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
 	<span class="k">except</span><span class="p">:</span>
 	  <span class="n">m</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">lib</span><span class="o">.</span><span class="n">halo_mass</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">byref</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">r</span><span class="p">])</span>
 	<span class="k">return</span> <span class="n">m</span></div>
 <div class="viewcode-block" id="Halo.pot"><a class="viewcode-back" href="../api.html#oPDF.Halo.pot">[docs]</a>  <span class="k">def</span> <span class="nf">pot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
-	<span class="sd">&#39;&#39;&#39;potential&#39;&#39;&#39;</span>
+	<span class="sd">&#39;&#39;&#39;potential</span>
+<span class="sd">	:param r: array-like or float, the radius&#39;&#39;&#39;</span>
 	<span class="k">try</span><span class="p">:</span>
 	  <span class="n">m</span><span class="o">=</span><span class="n">lib</span><span class="o">.</span><span class="n">halo_pot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">byref</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
 	<span class="k">except</span><span class="p">:</span>
@@ -401,7 +403,6 @@
 	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nP</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
 	  <span class="n">lib</span><span class="o">.</span><span class="n">free_tracer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span>
 	<span class="n">lib</span><span class="o">.</span><span class="n">load_tracer_particles</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span>
-	<span class="k">print</span>  <span class="bp">self</span><span class="o">.</span><span class="n">nP</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">__update_array</span><span class="p">()</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">rmin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;r&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">rmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;r&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
