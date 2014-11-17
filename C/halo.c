@@ -30,11 +30,13 @@ void halo_set_type(HaloType_t t, VirType_t virtype, double Redshift, const doubl
 	}
   }
 }
+#define ISPHYSICAL(x) ((x)>0)
 void halo_set_param(const double pars[], Halo_t *halo)
 {
   memcpy(halo->pars, pars, NUM_PAR_MAX*sizeof(double));
   double phypar[NUM_PAR_MAX];
   int i;
+  halo->IsForbidden=0; //You can set the range of allowed parameters by setting halo.IsForbidden=1 when input parameters are not allowed, which will cause the likelihood routines to return -INFINITY for log-like or INFINITY for distances.
   for(i=0;i<NUM_PAR_MAX;i++)
 	phypar[i]=pars[i]*halo->scales[i];
   switch(halo->type)
@@ -43,6 +45,7 @@ void halo_set_param(const double pars[], Halo_t *halo)
 	  halo->M=phypar[0];
 	  halo->c=phypar[1];
 	  decode_NFWprof(halo);
+	  halo->IsForbidden=!(ISPHYSICAL(halo->M)&&ISPHYSICAL(halo->c));
 	  break;
 	case HT_NFWPotsRs:
 	case HT_CorePotsRs://same as NFWPotsRs
@@ -50,6 +53,7 @@ void halo_set_param(const double pars[], Halo_t *halo)
 	  halo->Rs=phypar[1];
 	  halo->Rhos=-halo->Pots/halo->Rs/halo->Rs/4/M_PI/Globals.units.Const.G;
 	  halo->Ms=-halo->Pots*halo->Rs/Globals.units.Const.G;
+	  halo->IsForbidden=!(ISPHYSICAL(-halo->Pots)&&ISPHYSICAL(halo->Rs));
 	  break;
 	case HT_NFWRhosRs:
 	case HT_CoreRhosRs:
@@ -57,14 +61,18 @@ void halo_set_param(const double pars[], Halo_t *halo)
 	  halo->Rs=phypar[1];
 	  halo->Ms=4.0*M_PI*halo->Rhos*halo->Rs*halo->Rs*halo->Rs;
 	  halo->Pots=-Globals.units.Const.G*halo->Ms/halo->Rs;
+	  halo->IsForbidden=!(ISPHYSICAL(halo->Rhos)&&ISPHYSICAL(halo->Rs));
 	  break;
 	case HT_TMPMC:
 	  halo->M=phypar[0];
 	  halo->c=phypar[1];
 	  decode_TemplateProf(halo);
+	  halo->IsForbidden=!(ISPHYSICAL(halo->M)&&ISPHYSICAL(halo->c));
+	  break;
 	case HT_TMPPotScaleRScale:
 	  halo->PotScale=phypar[0];
 	  halo->RScale=phypar[1];
+	  halo->IsForbidden=!(ISPHYSICAL(halo->PotScale)&&ISPHYSICAL(halo->RScale));
 	  break;
 	default:
 	  DEBUGPRINT("Error: Unknown halo parametrization %d\n", halo->type);
@@ -74,6 +82,7 @@ void halo_set_param(const double pars[], Halo_t *halo)
 
 double halo_mass(double r, Halo_t *halo)
 {
+  if(halo->IsForbidden) return 0.;
   switch(halo->type)
   {
 	case HT_TMPMC:
@@ -91,6 +100,7 @@ double halo_mass(double r, Halo_t *halo)
 
 double halo_pot(double r, Halo_t *halo)
 { 
+  if(halo->IsForbidden) return 0.;
   double x=r/halo->Rs;
   switch(halo->type)
   {

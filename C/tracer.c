@@ -502,6 +502,8 @@ void count_tracer_radial(Tracer_t *Sample, int nbin, int FlagRLogBin)
 
 void tracer_set_energy(Tracer_t *Sample)
 {//fix the energy parameter according to initial potential
+  if(Sample->halo.IsForbidden) return;//do nothing
+  
   int i;
   #pragma omp parallel for
   for(i=0;i<Sample->nP;i++)
@@ -510,6 +512,7 @@ void tracer_set_energy(Tracer_t *Sample)
 
 void tracer_set_orbits(Tracer_t *Sample, int FlagSetPhase)
 {
+  if(Sample->halo.IsForbidden) return;//do nothing
   int i;
   #pragma omp parallel for
   for(i=0;i<Sample->nP;i++)

@@ -116,6 +116,12 @@ void free_integration_space()
 }
 void solve_radial_orbit(Particle_t *P, double rmin, double rmax, Halo_t *halo, int FlagSetPhase)//bottleneck in gsl_integration_cquad
 {//find peri(apo)-centers and integrate the period 
+  
+  if(halo->IsForbidden)
+	{
+	  printf("Halo not allowed with param [%g,%g].\n Not solving orbits.\n", halo->pars[0], halo->pars[1]);
+	  return;
+	}
   solve_radial_limits(P, rmin, rmax, halo); //according to current potential and E,L,r; E must be initialized with a initial potential
   if(is_forbidden(P->r,P->E,P->L2, halo))
   {
@@ -164,7 +170,9 @@ void solve_radial_orbit(Particle_t *P, double rmin, double rmax, Halo_t *halo, i
 //   if(P->T<=0) printf("Part %d (M=%g,c=%g): r=%g,K=%g, E=%g, L2=%g; T=%g (vt/v=%g)\n",pid, Halo.M, Halo.c, P->r, P->K, P->E, P->L2, P->T, sqrt(P->L2/P->r/P->r/2./P->K));
 }
 double MeanPhaseTest(Tracer_t *Sample, int FlagRaw)
-{  
+{ 
+  if(Sample->halo.IsForbidden) return INFINITY;
+
   int i;
   double c=0.;
    #pragma omp parallel for reduction(+:c)
@@ -180,6 +188,8 @@ double MeanPhaseTest(Tracer_t *Sample, int FlagRaw)
 }
 double AndersonDarlingTest(Tracer_t *Sample)
 {//Beloborodov&Levin 2004, apj, 613:224-237; simplified equation as in the note.
+  if(Sample->halo.IsForbidden) return INFINITY;
+
   int i;
   double AD=0., *theta;
   theta=malloc(sizeof(double)*Sample->nP);
@@ -202,6 +212,12 @@ double AndersonDarlingTest(Tracer_t *Sample)
 }
 void predict_radial_count (double RadialCountPred[], int nbin, int FlagRLogBin,  Tracer_t *Sample)
 {
+    if(Sample->halo.IsForbidden)
+	{
+	  printf("Halo not allowed with param [%g,%g]\n Not predicting counts.\n", Sample->halo.pars[0], Sample->halo.pars[1]);
+	  return;
+	}
+	
     int i,j;
 	double dr, logRmin, factor;
 // 	printf("Log=%d\n",FlagRLogBin);
@@ -249,6 +265,8 @@ void predict_radial_count (double RadialCountPred[], int nbin, int FlagRLogBin, 
 }
 double like_radial_bin( Tracer_t *Sample)
 {
+  if(Sample->halo.IsForbidden) return -INFINITY;
+
   int i;
   double lnL=0., dr, logRmin, factor;
   if(Sample->nbin_r==0) 
@@ -330,14 +348,14 @@ double like_eval(Estimator_t estimator, Tracer_t *Sample)
       DEBUGPRINT("Error: unknown Estimator=%d\n", estimator);
       exit(estimator);
   }
-//     printf("%g,%g: %g\n", pars[0],pars[1],lnL);
+//   printf("[%d] %g,%g: %g\n", Sample->halo.IsForbidden, Sample->halo.pars[0],Sample->halo.pars[1],lnL);
   Sample->lnL=lnL;
   return lnL;
 }
 
 double nested_views_like(Estimator_t estimator,  Tracer_t *Sample, int nbin_r, int FlagRLogBin)
 {//pure like, without freeze_energy()/set_orbits() (except for set_orbits() for r-Views);  prepare them before calling this!
-  //nbin_r and FlagRLogBin are only used when estimator is RBinLike
+  //nbin_r and FlagRLogBin are only used when estimator is RBinLike  
   double lnL;
   if(!Sample->nView)
   {

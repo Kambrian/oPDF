@@ -76,6 +76,7 @@ class Halo_t(ctypes.Structure):
 			('Ms',ctypes.c_double),#4*pi*rs^3*rhos
 			('RScale',ctypes.c_double),#for TMP profile, Rs/Rs0
 			('PotScale',ctypes.c_double),#for TMP profile, Pots/Pots0
+			('IsForbidden', ctypes.c_int), #whether the halo parameters are forbidden(e.g, negative mass)
 			('virtype',ctypes.c_int),
 			('type',ctypes.c_int)
 			]

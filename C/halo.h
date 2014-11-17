@@ -29,6 +29,7 @@ typedef struct Halo
   double Ms;//4*pi*rs^3*rhos
   double RScale; //for TMP profile, Rs/Rs0
   double PotScale; //for TMP profile, Pots/Pots0
+  int IsForbidden; //flag telling whether the parameters are forbidden (e.g, negative mass parameter)
 //   int TMPid;//for TMP profile
   int virtype;
   HaloType_t type;
