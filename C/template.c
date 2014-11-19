@@ -101,5 +101,5 @@ rhoc=(3.0*cosm.Hz*cosm.Hz)/(8.0*M_PI*Globals.units.Const.G);
 halo->Rv=cbrt(fabs(halo->M)/(4.0*M_PI/3.0*cosm.virialF[halo->virtype]*rhoc));
 halo->Rs=halo->Rv/halo->c; 
 halo->RScale=halo->Rs/PotSpline.Rs;
-halo->PotScale=cosm.virialF[halo->virtype]*rhoc*halo->Rs*halo->Rs/eval_density_spline(halo->Rv/halo->Rs);
+halo->PotScale=cosm.virialF[halo->virtype]*rhoc*halo->RScale*halo->RScale/eval_density_spline(halo->Rv/halo->RScale);
 }
