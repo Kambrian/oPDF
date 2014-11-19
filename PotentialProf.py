@@ -3,16 +3,18 @@ from oPDF import *
 from myutils import *
 import h5py,os,sys
 from scipy.stats import chi2
-plt.ion()
+#plt.ion()
 
+hubble=0.73
+Globals.set_units(1e10*hubble, hubble, 1.) #set to 1e10Msun, kpc, km/s
 
 DMfile=rootdir+'/../../data/A4DM.hdf5'
 #real parameters, for comparison with analytical profile:
-M0=183.8
-C0=15.07
+M0=183.8 #Spherical-overdensity Mass M0
+C0=15.07 #Rv0/Rs0
 
-nbin=100
-npart=0 #int(1e6)
+nbin=100 #do not change this, unless you change TemplateData.h as well.
+npart=0 #number of particles to use. 0 means FullSample.
 
 FullSample=Tracer(DMfile,rmin=0,rmax=500)
 Sample=FullSample.copy(0,npart)
@@ -46,8 +48,8 @@ plt.loglog()
 
 plt.xlabel('R')
 plt.ylabel(r'$\psi$')
-plt.legend(('Data','NFWfit'))
-#plt.savefig(lib.rootdir+'/plots/paper/extra/DensityProf'+halo+'ALLvsFoF.eps') #rasterize=True, dpi=300
+plt.legend(('Data','NFW analytical'))
+#plt.savefig('DensityProf.eps') #rasterize=True, dpi=300
 print 'Profile template to be added to C/TemplateData.h:'
 print 'R'
 print ','.join(['{:f}'.format(i) for i in xbin])
@@ -57,13 +59,13 @@ print 'AvDensity'
 print ','.join(['{:g}'.format(i) for i in density_cum])
 
 ## Now recompile and try the newly added template
-TMPid=0 #id of the newly added template 
+TMPid=0 #change to id of the newly added template 
 
 xnew=np.logspace(-1,3,50)
-tmphalo=Halo(halotype=HaloTypes.TMPMC, TMPid=0)
+tmphalo=Halo(halotype=HaloTypes.TMPMC, TMPid=TMPid)
 tmphalo.set_param([M0,C0])
 potNew=-tmphalo.pot(xnew)
-tmphalo2=Halo(halotype=HaloTypes.TMPMC, TMPid=0)
+tmphalo2=Halo(halotype=HaloTypes.TMPMC, TMPid=TMPid)
 tmphalo2.set_param([2*M0,C0])
 potNew2=-tmphalo2.pot(xnew)
 plt.figure()
@@ -71,6 +73,7 @@ plt.plot(xnew, potNew, 'ro')
 plt.plot(xnew, potNew2, 'gs')
 plt.plot(xbin, pot, 'k-')
 plt.loglog()
-#Sample.clean()
-#lib.free_potential_spline()
-#lib.close()
+plt.legend(('Template(M0,c0)', 'Template(2M0,c0)','Data'))
+plt.show()
+#finalize
+Sample.clean()

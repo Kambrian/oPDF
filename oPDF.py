@@ -46,9 +46,19 @@ class globals_t(ctypes.Structure):
 	including precision, cosmology and units'''
 	lib.default_global_pars()
   
-  def set_units(self, MassInMsunh=0.73e10, LengthInKpch=0.73, VelInKms=1.):
+  def set_units(self, MassInMsunh=1e10, LengthInKpch=1., VelInKms=1.):
 	'''set system of units.
-	specify Mass in Msun/h, Length in kpc/h, Velocity in km/s'''
+	specify Mass in Msun/h, Length in kpc/h, Velocity in km/s.
+	
+	If you want to use (1e10Msun, kpc, km/s) as units, and you adopt $h=0.73$ in your model, then you can set the units like below
+	>>>h=0.73
+	>>>Globals.set_units(1e10*h,h,1)
+	That is, to set them to (1e10h Msun/h, h kpc/h, km/s).
+	
+	.. note::
+	   - The user should only use Globals.set_units() to change the units, which automatically updates several interal constants related to units. Never try to change the internal unit variables (e.g., Globals.units.MassInMsunh) manually.
+	   -  To avoid inconsistency with units of previously loaded tracers, you must do it immediately after importing the :module:`oPDF` module if you need to call :func:`set_units`.'''
+	   
 	lib.set_units(MassInMsunh, LengthInKpch, VelInKms)
 
   def get_units(self):
@@ -89,6 +99,8 @@ lib.halo_mass.restype=ctypes.c_double
 lib.halo_mass.argtypes=[ctypes.c_double, Halo_p]
 lib.halo_pot.restype=ctypes.c_double
 lib.halo_pot.argtypes=[ctypes.c_double, Halo_p]
+lib.isNFW.restype=ctypes.c_int
+lib.isNFW.argtypes=[ctypes.c_int]
 
 HaloTypes=NamedEnum('NFWMC NFWPotsRs NFWRhosRs TMPMC TMPPotScaleRScale CoreRhosRs CorePotsRs')
 class Halo(Halo_t):
@@ -161,13 +173,17 @@ class Halo(Halo_t):
 	except:
 	  m=np.array([lib.halo_pot(x, ctypes.byref(self)) for x in r])
 	return m
-  def get_current_TMPid():
+  def get_current_TMPid(self):
 	'''get the id of the template currently loaded in the system.
 	
 	this func can be used to check whether the loaded template 
 	is the template of the current halo, just in case the template does not match'''
 	return lib.get_current_TMPid(ctypes.byref(self))
 
+  def isNFW(self):
+	''' return True if halo is NFW, False if not '''
+	return bool(lib.isNFW(self.type))
+	
 #==tracer.h
 class Particle_t(ctypes.Structure):
   _fields_=[('haloid', ctypes.c_int),
@@ -694,16 +710,27 @@ class Tracer(Tracer_t):
 
   def NFW_fit(self, x0=[1,1], minuittol=1):
 	''' to fit an NFW density PDF with maximum likelihood.
-	results will be printed on screen.
-	also return minuit result and the minuit minimizer.
 	
-	..note:
-	This is only intended for fitting the Dark Matter density profile to get the NFW parameters.
-	The tracer particle mass should have been properly assigned or adjusted, 
-	so that mP*number_density=physical_density.
-	If you have sampled n particles from the full sample of n0 particles, 
-	remember to adjust the mP of the sample to be mP0*n0/n, so that total mass is conserved.
+	.. note::
+	   You need the `iminuit <https://pypi.python.org/pypi/iminuit>`_ python package before you can use this function. If you don't have that, you need to comment out the `iminuit` related imports in the header of `oPDF.py`.
+	
+	:param x0: initial value of halo parameters. the interpretation of them depends on the halotype and scales of the tracer's halo. see Tracer.halo of :class:`Tracer` and halo.type, halo.scales of :class:`halo`. 
+	:param minuittol: tolerance of minuit to consider convergence. Convergence is defined when the estimated distance to minimum edm<1e-4*minuittol*0.5
+
+	:return: results will be printed on screen.
+			 also return minuit result and the minuit minimizer.
+			 Please consult the `iminuit <https://pypi.python.org/pypi/iminuit>`_ documentation for the `iminuit` outputs.
+			  
+	.. note::
+	   This is only intended for fitting the Dark Matter density profile to get the NFW parameters.
+	   The tracer particle mass should have been properly assigned or adjusted, 
+	   so that mP*number_density=physical_density.
+	   If you have sampled n particles from the full sample of n0 particles, 
+	   remember to adjust the mP of the sample to be mP0*n0/n, so that total mass is conserved.
 	'''
+	if not self.halo.isNFW():
+	  print "Error: not an NFW halo. use Tracer.halo.set_type() to set halo type to NFW before NFW_fit()"
+	  
 	like=lambda m,c: -self.NFW_like([m,c])
 	#profilelikelihood ratio error-def: chi-square1
 	m=Minuit(like, m=x0[0], c=x0[1], print_level=0, pedantic=False, error_m=0.1, error_c=0.1, errordef=0.5,frontend=ConsoleFrontend())

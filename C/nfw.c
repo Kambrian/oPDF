@@ -76,9 +76,27 @@ double NFW_mass(double r, Halo_t *halo)
   return halo->Ms*(log(1+x)-x/(1+x)); 
 }
 
+int isNFW(HaloType_t t)
+{
+  switch(t)
+  {
+	case HT_NFWMC:
+	case HT_CorePotsRs:
+	case HT_CoreRhosRs:
+	  return 1;
+	default:
+	  return 0;
+  }
+  return 0;
+}
 double NFW_like(const double pars[], Tracer_t *T)
-{//halo should already be attached to Tracer before calling this.
+{
   if(pars[0]<=0||pars[1]<=0||isnan(pars[0])||isnan(pars[1])) return -INFINITY;
+  if(!isNFW(T->halo.type))
+  {
+	fprintf(stderr, "Error: halotype=%d, not an NFW halo\n", T->halo.type);
+	exit(1);
+  }
   halo_set_param(pars, &T->halo);
   double lnL=log(T->halo.Rhos)*T->nP-(halo_mass(T->rmax, &T->halo)-halo_mass(T->rmin, &T->halo))/T->mP; //the normalizations
   int i;
