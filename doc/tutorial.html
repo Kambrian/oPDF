@@ -127,7 +127,7 @@ position and velocity of the center of the halo. The code comes with a
 sample file under data/:</p>
 <ul class="simple">
 <li>mockhalo.hdf5, a mock stellar halo. The potential is NFW with
-<img class="math" src="_images/math/a974029b08b692105c24717830c2924af4dacf22.png" alt="M=183.5017\times 10^{10}M_\odot"/>, <img class="math" src="_images/math/ff5af34649995f6eed642007fef62ceaa69dff55.png" alt="c=16.1560"/>,
+<img class="math" src="_images/math/3765ec709412cb6e345903abc98ffebb13258fb1.png" alt="M=133.96\times 10^{10}M_\odot/h"/>, <img class="math" src="_images/math/ac925496c4eb44cdcde263d8440b82821d86a8a0.png" alt="c=16.16"/>,
 following the <img class="math" src="_images/math/040cbd66736d3d7cb9bbe97eb42cd778da4e7903.png" alt="\rho_{vir}=200\rho_{crit}"/> definition.</li>
 </ul>
 <p>Compulsory datasets in a data file:</p>
@@ -143,7 +143,12 @@ Assuming 1 if not specified.</li>
 examination of the effects of subhaloes during the analysis.</li>
 <li><code class="docutils literal"><span class="pre">HaloID,</span> <span class="pre">[nx1],</span> <span class="pre">int32</span></code>. This is the host halo id of each particles.</li>
 </ul>
-<p>The units of the data can be specified when running the code.</p>
+<p>The default system of units are
+<img class="math" src="_images/math/1036505de2cf34a2c5fdacabc298fe746791f5f6.png" alt="10^{10} M_\odot/h, {\rm kpc}/h, km/s"/> for Mass, Length and
+Velocity. If the units in the data differ from this system, you can
+choose to either update the data so that they follows the default
+systems, or change the system of units of oPDF code at run time. See the
+units section of this tutorial.</p>
 <p><em>Note</em>: to construct a tracer sample for a halo, do not use FoF
 particles alone. Instead, make a spherical selection by including all
 the particles inside a given radius. These will include FoF particles,
@@ -167,9 +172,6 @@ of the <code class="docutils literal"><span class="pre">oPDF</span></code> code.
 <span class="n">Sample</span><span class="o">=</span><span class="n">FullSample</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1000</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>30000 &lt;oPDF.LP_Particle_t object at 0x4e23e60&gt;
-</pre></div>
-</div>
 <p>This will load the data into FullSample, and make a subsample of 1000
 particles from the FullSample. You may want to do your analysis with the
 full sample. We extract the subsample just for illustrution purpose, to
@@ -184,7 +186,7 @@ speed up the calculation in this tutorial.</p>
 <span class="k">print</span> <span class="n">x</span><span class="p">,</span><span class="n">fval</span><span class="p">,</span><span class="n">status</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>[ 161.8486416    19.83133738] 5014.14688084 1
+<div class="highlight-python"><div class="highlight"><pre>[ 118.17712485   19.81948425] 5014.14688443 1
 </pre></div>
 </div>
 <p>In one or two minutes, you will get the results above, where</p>
@@ -194,17 +196,17 @@ speed up the calculation in this tutorial.</p>
 <li><code class="docutils literal"><span class="pre">status</span></code> =1 means fitting is successful, =0 means fit failed.</li>
 </ul>
 <p>That&#8217;s it! You have got the best-fitting
-<img class="math" src="_images/math/1970db461b2b676038f2fedf48ea9b7021d7cf61.png" alt="M=161.8\times10^{10} M_\odot"/> and <img class="math" src="_images/math/0dcc96506374b3bbdb8ed03f1e8da41a6807ca39.png" alt="c=19.83"/>. ### Estimate
-significances How does that compare to the real parameters of
-<img class="math" src="_images/math/a974029b08b692105c24717830c2924af4dacf22.png" alt="M=183.5017\times 10^{10}M_\odot"/>, <img class="math" src="_images/math/ff5af34649995f6eed642007fef62ceaa69dff55.png" alt="c=16.1560"/>? Not too
+<img class="math" src="_images/math/31491564a3e51f63ff89b8caef5c079fbb9c19d8.png" alt="M=118.18\times10^{10} M_\odot/h"/> and <img class="math" src="_images/math/8eb6fb7dc92a93b422cff9d20ef4fa95d34b08b5.png" alt="c=19.82"/>. ###
+Estimate significances How does that compare to the real parameters of
+<img class="math" src="_images/math/3765ec709412cb6e345903abc98ffebb13258fb1.png" alt="M=133.96\times 10^{10}M_\odot/h"/>, <img class="math" src="_images/math/ac925496c4eb44cdcde263d8440b82821d86a8a0.png" alt="c=16.16"/>? Not too
 far, but let&#8217;s check the likelihood ratio of the two models</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">x0</span><span class="o">=</span><span class="p">[</span><span class="mf">183.5017</span><span class="p">,</span><span class="mf">16.1560</span><span class="p">]</span>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">x0</span><span class="o">=</span><span class="p">[</span><span class="mf">133.96</span><span class="p">,</span><span class="mf">16.16</span><span class="p">]</span>
 <span class="n">f0</span><span class="o">=</span><span class="n">Sample</span><span class="o">.</span><span class="n">likelihood</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="p">)</span>
 <span class="n">likerat</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">fval</span><span class="o">-</span><span class="n">f0</span><span class="p">)</span>
 <span class="k">print</span> <span class="n">likerat</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="mf">1.0933322551</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="mf">1.09277867155</span>
 </pre></div>
 </div>
 <p>So we got a likelihood ratio of 1.09. How significant is that? According
@@ -221,11 +223,11 @@ Chi2Sig() utility function</p>
 <span class="k">print</span> <span class="n">significance</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="mf">0.555026554617</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="mf">0.554792280618</span>
 </pre></div>
 </div>
 <p>So the best-fitting differs from the real parameters by
-<img class="math" src="_images/math/4047672991383832cdc9f89153d3039ed0d6ffe5.png" alt="0.56\sigma"/>, which is not significant at all. In other words,
+<img class="math" src="_images/math/fce2453c2151d9f47ee442d273cc5f2dc188aecf.png" alt="0.55\sigma"/>, which is not significant at all. In other words,
 the best-fitting parameters are quite consistent with the real
 parameters!</p>
 </div>
@@ -256,7 +258,7 @@ values:</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">r&#39;$c/c_0$&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x4fa4fd0&gt;
+<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x3e97050&gt;
 </pre></div>
 </div>
 <img alt="_images/tutorial_16_1.png" src="_images/tutorial_16_1.png" />
@@ -285,7 +287,7 @@ potential with parameters <code class="docutils literal"><span class="pre">x0</s
 <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Real Potential&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x524ee90&gt;
+<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x4117ed0&gt;
 </pre></div>
 </div>
 <img alt="_images/tutorial_19_1.png" src="_images/tutorial_19_1.png" />
@@ -341,32 +343,36 @@ change the RBinLike to use 20 linear bins.</p>
 <div class="section" id="units">
 <h3>units<a class="headerlink" href="#units" title="Permalink to this headline">¶</a></h3>
 <p>The system of units is specified in three fundamental units:
-Mass[<img class="math" src="_images/math/bc68f05480b157fadfe5636df94ca999feb14e7f.png" alt="M_\odot/h"/>], Length[kpc:math:<cite>/h</cite>], Velocity[km/s]. You
+Mass[<img class="math" src="_images/math/bc68f05480b157fadfe5636df94ca999feb14e7f.png" alt="M_\odot/h"/>], Length[kpc/<img class="math" src="_images/math/cbb80ad77aa7a5e227d5a46bc44d235284106cfc.png" alt="h"/>], Velocity[km/s]. You
 can query the current units with</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="n">Globals</span><span class="o">.</span><span class="n">get_units</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>Mass  : 7300000000.0 Msun/h
-Length: 0.73 kpc/h
+<div class="highlight-python"><div class="highlight"><pre>Mass  : 10000000000.0 Msun/h
+Length: 1.0 kpc/h
 Vel   : 1.0 km/s
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">(</span><span class="mf">7300000000.0</span><span class="p">,</span> <span class="mf">0.73</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">(</span><span class="mf">10000000000.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>These units are typical for a simulated tracer in units of
-<code class="docutils literal"><span class="pre">[1e10Msun/h,</span> <span class="pre">kpc/h,</span> <span class="pre">km/s]</span></code> with <code class="docutils literal"><span class="pre">h=0.73</span></code>. The oPDF code does not
-need to know the value of the hubble constant, as long as the units are
-correctly specified. It is the user&#8217;s responsibility to make sure that
-his/her units are consistent with his assumed hubble parameter.</p>
+<p>The default units are [<img class="math" src="_images/math/b1666fa286165084e660b7a7f0e7dddd8f389734.png" alt="10^{10} M_\odot/h"/>, kpc/<img class="math" src="_images/math/cbb80ad77aa7a5e227d5a46bc44d235284106cfc.png" alt="h"/>,
+km/s]. The oPDF code does not need to know the value of the hubble
+constant <img class="math" src="_images/math/cbb80ad77aa7a5e227d5a46bc44d235284106cfc.png" alt="h"/>, as long as the units are correctly specified. It
+is the user&#8217;s responsibility to make sure that his/her units are
+consistent with his assumed hubble parameter.</p>
 <p>If you want to change the system of units, you must do it immediately
 after importing the <code class="docutils literal"><span class="pre">oPDF</span></code> module, to avoid inconsistency with units
-of previously loaded tracers. For example, to change the units to
-(1e10Msun/h,kpc/h,km/s),</p>
+of previously loaded tracers. For example, if your data is provided in
+units of (1e10Msun, kpc, km/s), and you adopt <img class="math" src="_images/math/c0e0a14e7c3300c80e44a70768a1ba74e1721614.png" alt="h=0.73"/> in your
+model, then you can set the units like below</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">oPDF</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="n">Globals</span><span class="o">.</span><span class="n">set_units</span><span class="p">(</span><span class="mf">1e10</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">h</span><span class="o">=</span><span class="mf">0.73</span>
+<span class="n">Globals</span><span class="o">.</span><span class="n">set_units</span><span class="p">(</span><span class="mf">1e10</span><span class="o">*</span><span class="n">h</span><span class="p">,</span><span class="n">h</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>That is, to set them to (<img class="math" src="_images/math/ff4575eae18e30cefeefd3c02c964ec837bdc2b7.png" alt="10^{10}h"/> Msun/<img class="math" src="_images/math/cbb80ad77aa7a5e227d5a46bc44d235284106cfc.png" alt="h"/>, <img class="math" src="_images/math/cbb80ad77aa7a5e227d5a46bc44d235284106cfc.png" alt="h"/>kpc/<img class="math" src="_images/math/cbb80ad77aa7a5e227d5a46bc44d235284106cfc.png" alt="h"/>,
+km/s).</p>
 <p>The user should only use Globals.set_units() to change the units, which
 automatically updates several interal constants related to units. Never
 try to change the internal unit variables (e.g.,
@@ -413,7 +419,7 @@ slope=0), parametrized by (<img class="math" src="_images/math/80f3e7ed57c124be0
 <li>HaloTypes.TMPPotScaleRScale: Template,
 <img class="math" src="_images/math/7a947bb3fb1e0cc69d0b627a2307ad16cc89e7bf.png" alt="\psi_s/\psi_{s0}, r_s/r_{s0}"/></li>
 </ul>
-<p>To use template profiles, you have to creates them first, in the form of
+<p>To use template profiles, you have to create them first, in the form of
 (<img class="math" src="_images/math/2cb2800f6a05e3f058ab8a355978af183021f8f7.png" alt="r,\psi,\rho(&lt; r)"/>) arrays and the real <img class="math" src="_images/math/5a56f25d5a5f42e0b8d477397dac166f964ba407.png" alt="r_s"/> parameter
 to be added to C/TemplateData.h. You need to recompile the C library
 once this is done. PotentialProf.py can help you in generating the
@@ -438,8 +444,8 @@ change them as</p>
 </pre></div>
 </div>
 <p>Now if we fit the Sample again with the RBinLike estimator, instead of
-<code class="docutils literal"><span class="pre">x=[</span> <span class="pre">161.8</span>&nbsp;&nbsp;&nbsp; <span class="pre">19.8]</span></code>, we will get <code class="docutils literal"><span class="pre">x=[1.618</span>&nbsp;&nbsp;&nbsp; <span class="pre">1.98]</span></code> as the best
-fit, but the physical values are not changed.</p>
+<code class="docutils literal"><span class="pre">x=[</span> <span class="pre">118.18</span>&nbsp;&nbsp;&nbsp; <span class="pre">19.82]</span></code>, we will get <code class="docutils literal"><span class="pre">x=[1.1818</span>&nbsp;&nbsp;&nbsp; <span class="pre">1.982]</span></code> as the
+best fit, but the physical values are not changed.</p>
 <div class="section" id="halos">
 <h4>Halos<a class="headerlink" href="#halos" title="Permalink to this headline">¶</a></h4>
 <p>Each tracer is associated with a halo. You can also work with a seperate
@@ -459,7 +465,7 @@ You can set_type(), set_param(), get the mass and potential profiles</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">r&#39;$-\psi(r)$&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x5e48510&gt;
+<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x4b54e90&gt;
 </pre></div>
 </div>
 <img alt="_images/tutorial_47_1.png" src="_images/tutorial_47_1.png" />
@@ -511,8 +517,8 @@ set_phase() function, e.g.,</li>
 <span class="k">print</span> <span class="n">Sample</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;theta&#39;</span><span class="p">][</span><span class="mi">35</span><span class="p">]</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="mf">9201829.25741</span>
-<span class="mf">0.982207688183</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="mf">10025467.0597</span>
+<span class="mf">0.978053348837</span>
 </pre></div>
 </div>
 </div>
@@ -535,20 +541,24 @@ and add any initilization in halo_set_type() if needed.</li>
 </li>
 <li>To add new template profiles</li>
 <li>Generate your template in the form of (<img class="math" src="_images/math/2cb2800f6a05e3f058ab8a355978af183021f8f7.png" alt="r,\psi,\rho(&lt; r)"/>)
-arrays, and append to C/PotentialTemplate in TemplateData.h</li>
-<li>Append the scale radius of the new template to TemplateScale in
-C/TemplateData.h. This is only used if you want to use TMPMC
+arrays, and append to <code class="docutils literal"><span class="pre">PotentialTemplate</span></code> in <code class="docutils literal"><span class="pre">C/TemplateData.h</span></code>.</li>
+<li>Append the scale radius of the new template to <code class="docutils literal"><span class="pre">TemplateScale</span></code> in
+<code class="docutils literal"><span class="pre">C/TemplateData.h</span></code>. This is only used if you want to use <code class="docutils literal"><span class="pre">TMPMC</span></code>
 parametrization. In this case the scale radius must be the radius
-where the logrithmic slope of density equals to -2.</li>
+with respect to which you define the concentration. That is, you must
+make sure when you input the real <img class="math" src="_images/math/2a5d0a03e262a6ebff3d09b9cf9abb3e5f2b6022.png" alt="M,c"/> parameters to the
+template, and I convert <img class="math" src="_images/math/f0af30c92a973f09f2569ce807e8dd88f26d2b59.png" alt="Rv"/> from <img class="math" src="_images/math/2de38926392ba23abeac75effc66c37a5f5be5fd.png" alt="M"/> and then compare to
+this scale radius, I get the real <img class="math" src="_images/math/65868d23a5bfe5b3b2d819386b19c14fa36af134.png" alt="c"/> that you input.</li>
 <li><img class="math" src="_images/math/2eca59ef6a923ae3e9ef42ab65fed9f7486510ea.png" alt="\rho(&lt;r)"/> and <img class="math" src="_images/math/5a56f25d5a5f42e0b8d477397dac166f964ba407.png" alt="r_s"/> are only needed if you want to use
-TMPMC parametrization. If you only want to use TMPPotScaleRScale
-parametrization, you can fill <img class="math" src="_images/math/2eca59ef6a923ae3e9ef42ab65fed9f7486510ea.png" alt="\rho(&lt;r)"/> and <img class="math" src="_images/math/5a56f25d5a5f42e0b8d477397dac166f964ba407.png" alt="r_s"/> with
-ones or any value.</li>
+<code class="docutils literal"><span class="pre">TMPMC</span></code> parametrization. If you only want to use
+<code class="docutils literal"><span class="pre">TMPPotScaleRScale</span></code> parametrization, you can fill <img class="math" src="_images/math/2eca59ef6a923ae3e9ef42ab65fed9f7486510ea.png" alt="\rho(&lt;r)"/>
+and <img class="math" src="_images/math/5a56f25d5a5f42e0b8d477397dac166f964ba407.png" alt="r_s"/> with ones or any value.</li>
 <li>To add new estimators</li>
 <li>check C/models.c</li>
 </ul>
-<p>You need to recompile the C library once this is done. PotentialProf.py
-can help you in generating the templates from DM distributions.</p>
+<p>You need to recompile the C library once this is done.
+<code class="docutils literal"><span class="pre">PotentialProf.py</span></code> can help you in generating the templates from DM
+distributions.</p>
 </div>
 </div>
 <div class="section" id="additional-features">
@@ -586,9 +596,6 @@ cleaning process by using <code class="docutils literal"><span class="pre">with<
     <span class="n">NewSample</span><span class="o">=</span><span class="n">TempSample</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>30000 &lt;oPDF.LP_Particle_t object at 0x564f3b0&gt;
-</pre></div>
-</div>
 <p>This will load the datafile into <code class="docutils literal"><span class="pre">TempSample</span></code>, create <code class="docutils literal"><span class="pre">NewSample</span></code>
 from <code class="docutils literal"><span class="pre">TempSample</span></code>, and clear <code class="docutils literal"><span class="pre">TempSample</span></code> when exiting the <code class="docutils literal"><span class="pre">with</span></code>
 block.</p>
@@ -611,8 +618,8 @@ fitting the distribution of dark matter particles in a halo)</p>
 <pre class="literal-block">
 <strong>******************************************************************</strong>
 ---------------------------------------------------------------------------------------
-fval = 7019.816934338302 | nfcn = 68 | ncalls = 68
-edm = 1.6793878043880015e-05 (Goal: 5e-05) | up = 0.5
+fval = 6359.824931628151 | nfcn = 82 | ncalls = 82
+edm = 2.564356008095891e-05 (Goal: 5e-05) | up = 0.5
 ---------------------------------------------------------------------------------------
 |          Valid |    Valid Param | Accurate Covar |         Posdef |    Made Posdef |
 ---------------------------------------------------------------------------------------
@@ -626,32 +633,34 @@ edm = 1.6793878043880015e-05 (Goal: 5e-05) | up = 0.5
 ----------------------------------------------------------------------------------------------
 |      | Name  |  Value   | Para Err |   Err-   |   Err+   |  Limit-  |  Limit+  |          |
 ----------------------------------------------------------------------------------------------
-|    0 |     m =  15.43   |  0.5686  |          |          |          |          |          |
-|    1 |     c =  11.99   |  1.183   |          |          |          |          |          |
+|    0 |     m =  15.45   |  0.5484  |          |          |          |          |          |
+|    1 |     c =  25.63   |  2.777   |          |          |          |          |          |
 ----------------------------------------------------------------------------------------------
 
 <strong>******************************************************************</strong>
 ['m', 'c']
-((1.0, -0.20669988381300106), (-0.20669988381300106, 1.0))
+((1.0, -0.14515703395364832), (-0.14515703395364832, 1.0))
        |    0    1
 --------------------
-m    0 | 1.00 -0.21
-c    1 | -0.21 1.00
+m    0 | 1.00 -0.15
+c    1 | -0.15 1.00
 --------------------
 </pre>
-<div class="highlight-python"><div class="highlight"><pre>(({&#39;hesse_failed&#39;: False, &#39;has_reached_call_limit&#39;: False, &#39;has_accurate_covar&#39;: True, &#39;has_posdef_covar&#39;: True, &#39;up&#39;: 0.5, &#39;edm&#39;: 1.6793878043880015e-05, &#39;is_valid&#39;: True, &#39;is_above_max_edm&#39;: False, &#39;has_covariance&#39;: True, &#39;has_made_posdef_covar&#39;: False, &#39;has_valid_parameters&#39;: True, &#39;fval&#39;: 7019.816934338302, &#39;nfcn&#39;: 68},
-  [{&#39;is_const&#39;: False, &#39;name&#39;: &#39;m&#39;, &#39;has_limits&#39;: False, &#39;value&#39;: 15.43079877133447, &#39;number&#39;: 0L, &#39;has_lower_limit&#39;: False, &#39;upper_limit&#39;: 0.0, &#39;lower_limit&#39;: 0.0, &#39;has_upper_limit&#39;: False, &#39;error&#39;: 0.5686375878908682, &#39;is_fixed&#39;: False},
-   {&#39;is_const&#39;: False, &#39;name&#39;: &#39;c&#39;, &#39;has_limits&#39;: False, &#39;value&#39;: 11.989314056141591, &#39;number&#39;: 1L, &#39;has_lower_limit&#39;: False, &#39;upper_limit&#39;: 0.0, &#39;lower_limit&#39;: 0.0, &#39;has_upper_limit&#39;: False, &#39;error&#39;: 1.1834785038966056, &#39;is_fixed&#39;: False}]),
- &lt;iminuit._libiminuit.Minuit at 0x5c3f2f0&gt;)
+<div class="highlight-python"><div class="highlight"><pre>(({&#39;hesse_failed&#39;: False, &#39;has_reached_call_limit&#39;: False, &#39;has_accurate_covar&#39;: True, &#39;has_posdef_covar&#39;: True, &#39;up&#39;: 0.5, &#39;edm&#39;: 2.564356008095891e-05, &#39;is_valid&#39;: True, &#39;is_above_max_edm&#39;: False, &#39;has_covariance&#39;: True, &#39;has_made_posdef_covar&#39;: False, &#39;has_valid_parameters&#39;: True, &#39;fval&#39;: 6359.824931628151, &#39;nfcn&#39;: 82},
+  [{&#39;is_const&#39;: False, &#39;name&#39;: &#39;m&#39;, &#39;has_limits&#39;: False, &#39;value&#39;: 15.448578108740815, &#39;number&#39;: 0L, &#39;has_lower_limit&#39;: False, &#39;upper_limit&#39;: 0.0, &#39;lower_limit&#39;: 0.0, &#39;has_upper_limit&#39;: False, &#39;error&#39;: 0.5483502684852839, &#39;is_fixed&#39;: False},
+   {&#39;is_const&#39;: False, &#39;name&#39;: &#39;c&#39;, &#39;has_limits&#39;: False, &#39;value&#39;: 25.626752919187034, &#39;number&#39;: 1L, &#39;has_lower_limit&#39;: False, &#39;upper_limit&#39;: 0.0, &#39;lower_limit&#39;: 0.0, &#39;has_upper_limit&#39;: False, &#39;error&#39;: 2.7766103272812517, &#39;is_fixed&#39;: False}]),
+ &lt;iminuit._libiminuit.Minuit at 0x4c10000&gt;)
 </pre></div>
 </div>
 <p>In order for this to make sense, <code class="docutils literal"><span class="pre">Sample</span></code> should be loaded with dark
 matter particles of equal particle mass given in <code class="docutils literal"><span class="pre">Sample.mP</span></code>, and the
 number density profile times <code class="docutils literal"><span class="pre">Sample.mP</span></code> should give the physical
 density profile.</p>
-<p>You also need the <code class="docutils literal"><span class="pre">iminuit</span></code> python package before you can use this
-function. If you don&#8217;t have that, you need to comment out the
-<code class="docutils literal"><span class="pre">iminuit</span></code> related imports in the header of <code class="docutils literal"><span class="pre">oPDF.py</span></code>.</p>
+<p>You also need the <a class="reference external" href="https://pypi.python.org/pypi/iminuit">iminuit</a>
+python package before you can use this function. If you don&#8217;t have that,
+you need to comment out the <code class="docutils literal"><span class="pre">iminuit</span></code> related imports in the header of
+<code class="docutils literal"><span class="pre">oPDF.py</span></code>. Please consult the <code class="docutils literal"><span class="pre">iminuit</span></code> documentation for the
+<code class="docutils literal"><span class="pre">iminuit</span></code> outputs.</p>
 </div>
 </div>
 </div>

@@ -95,9 +95,19 @@
 <span class="sd">	including precision, cosmology and units&#39;&#39;&#39;</span>
 	<span class="n">lib</span><span class="o">.</span><span class="n">default_global_pars</span><span class="p">()</span>
   </div>
-<div class="viewcode-block" id="globals_t.set_units"><a class="viewcode-back" href="../api.html#oPDF.globals_t.set_units">[docs]</a>  <span class="k">def</span> <span class="nf">set_units</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">MassInMsunh</span><span class="o">=</span><span class="mf">0.73e10</span><span class="p">,</span> <span class="n">LengthInKpch</span><span class="o">=</span><span class="mf">0.73</span><span class="p">,</span> <span class="n">VelInKms</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+<div class="viewcode-block" id="globals_t.set_units"><a class="viewcode-back" href="../api.html#oPDF.globals_t.set_units">[docs]</a>  <span class="k">def</span> <span class="nf">set_units</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">MassInMsunh</span><span class="o">=</span><span class="mf">1e10</span><span class="p">,</span> <span class="n">LengthInKpch</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">VelInKms</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;set system of units.</span>
-<span class="sd">	specify Mass in Msun/h, Length in kpc/h, Velocity in km/s&#39;&#39;&#39;</span>
+<span class="sd">	specify Mass in Msun/h, Length in kpc/h, Velocity in km/s.</span>
+<span class="sd">	</span>
+<span class="sd">	If you want to use (1e10Msun, kpc, km/s) as units, and you adopt $h=0.73$ in your model, then you can set the units like below</span>
+<span class="sd">	&gt;&gt;&gt;h=0.73</span>
+<span class="sd">	&gt;&gt;&gt;Globals.set_units(1e10*h,h,1)</span>
+<span class="sd">	That is, to set them to (1e10h Msun/h, h kpc/h, km/s).</span>
+<span class="sd">	</span>
+<span class="sd">	.. note::</span>
+<span class="sd">	   - The user should only use Globals.set_units() to change the units, which automatically updates several interal constants related to units. Never try to change the internal unit variables (e.g., Globals.units.MassInMsunh) manually.</span>
+<span class="sd">	   -  To avoid inconsistency with units of previously loaded tracers, you must do it immediately after importing the :module:`oPDF` module if you need to call :func:`set_units`.&#39;&#39;&#39;</span>
+	   
 	<span class="n">lib</span><span class="o">.</span><span class="n">set_units</span><span class="p">(</span><span class="n">MassInMsunh</span><span class="p">,</span> <span class="n">LengthInKpch</span><span class="p">,</span> <span class="n">VelInKms</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="globals_t.get_units"><a class="viewcode-back" href="../api.html#oPDF.globals_t.get_units">[docs]</a>  <span class="k">def</span> <span class="nf">get_units</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -138,6 +148,8 @@
 <span class="n">lib</span><span class="o">.</span><span class="n">halo_mass</span><span class="o">.</span><span class="n">argtypes</span><span class="o">=</span><span class="p">[</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">,</span> <span class="n">Halo_p</span><span class="p">]</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">halo_pot</span><span class="o">.</span><span class="n">restype</span><span class="o">=</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">halo_pot</span><span class="o">.</span><span class="n">argtypes</span><span class="o">=</span><span class="p">[</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">,</span> <span class="n">Halo_p</span><span class="p">]</span>
+<span class="n">lib</span><span class="o">.</span><span class="n">isNFW</span><span class="o">.</span><span class="n">restype</span><span class="o">=</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span>
+<span class="n">lib</span><span class="o">.</span><span class="n">isNFW</span><span class="o">.</span><span class="n">argtypes</span><span class="o">=</span><span class="p">[</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">]</span>
 
 <span class="n">HaloTypes</span><span class="o">=</span><span class="n">NamedEnum</span><span class="p">(</span><span class="s">&#39;NFWMC NFWPotsRs NFWRhosRs TMPMC TMPPotScaleRScale CoreRhosRs CorePotsRs&#39;</span><span class="p">)</span>
 <div class="viewcode-block" id="Halo"><a class="viewcode-back" href="../api.html#oPDF.Halo">[docs]</a><span class="k">class</span> <span class="nc">Halo</span><span class="p">(</span><span class="n">Halo_t</span><span class="p">):</span>
@@ -210,13 +222,17 @@
 	<span class="k">except</span><span class="p">:</span>
 	  <span class="n">m</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">lib</span><span class="o">.</span><span class="n">halo_pot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">byref</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">r</span><span class="p">])</span>
 	<span class="k">return</span> <span class="n">m</span></div>
-<div class="viewcode-block" id="Halo.get_current_TMPid"><a class="viewcode-back" href="../api.html#oPDF.Halo.get_current_TMPid">[docs]</a>  <span class="k">def</span> <span class="nf">get_current_TMPid</span><span class="p">():</span>
+<div class="viewcode-block" id="Halo.get_current_TMPid"><a class="viewcode-back" href="../api.html#oPDF.Halo.get_current_TMPid">[docs]</a>  <span class="k">def</span> <span class="nf">get_current_TMPid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;get the id of the template currently loaded in the system.</span>
 <span class="sd">	</span>
 <span class="sd">	this func can be used to check whether the loaded template </span>
 <span class="sd">	is the template of the current halo, just in case the template does not match&#39;&#39;&#39;</span>
 	<span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">get_current_TMPid</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">byref</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
-
+</div>
+<div class="viewcode-block" id="Halo.isNFW"><a class="viewcode-back" href="../api.html#oPDF.Halo.isNFW">[docs]</a>  <span class="k">def</span> <span class="nf">isNFW</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39; return True if halo is NFW, False if not &#39;&#39;&#39;</span>
+	<span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">lib</span><span class="o">.</span><span class="n">isNFW</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">))</span>
+	
 <span class="c">#==tracer.h</span></div></div>
 <span class="k">class</span> <span class="nc">Particle_t</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">Structure</span><span class="p">):</span>
   <span class="n">_fields_</span><span class="o">=</span><span class="p">[(</span><span class="s">&#39;haloid&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span>
@@ -743,16 +759,27 @@
 </div>
 <div class="viewcode-block" id="Tracer.NFW_fit"><a class="viewcode-back" href="../api.html#oPDF.Tracer.NFW_fit">[docs]</a>  <span class="k">def</span> <span class="nf">NFW_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">minuittol</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39; to fit an NFW density PDF with maximum likelihood.</span>
-<span class="sd">	results will be printed on screen.</span>
-<span class="sd">	also return minuit result and the minuit minimizer.</span>
 <span class="sd">	</span>
-<span class="sd">	..note:</span>
-<span class="sd">	This is only intended for fitting the Dark Matter density profile to get the NFW parameters.</span>
-<span class="sd">	The tracer particle mass should have been properly assigned or adjusted, </span>
-<span class="sd">	so that mP*number_density=physical_density.</span>
-<span class="sd">	If you have sampled n particles from the full sample of n0 particles, </span>
-<span class="sd">	remember to adjust the mP of the sample to be mP0*n0/n, so that total mass is conserved.</span>
+<span class="sd">	.. note::</span>
+<span class="sd">	   You need the `iminuit &lt;https://pypi.python.org/pypi/iminuit&gt;`_ python package before you can use this function. If you don&#39;t have that, you need to comment out the `iminuit` related imports in the header of `oPDF.py`.</span>
+<span class="sd">	</span>
+<span class="sd">	:param x0: initial value of halo parameters. the interpretation of them depends on the halotype and scales of the tracer&#39;s halo. see Tracer.halo of :class:`Tracer` and halo.type, halo.scales of :class:`halo`. </span>
+<span class="sd">	:param minuittol: tolerance of minuit to consider convergence. Convergence is defined when the estimated distance to minimum edm&lt;1e-4*minuittol*0.5</span>
+
+<span class="sd">	:return: results will be printed on screen.</span>
+<span class="sd">			 also return minuit result and the minuit minimizer.</span>
+<span class="sd">			 Please consult the `iminuit &lt;https://pypi.python.org/pypi/iminuit&gt;`_ documentation for the `iminuit` outputs.</span>
+<span class="sd">			  </span>
+<span class="sd">	.. note::</span>
+<span class="sd">	   This is only intended for fitting the Dark Matter density profile to get the NFW parameters.</span>
+<span class="sd">	   The tracer particle mass should have been properly assigned or adjusted, </span>
+<span class="sd">	   so that mP*number_density=physical_density.</span>
+<span class="sd">	   If you have sampled n particles from the full sample of n0 particles, </span>
+<span class="sd">	   remember to adjust the mP of the sample to be mP0*n0/n, so that total mass is conserved.</span>
 <span class="sd">	&#39;&#39;&#39;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">isNFW</span><span class="p">():</span>
+	  <span class="k">print</span> <span class="s">&quot;Error: not an NFW halo. use Tracer.halo.set_type() to set halo type to NFW before NFW_fit()&quot;</span>
+	  
 	<span class="n">like</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">,</span><span class="n">c</span><span class="p">:</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">NFW_like</span><span class="p">([</span><span class="n">m</span><span class="p">,</span><span class="n">c</span><span class="p">])</span>
 	<span class="c">#profilelikelihood ratio error-def: chi-square1</span>
 	<span class="n">m</span><span class="o">=</span><span class="n">Minuit</span><span class="p">(</span><span class="n">like</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="n">x0</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">print_level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">pedantic</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">error_m</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">error_c</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">errordef</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span><span class="n">frontend</span><span class="o">=</span><span class="n">ConsoleFrontend</span><span class="p">())</span>

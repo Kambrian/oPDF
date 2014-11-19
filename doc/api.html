@@ -141,9 +141,20 @@ including precision, cosmology and units</p>
 
 <dl class="method">
 <dt id="oPDF.globals_t.set_units">
-<code class="descname">set_units</code><span class="sig-paren">(</span><em>MassInMsunh=7300000000.0</em>, <em>LengthInKpch=0.73</em>, <em>VelInKms=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#globals_t.set_units"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.globals_t.set_units" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_units</code><span class="sig-paren">(</span><em>MassInMsunh=10000000000.0</em>, <em>LengthInKpch=1.0</em>, <em>VelInKms=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#globals_t.set_units"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.globals_t.set_units" title="Permalink to this definition">¶</a></dt>
 <dd><p>set system of units.
-specify Mass in Msun/h, Length in kpc/h, Velocity in km/s</p>
+specify Mass in Msun/h, Length in kpc/h, Velocity in km/s.</p>
+<p>If you want to use (1e10Msun, kpc, km/s) as units, and you adopt $h=0.73$ in your model, then you can set the units like below
+&gt;&gt;&gt;h=0.73
+&gt;&gt;&gt;Globals.set_units(1e10*h,h,1)
+That is, to set them to (1e10h Msun/h, h kpc/h, km/s).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<ul class="last simple">
+<li>The user should only use Globals.set_units() to change the units, which automatically updates several interal constants related to units. Never try to change the internal unit variables (e.g., Globals.units.MassInMsunh) manually.</li>
+<li>To avoid inconsistency with units of previously loaded tracers, you must do it immediately after importing the <a href="#id1"><span class="problematic" id="id2">:module:`oPDF`</span></a> module if you need to call <a class="reference internal" href="#oPDF.globals_t.set_units" title="oPDF.globals_t.set_units"><code class="xref py py-func docutils literal"><span class="pre">set_units()</span></code></a>.</li>
+</ul>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -200,6 +211,12 @@ specify Mass in Msun/h, Length in kpc/h, Velocity in km/s</p>
 <dd><p>get the id of the template currently loaded in the system.</p>
 <p>this func can be used to check whether the loaded template 
 is the template of the current halo, just in case the template does not match</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Halo.isNFW">
+<code class="descname">isNFW</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Halo.isNFW"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Halo.isNFW" title="Permalink to this definition">¶</a></dt>
+<dd><p>return True if halo is NFW, False if not</p>
 </dd></dl>
 
 <dl class="method">
@@ -295,15 +312,37 @@ to keep the original ordering of particles, set shuffle=False</p>
 <dl class="method">
 <dt id="oPDF.Tracer.NFW_fit">
 <code class="descname">NFW_fit</code><span class="sig-paren">(</span><em>x0=[1, 1], minuittol=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.NFW_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.NFW_fit" title="Permalink to this definition">¶</a></dt>
-<dd><p>to fit an NFW density PDF with maximum likelihood.
-results will be printed on screen.
-also return minuit result and the minuit minimizer.</p>
-<p>..note:
-This is only intended for fitting the Dark Matter density profile to get the NFW parameters.
+<dd><p>to fit an NFW density PDF with maximum likelihood.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You need the <a class="reference external" href="https://pypi.python.org/pypi/iminuit">iminuit</a> python package before you can use this function. If you don&#8217;t have that, you need to comment out the <cite>iminuit</cite> related imports in the header of <cite>oPDF.py</cite>.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x0</strong> &#8211; initial value of halo parameters. the interpretation of them depends on the halotype and scales of the tracer&#8217;s halo. see Tracer.halo of <a class="reference internal" href="#oPDF.Tracer" title="oPDF.Tracer"><code class="xref py py-class docutils literal"><span class="pre">Tracer</span></code></a> and halo.type, halo.scales of <code class="xref py py-class docutils literal"><span class="pre">halo</span></code>.</li>
+<li><strong>minuittol</strong> &#8211; tolerance of minuit to consider convergence. Convergence is defined when the estimated distance to minimum edm&lt;1e-4*minuittol*0.5</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>results will be printed on screen.
+also return minuit result and the minuit minimizer.
+Please consult the <a class="reference external" href="https://pypi.python.org/pypi/iminuit">iminuit</a> documentation for the <cite>iminuit</cite> outputs.</p>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This is only intended for fitting the Dark Matter density profile to get the NFW parameters.
 The tracer particle mass should have been properly assigned or adjusted, 
 so that mP*number_density=physical_density.
 If you have sampled n particles from the full sample of n0 particles, 
 remember to adjust the mP of the sample to be mP0*n0/n, so that total mass is conserved.</p>
+</div>
 </dd></dl>
 
 <dl class="method">

@@ -90,7 +90,7 @@ position and velocity of the center of the halo. The code comes with a
 sample file under data/:
 
 -  mockhalo.hdf5, a mock stellar halo. The potential is NFW with
-   :math:`M=183.5017\times 10^{10}M_\odot`\ , :math:`c=16.1560`\ ,
+   :math:`M=133.96\times 10^{10}M_\odot/h`\ , :math:`c=16.16`\ ,
    following the :math:`\rho_{vir}=200\rho_{crit}` definition.
 
 Compulsory datasets in a data file:
@@ -106,7 +106,12 @@ Optional datasets:
    examination of the effects of subhaloes during the analysis.
 -  ``HaloID, [nx1], int32``. This is the host halo id of each particles.
 
-The units of the data can be specified when running the code.
+The default system of units are
+:math:`10^{10} M_\odot/h, {\rm kpc}/h, km/s` for Mass, Length and
+Velocity. If the units in the data differ from this system, you can
+choose to either update the data so that they follows the default
+systems, or change the system of units of oPDF code at run time. See the
+units section of this tutorial.
 
 *Note*: to construct a tracer sample for a halo, do not use FoF
 particles alone. Instead, make a spherical selection by including all
@@ -134,12 +139,6 @@ of the ``oPDF`` code. Let's load the sample data
     datafile=rootdir+"/data/mockhalo.hdf5"
     FullSample=Tracer(datafile)
     Sample=FullSample.copy(0,1000)
-
-.. parsed-literal::
-
-    30000 <oPDF.LP_Particle_t object at 0x4e23e60>
-
-
 This will load the data into FullSample, and make a subsample of 1000
 particles from the FullSample. You may want to do your analysis with the
 full sample. We extract the subsample just for illustrution purpose, to
@@ -159,7 +158,7 @@ Now let's fit the data with the radial binned likelihood estimator with
 
 .. parsed-literal::
 
-    [ 161.8486416    19.83133738] 5014.14688084 1
+    [ 118.17712485   19.81948425] 5014.14688443 1
 
 
 In one or two minutes, you will get the results above, where
@@ -169,21 +168,21 @@ In one or two minutes, you will get the results above, where
 -  ``status`` =1 means fitting is successful, =0 means fit failed.
 
 That's it! You have got the best-fitting
-:math:`M=161.8\times10^{10} M_\odot` and :math:`c=19.83`\ . ### Estimate
-significances How does that compare to the real parameters of
-:math:`M=183.5017\times 10^{10}M_\odot`\ , :math:`c=16.1560`\ ? Not too
+:math:`M=118.18\times10^{10} M_\odot/h` and :math:`c=19.82`\ . ###
+Estimate significances How does that compare to the real parameters of
+:math:`M=133.96\times 10^{10}M_\odot/h`\ , :math:`c=16.16`\ ? Not too
 far, but let's check the likelihood ratio of the two models
 
 .. code:: python
 
-    x0=[183.5017,16.1560]
+    x0=[133.96,16.16]
     f0=Sample.likelihood(x0, Estimators.RBinLike)
     likerat=2*(fval-f0)
     print likerat
 
 .. parsed-literal::
 
-    1.0933322551
+    1.09277867155
 
 
 So we got a likelihood ratio of 1.09. How significant is that? According
@@ -204,11 +203,11 @@ Chi2Sig() utility function
 
 .. parsed-literal::
 
-    0.555026554617
+    0.554792280618
 
 
 So the best-fitting differs from the real parameters by
-:math:`0.56\sigma`\ , which is not significant at all. In other words,
+:math:`0.55\sigma`\ , which is not significant at all. In other words,
 the best-fitting parameters are quite consistent with the real
 parameters!
 
@@ -247,7 +246,7 @@ values:
 
 .. parsed-literal::
 
-    <matplotlib.text.Text at 0x4fa4fd0>
+    <matplotlib.text.Text at 0x3e97050>
 
 
 
@@ -287,7 +286,7 @@ potential with parameters ``x0``.
 
 .. parsed-literal::
 
-    <matplotlib.text.Text at 0x524ee90>
+    <matplotlib.text.Text at 0x4117ed0>
 
 
 
@@ -355,7 +354,7 @@ units
 ~~~~~
 
 The system of units is specified in three fundamental units:
-Mass[:math:`M_\odot/h`\ ], Length[kpc:math:`/h`\ ], Velocity[km/s]. You
+Mass[:math:`M_\odot/h`\ ], Length[kpc/:math:`h`\ ], Velocity[km/s]. You
 can query the current units with
 
 .. code:: python
@@ -364,8 +363,8 @@ can query the current units with
 
 .. parsed-literal::
 
-    Mass  : 7300000000.0 Msun/h
-    Length: 0.73 kpc/h
+    Mass  : 10000000000.0 Msun/h
+    Length: 1.0 kpc/h
     Vel   : 1.0 km/s
 
 
@@ -373,25 +372,30 @@ can query the current units with
 
 .. parsed-literal::
 
-    (7300000000.0, 0.73, 1.0)
+    (10000000000.0, 1.0, 1.0)
 
 
 
-These units are typical for a simulated tracer in units of
-``[1e10Msun/h, kpc/h, km/s]`` with ``h=0.73``. The oPDF code does not
-need to know the value of the hubble constant, as long as the units are
-correctly specified. It is the user's responsibility to make sure that
-his/her units are consistent with his assumed hubble parameter.
+The default units are [:math:`10^{10} M_\odot/h`\ , kpc/:math:`h`\ ,
+km/s]. The oPDF code does not need to know the value of the hubble
+constant :math:`h`\ , as long as the units are correctly specified. It
+is the user's responsibility to make sure that his/her units are
+consistent with his assumed hubble parameter.
 
 If you want to change the system of units, you must do it immediately
 after importing the ``oPDF`` module, to avoid inconsistency with units
-of previously loaded tracers. For example, to change the units to
-(1e10Msun/h,kpc/h,km/s),
+of previously loaded tracers. For example, if your data is provided in
+units of (1e10Msun, kpc, km/s), and you adopt :math:`h=0.73` in your
+model, then you can set the units like below
 
 .. code:: python
 
     from oPDF import *
-    Globals.set_units(1e10,1,1)
+    h=0.73
+    Globals.set_units(1e10*h,h,1)
+That is, to set them to (:math:`10^{10}h` Msun/:math:`h`\ , :math:`h`\ kpc/:math:`h`\ ,
+km/s).
+
 The user should only use Globals.set\_units() to change the units, which
 automatically updates several interal constants related to units. Never
 try to change the internal unit variables (e.g.,
@@ -446,7 +450,7 @@ including:
 -  HaloTypes.TMPPotScaleRScale: Template,
    :math:`\psi_s/\psi_{s0}, r_s/r_{s0}`
 
-To use template profiles, you have to creates them first, in the form of
+To use template profiles, you have to create them first, in the form of
 (:math:`r,\psi,\rho(< r)`\ ) arrays and the real :math:`r_s` parameter
 to be added to C/TemplateData.h. You need to recompile the C library
 once this is done. PotentialProf.py can help you in generating the
@@ -475,8 +479,8 @@ change them as
 
     Sample.halo.set_type(scales=[100,10])
 Now if we fit the Sample again with the RBinLike estimator, instead of
-``x=[ 161.8    19.8]``, we will get ``x=[1.618    1.98]`` as the best
-fit, but the physical values are not changed.
+``x=[ 118.18    19.82]``, we will get ``x=[1.1818    1.982]`` as the
+best fit, but the physical values are not changed.
 
 Halos
 ^^^^^
@@ -504,7 +508,7 @@ You can set\_type(), set\_param(), get the mass and potential profiles
 
 .. parsed-literal::
 
-    <matplotlib.text.Text at 0x5e48510>
+    <matplotlib.text.Text at 0x4b54e90>
 
 
 
@@ -568,8 +572,8 @@ Note:
 
 .. parsed-literal::
 
-    9201829.25741
-    0.982207688183
+    10025467.0597
+    0.978053348837
 
 
 Extending the code
@@ -592,21 +596,25 @@ Extending the code
 
 -  To add new template profiles
 -  Generate your template in the form of (:math:`r,\psi,\rho(< r)`\ )
-   arrays, and append to C/PotentialTemplate in TemplateData.h
--  Append the scale radius of the new template to TemplateScale in
-   C/TemplateData.h. This is only used if you want to use TMPMC
+   arrays, and append to ``PotentialTemplate`` in ``C/TemplateData.h``.
+-  Append the scale radius of the new template to ``TemplateScale`` in
+   ``C/TemplateData.h``. This is only used if you want to use ``TMPMC``
    parametrization. In this case the scale radius must be the radius
-   where the logrithmic slope of density equals to -2.
+   with respect to which you define the concentration. That is, you must
+   make sure when you input the real :math:`M,c` parameters to the
+   template, and I convert :math:`Rv` from :math:`M` and then compare to
+   this scale radius, I get the real :math:`c` that you input.
 -  :math:`\rho(<r)` and :math:`r_s` are only needed if you want to use
-   TMPMC parametrization. If you only want to use TMPPotScaleRScale
-   parametrization, you can fill :math:`\rho(<r)` and :math:`r_s` with
-   ones or any value.
+   ``TMPMC`` parametrization. If you only want to use
+   ``TMPPotScaleRScale`` parametrization, you can fill :math:`\rho(<r)`
+   and :math:`r_s` with ones or any value.
 
 -  To add new estimators
 -  check C/models.c
 
-You need to recompile the C library once this is done. PotentialProf.py
-can help you in generating the templates from DM distributions.
+You need to recompile the C library once this is done.
+``PotentialProf.py`` can help you in generating the templates from DM
+distributions.
 
 Additional Features
 -------------------
@@ -653,12 +661,6 @@ cleaning process by using ``with`` statement:
 
     with Tracer(datafile) as TempSample:
         NewSample=TempSample.copy(0,100)
-
-.. parsed-literal::
-
-    30000 <oPDF.LP_Particle_t object at 0x564f3b0>
-
-
 This will load the datafile into ``TempSample``, create ``NewSample``
 from ``TempSample``, and clear ``TempSample`` when exiting the ``with``
 block.
@@ -686,8 +688,8 @@ fitting the distribution of dark matter particles in a halo)
 
     **********************************************************************
     ---------------------------------------------------------------------------------------
-    fval = 7019.816934338302 | nfcn = 68 | ncalls = 68
-    edm = 1.6793878043880015e-05 (Goal: 5e-05) | up = 0.5
+    fval = 6359.824931628151 | nfcn = 82 | ncalls = 82
+    edm = 2.564356008095891e-05 (Goal: 5e-05) | up = 0.5
     ---------------------------------------------------------------------------------------
     |          Valid |    Valid Param | Accurate Covar |         Posdef |    Made Posdef |
     ---------------------------------------------------------------------------------------
@@ -701,17 +703,17 @@ fitting the distribution of dark matter particles in a halo)
     ----------------------------------------------------------------------------------------------
     |      | Name  |  Value   | Para Err |   Err-   |   Err+   |  Limit-  |  Limit+  |          |
     ----------------------------------------------------------------------------------------------
-    |    0 |     m =  15.43   |  0.5686  |          |          |          |          |          |
-    |    1 |     c =  11.99   |  1.183   |          |          |          |          |          |
+    |    0 |     m =  15.45   |  0.5484  |          |          |          |          |          |
+    |    1 |     c =  25.63   |  2.777   |          |          |          |          |          |
     ----------------------------------------------------------------------------------------------
     
     **********************************************************************
     ['m', 'c']
-    ((1.0, -0.20669988381300106), (-0.20669988381300106, 1.0))
+    ((1.0, -0.14515703395364832), (-0.14515703395364832, 1.0))
            |    0    1 
     --------------------
-    m    0 | 1.00 -0.21 
-    c    1 | -0.21 1.00 
+    m    0 | 1.00 -0.15 
+    c    1 | -0.15 1.00 
     --------------------
     
 
@@ -720,10 +722,10 @@ fitting the distribution of dark matter particles in a halo)
 
 .. parsed-literal::
 
-    (({'hesse_failed': False, 'has_reached_call_limit': False, 'has_accurate_covar': True, 'has_posdef_covar': True, 'up': 0.5, 'edm': 1.6793878043880015e-05, 'is_valid': True, 'is_above_max_edm': False, 'has_covariance': True, 'has_made_posdef_covar': False, 'has_valid_parameters': True, 'fval': 7019.816934338302, 'nfcn': 68},
-      [{'is_const': False, 'name': 'm', 'has_limits': False, 'value': 15.43079877133447, 'number': 0L, 'has_lower_limit': False, 'upper_limit': 0.0, 'lower_limit': 0.0, 'has_upper_limit': False, 'error': 0.5686375878908682, 'is_fixed': False},
-       {'is_const': False, 'name': 'c', 'has_limits': False, 'value': 11.989314056141591, 'number': 1L, 'has_lower_limit': False, 'upper_limit': 0.0, 'lower_limit': 0.0, 'has_upper_limit': False, 'error': 1.1834785038966056, 'is_fixed': False}]),
-     <iminuit._libiminuit.Minuit at 0x5c3f2f0>)
+    (({'hesse_failed': False, 'has_reached_call_limit': False, 'has_accurate_covar': True, 'has_posdef_covar': True, 'up': 0.5, 'edm': 2.564356008095891e-05, 'is_valid': True, 'is_above_max_edm': False, 'has_covariance': True, 'has_made_posdef_covar': False, 'has_valid_parameters': True, 'fval': 6359.824931628151, 'nfcn': 82},
+      [{'is_const': False, 'name': 'm', 'has_limits': False, 'value': 15.448578108740815, 'number': 0L, 'has_lower_limit': False, 'upper_limit': 0.0, 'lower_limit': 0.0, 'has_upper_limit': False, 'error': 0.5483502684852839, 'is_fixed': False},
+       {'is_const': False, 'name': 'c', 'has_limits': False, 'value': 25.626752919187034, 'number': 1L, 'has_lower_limit': False, 'upper_limit': 0.0, 'lower_limit': 0.0, 'has_upper_limit': False, 'error': 2.7766103272812517, 'is_fixed': False}]),
+     <iminuit._libiminuit.Minuit at 0x4c10000>)
 
 
 
@@ -732,6 +734,8 @@ matter particles of equal particle mass given in ``Sample.mP``, and the
 number density profile times ``Sample.mP`` should give the physical
 density profile.
 
-You also need the ``iminuit`` python package before you can use this
-function. If you don't have that, you need to comment out the
-``iminuit`` related imports in the header of ``oPDF.py``.
+You also need the `iminuit <https://pypi.python.org/pypi/iminuit>`_
+python package before you can use this function. If you don't have that,
+you need to comment out the ``iminuit`` related imports in the header of
+``oPDF.py``. Please consult the ``iminuit`` documentation for the
+``iminuit`` outputs.
