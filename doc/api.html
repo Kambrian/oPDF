@@ -264,7 +264,7 @@ is the template of the current halo, just in case the template does not match</p
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
-<li><strong>halo</strong> &#8211; the halo (potential, :py:class:oPDF.Halo) for the tracer.</li>
+<li><strong>halo</strong> &#8211; the halo (potential, type <a class="reference internal" href="#oPDF.Halo" title="oPDF.Halo"><code class="xref py py-class docutils literal"><span class="pre">Halo</span></code></a>) for the tracer.</li>
 <li><strong>lnL</strong> &#8211; likelihood or distance for the sample from the previous likelihood calculation, depending on estimator.</li>
 <li><strong>nP</strong> &#8211; number of particles.</li>
 <li><strong>mP</strong> &#8211; average particle mass.</li>
@@ -381,6 +381,7 @@ reuturn bin edges, ts, counts</p>
 <code class="descname">copy</code><span class="sig-paren">(</span><em>offset=0</em>, <em>n=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.copy" title="Permalink to this definition">¶</a></dt>
 <dd><p>create a subsample by copying n particles starting from offset.
 if n==0, then copy all the particles starting from offset.</p>
+<p>Only particles and their radial limits are copied. The halo, RadialCounts and Views are not copied into the new sample.</p>
 <p>return the subsample</p>
 </dd></dl>
 
@@ -479,13 +480,17 @@ The likelihood for each view is also availabel in Views[i].lnL</p>
 <dl class="method">
 <dt id="oPDF.Tracer.phase_image">
 <code class="descname">phase_image</code><span class="sig-paren">(</span><em>pars</em>, <em>proxy</em>, <em>bins=30</em>, <em>logscale=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.phase_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.phase_image" title="Permalink to this definition">¶</a></dt>
-<dd><p>plot an image of the particle distribution in proxy-theta space</p>
+<dd><p>plot an image of the particle distribution in proxy-theta space
+:param pars: parameters specifying the potential
+:param proxy: proxy to use for the proxy-theta plot, &#8216;E&#8217; or &#8216;L&#8217;.
+:param bins: binning in proxy. if an integer, create the input number of bins. If an array, use the array as the bins.
+:param logscale: True or False, whether to bin in logscale or not when bins is an integer.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="oPDF.Tracer.plot_TSprof">
 <code class="descname">plot_TSprof</code><span class="sig-paren">(</span><em>pars</em>, <em>proxy='L'</em>, <em>nbin=100</em>, <em>estimator=MeanPhaseRaw</em>, <em>xtype='percent-phys'</em>, <em>linestyle='r-'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.plot_TSprof"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.plot_TSprof" title="Permalink to this definition">¶</a></dt>
-<dd><p>plot the TS profile</p>
+<dd><p>plot the TS profile in equal-count bins of proxy.</p>
 <p>xtype: can be one of &#8216;percent&#8217;, &#8216;physical&#8217;, and &#8216;percent-phys&#8217;.</p>
 <blockquote>
 <div><p>when xtype=&#8217;percent&#8217;, plot the x-axis with percents.</p>
@@ -571,10 +576,13 @@ otherwise the maximum likelihood is automatically scanned for RBinLike.</p>
 <dl class="method">
 <dt id="oPDF.Tracer.select">
 <code class="descname">select</code><span class="sig-paren">(</span><em>flags</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.select"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.select" title="Permalink to this definition">¶</a></dt>
-<dd><p>select particles according to flags array, to create a subsample.</p>
+<dd><p>select particles according to flags array, into a new sample.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">When doing dynamical tests, one should avoid distorting the radial distribution with any radial selection. One can still apply radial cuts, but should only do this with the <a class="reference internal" href="#oPDF.Tracer.radial_cut" title="oPDF.Tracer.radial_cut"><code class="xref py py-func docutils literal"><span class="pre">radial_cut()</span></code></a> function. So never use <a class="reference internal" href="#oPDF.Tracer.select" title="oPDF.Tracer.select"><code class="xref py py-func docutils literal"><span class="pre">select()</span></code></a> on data[&#8216;r&#8217;].</p>
+<ul class="last simple">
+<li>Same as <a class="reference internal" href="#oPDF.Tracer.copy" title="oPDF.Tracer.copy"><code class="xref py py-func docutils literal"><span class="pre">copy()</span></code></a>, only particles and their radial limits are copied. The halo, RadialCounts and Views are not copied into the new sample.</li>
+<li>When doing dynamical tests, one should avoid distorting the radial distribution with any radial selection. One can still apply radial cuts, but should only do this with the <a class="reference internal" href="#oPDF.Tracer.radial_cut" title="oPDF.Tracer.radial_cut"><code class="xref py py-func docutils literal"><span class="pre">radial_cut()</span></code></a> function. So never use <a class="reference internal" href="#oPDF.Tracer.select" title="oPDF.Tracer.select"><code class="xref py py-func docutils literal"><span class="pre">select()</span></code></a> on data[&#8216;r&#8217;].</li>
+</ul>
 </div>
 </dd></dl>
 

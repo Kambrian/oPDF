@@ -362,7 +362,7 @@
 <div class="viewcode-block" id="Tracer"><a class="viewcode-back" href="../api.html#oPDF.Tracer">[docs]</a><span class="k">class</span> <span class="nc">Tracer</span><span class="p">(</span><span class="n">Tracer_t</span><span class="p">):</span>
   <span class="sd">&#39;&#39;&#39; Tracer: a population of tracer particles.</span>
 <span class="sd">    </span>
-<span class="sd">  :ivar halo: the halo (potential, :py:class:oPDF.Halo) for the tracer.</span>
+<span class="sd">  :ivar halo: the halo (potential, type :class:`Halo`) for the tracer.</span>
 <span class="sd">  :ivar lnL: likelihood or distance for the sample from the previous likelihood calculation, depending on estimator.</span>
 <span class="sd">  :ivar nP: number of particles.</span>
 <span class="sd">  :ivar mP: average particle mass.</span>
@@ -441,6 +441,8 @@
 	<span class="sd">&#39;&#39;&#39;create a subsample by copying n particles starting from offset.</span>
 <span class="sd">	if n==0, then copy all the particles starting from offset.</span>
 <span class="sd">	</span>
+<span class="sd">	Only particles and their radial limits are copied. The halo, RadialCounts and Views are not copied into the new sample.</span>
+<span class="sd">	</span>
 <span class="sd">	return the subsample&#39;&#39;&#39;</span>
 	<span class="n">newsample</span><span class="o">=</span><span class="n">Tracer</span><span class="p">()</span>
 	<span class="n">lib</span><span class="o">.</span><span class="n">copy_tracer_particles</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">offset</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">newsample</span><span class="o">.</span><span class="n">_pointer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span>
@@ -448,10 +450,11 @@
 	<span class="k">return</span> <span class="n">newsample</span>
   </div>
 <div class="viewcode-block" id="Tracer.select"><a class="viewcode-back" href="../api.html#oPDF.Tracer.select">[docs]</a>  <span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flags</span><span class="p">):</span>
-	<span class="sd">&#39;&#39;&#39;select particles according to flags array, to create a subsample.</span>
+	<span class="sd">&#39;&#39;&#39;select particles according to flags array, into a new sample. </span>
 <span class="sd">	</span>
 <span class="sd">	.. note::</span>
-<span class="sd">	   When doing dynamical tests, one should avoid distorting the radial distribution with any radial selection. One can still apply radial cuts, but should only do this with the :func:`radial_cut` function. So never use :func:`select` on data[&#39;r&#39;].&#39;&#39;&#39;</span>
+<span class="sd">	   - Same as :func:`copy`, only particles and their radial limits are copied. The halo, RadialCounts and Views are not copied into the new sample.</span>
+<span class="sd">	   - When doing dynamical tests, one should avoid distorting the radial distribution with any radial selection. One can still apply radial cuts, but should only do this with the :func:`radial_cut` function. So never use :func:`select` on data[&#39;r&#39;].&#39;&#39;&#39;</span>
 	   
 	<span class="n">sample</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
 	<span class="n">sample</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;flag&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">flags</span>
@@ -522,8 +525,6 @@
   		</div>
 <div class="viewcode-block" id="Tracer.gen_bin"><a class="viewcode-back" href="../api.html#oPDF.Tracer.gen_bin">[docs]</a>  <span class="k">def</span> <span class="nf">gen_bin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">bintype</span><span class="p">,</span><span class="n">nbin</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span><span class="n">logscale</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">equalcount</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;return bin edges. divide into nbin bins, with nbin+1 edges.&#39;&#39;&#39;</span>
-	<span class="k">if</span> <span class="n">bintype</span><span class="o">==</span><span class="s">&#39;L&#39;</span><span class="p">:</span>
-	  <span class="n">bintype</span><span class="o">=</span><span class="s">&#39;L2&#39;</span>
 	<span class="n">proxy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">bintype</span><span class="p">]</span>
 	<span class="n">n</span><span class="o">=</span><span class="n">nbin</span><span class="o">+</span><span class="mi">1</span>
 	<span class="k">if</span> <span class="n">equalcount</span><span class="p">:</span>
@@ -697,7 +698,7 @@
 	<span class="k">return</span> <span class="n">ts</span><span class="p">,</span><span class="n">x</span>
   </div>
 <div class="viewcode-block" id="Tracer.plot_TSprof"><a class="viewcode-back" href="../api.html#oPDF.Tracer.plot_TSprof">[docs]</a>  <span class="k">def</span> <span class="nf">plot_TSprof</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">,</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">Estimators</span><span class="o">.</span><span class="n">MeanPhaseRaw</span><span class="p">,</span> <span class="n">xtype</span><span class="o">=</span><span class="s">&#39;percent-phys&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s">&#39;r-&#39;</span><span class="p">):</span>
-	<span class="sd">&#39;&#39;&#39;plot the TS profile</span>
+	<span class="sd">&#39;&#39;&#39;plot the TS profile in equal-count bins of proxy.</span>
 <span class="sd">	</span>
 <span class="sd">	xtype: can be one of &#39;percent&#39;, &#39;physical&#39;, and &#39;percent-phys&#39;. </span>
 <span class="sd">	  </span>
@@ -718,8 +719,8 @@
 	  <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">percents</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">3</span><span class="p">],[</span><span class="s">&#39;</span><span class="si">%.1f</span><span class="s">&#39;</span><span class="o">%</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">x</span><span class="p">][</span><span class="mi">1</span><span class="p">::</span><span class="mi">3</span><span class="p">])</span>
 	  <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">r&#39;$\log(&#39;</span><span class="o">+</span><span class="n">proxy</span><span class="o">+</span><span class="s">&#39;)$&#39;</span><span class="p">)</span>
 	<span class="k">if</span> <span class="n">xtype</span><span class="o">==</span><span class="s">&#39;phys&#39;</span><span class="p">:</span>
-	  <span class="n">h</span><span class="p">,</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xmid</span><span class="p">,</span> <span class="n">ts</span><span class="p">,</span> <span class="n">linestyle</span><span class="p">)</span>
-	  <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">r&#39;$</span><span class="si">%s</span><span class="s">$&#39;</span><span class="o">%</span><span class="n">proxy</span><span class="p">)</span>
+	  <span class="n">h</span><span class="p">,</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">xmid</span><span class="p">),</span> <span class="n">ts</span><span class="p">,</span> <span class="n">linestyle</span><span class="p">)</span>
+	  <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">r&#39;$\log(</span><span class="si">%s</span><span class="s">)$&#39;</span><span class="o">%</span><span class="n">proxy</span><span class="p">)</span>
 	<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span>
 	<span class="k">if</span> <span class="n">estimator</span><span class="o">==</span><span class="n">Estimators</span><span class="o">.</span><span class="n">MeanPhaseRaw</span><span class="p">:</span>
 	  <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="s">&#39;k--&#39;</span><span class="p">)</span>
@@ -842,7 +843,12 @@
 	  <span class="k">return</span> <span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="n">extent</span>
 	</div>
 <div class="viewcode-block" id="Tracer.phase_image"><a class="viewcode-back" href="../api.html#oPDF.Tracer.phase_image">[docs]</a>  <span class="k">def</span> <span class="nf">phase_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">proxy</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">logscale</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
-	<span class="sd">&#39;&#39;&#39;plot an image of the particle distribution in proxy-theta space&#39;&#39;&#39;</span>
+	<span class="sd">&#39;&#39;&#39;plot an image of the particle distribution in proxy-theta space</span>
+<span class="sd">	:param pars: parameters specifying the potential</span>
+<span class="sd">	:param proxy: proxy to use for the proxy-theta plot, &#39;E&#39; or &#39;L&#39;.</span>
+<span class="sd">	:param bins: binning in proxy. if an integer, create the input number of bins. If an array, use the array as the bins.</span>
+<span class="sd">	:param logscale: True or False, whether to bin in logscale or not when bins is an integer.&#39;&#39;&#39;</span>
+	
 	<span class="bp">self</span><span class="o">.</span><span class="n">set_phase</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span> <span class="c">#determine the phase-angles with the real halo parameters x0</span>
 	<span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">phase_density</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">,</span> <span class="n">logscale</span><span class="o">=</span><span class="n">logscale</span><span class="p">)</span>
 	<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span><span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">)</span>
