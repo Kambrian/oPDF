@@ -96,6 +96,8 @@ void decode_TemplateProf(Halo_t *halo)
 double scaleF,rhoc;
 struct CosmParZ cosm;
 
+// if(halo->IsForbidden) return;//do nothing
+
 evolve_cosmology(halo->z,&cosm);
 rhoc=(3.0*cosm.Hz*cosm.Hz)/(8.0*M_PI*Globals.units.Const.G);
 halo->Rv=cbrt(fabs(halo->M)/(4.0*M_PI/3.0*cosm.virialF[halo->virtype]*rhoc));

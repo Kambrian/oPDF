@@ -5,8 +5,9 @@ import h5py,os,sys
 from scipy.stats import chi2
 #plt.ion()
 
+#set units if needed
 hubble=0.73
-Globals.set_units(1e10*hubble, hubble, 1.) #set to 1e10Msun, kpc, km/s
+Globals.set_units(1e10*hubble, hubble, 1.) #set to 1e10Msun, kpc, km/s with the current h
 
 DMfile=rootdir+'/../../data/A4DM.hdf5'
 #real parameters, for comparison with analytical profile:

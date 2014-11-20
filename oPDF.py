@@ -313,7 +313,7 @@ def _lib_close():
 class Tracer(Tracer_t):
   ''' Tracer: a population of tracer particles.
     
-  :ivar halo: the halo (potential, :py:class:oPDF.Halo) for the tracer.
+  :ivar halo: the halo (potential, type :class:`Halo`) for the tracer.
   :ivar lnL: likelihood or distance for the sample from the previous likelihood calculation, depending on estimator.
   :ivar nP: number of particles.
   :ivar mP: average particle mass.
@@ -392,6 +392,8 @@ class Tracer(Tracer_t):
 	'''create a subsample by copying n particles starting from offset.
 	if n==0, then copy all the particles starting from offset.
 	
+	Only particles and their radial limits are copied. The halo, RadialCounts and Views are not copied into the new sample.
+	
 	return the subsample'''
 	newsample=Tracer()
 	lib.copy_tracer_particles(int(offset), int(n), newsample._pointer, self._pointer)
@@ -399,10 +401,11 @@ class Tracer(Tracer_t):
 	return newsample
   
   def select(self, flags):
-	'''select particles according to flags array, to create a subsample.
+	'''select particles according to flags array, into a new sample. 
 	
 	.. note::
-	   When doing dynamical tests, one should avoid distorting the radial distribution with any radial selection. One can still apply radial cuts, but should only do this with the :func:`radial_cut` function. So never use :func:`select` on data['r'].'''
+	   - Same as :func:`copy`, only particles and their radial limits are copied. The halo, RadialCounts and Views are not copied into the new sample.
+	   - When doing dynamical tests, one should avoid distorting the radial distribution with any radial selection. One can still apply radial cuts, but should only do this with the :func:`radial_cut` function. So never use :func:`select` on data['r'].'''
 	   
 	sample=self.copy(0,0)
 	sample.data['flag']=flags
@@ -473,8 +476,6 @@ class Tracer(Tracer_t):
   		
   def gen_bin(self,bintype,nbin=30,logscale=True, equalcount=False):
 	'''return bin edges. divide into nbin bins, with nbin+1 edges.'''
-	if bintype=='L':
-	  bintype='L2'
 	proxy=self.data[bintype]
 	n=nbin+1
 	if equalcount:
@@ -648,7 +649,7 @@ class Tracer(Tracer_t):
 	return ts,x
   
   def plot_TSprof(self, pars, proxy='L', nbin=100, estimator=Estimators.MeanPhaseRaw, xtype='percent-phys', linestyle='r-'):
-	'''plot the TS profile
+	'''plot the TS profile in equal-count bins of proxy.
 	
 	xtype: can be one of 'percent', 'physical', and 'percent-phys'. 
 	  
@@ -669,8 +670,8 @@ class Tracer(Tracer_t):
 	  plt.xticks(percents[1::3],['%.1f'%np.log10(a) for a in x][1::3])
 	  plt.xlabel(r'$\log('+proxy+')$')
 	if xtype=='phys':
-	  h,=plt.plot(xmid, ts, linestyle)
-	  plt.xlabel(r'$%s$'%proxy)
+	  h,=plt.plot(np.log10(xmid), ts, linestyle)
+	  plt.xlabel(r'$\log(%s)$'%proxy)
 	plt.ylabel(estimator)
 	if estimator==Estimators.MeanPhaseRaw:
 	  plt.plot(plt.xlim(), [0, 0], 'k--')
@@ -793,7 +794,12 @@ class Tracer(Tracer_t):
 	  return X,Y,Z,extent
 	
   def phase_image(self, pars, proxy, bins=30, logscale=True):
-	'''plot an image of the particle distribution in proxy-theta space'''
+	'''plot an image of the particle distribution in proxy-theta space
+	:param pars: parameters specifying the potential
+	:param proxy: proxy to use for the proxy-theta plot, 'E' or 'L'.
+	:param bins: binning in proxy. if an integer, create the input number of bins. If an array, use the array as the bins.
+	:param logscale: True or False, whether to bin in logscale or not when bins is an integer.'''
+	
 	self.set_phase(pars) #determine the phase-angles with the real halo parameters x0
 	X,Y,Z,extent=self.phase_density(proxy, bins=bins, logscale=logscale)
 	plt.imshow(Z,extent=extent)

@@ -56,6 +56,8 @@ void decode_NFWprof(Halo_t *halo)
 double scaleF,rhoc;
 struct CosmParZ cosm;
 
+// if(halo->IsForbidden) return;// do nothing
+
 evolve_cosmology(halo->z,&cosm);
 // scaleF=1.0/(1+halo->z);
 rhoc=(3.0*cosm.Hz*cosm.Hz)/(8.0*M_PI*Globals.units.Const.G);
@@ -91,13 +93,13 @@ int isNFW(HaloType_t t)
 }
 double NFW_like(const double pars[], Tracer_t *T)
 {
-  if(pars[0]<=0||pars[1]<=0||isnan(pars[0])||isnan(pars[1])) return -INFINITY;
   if(!isNFW(T->halo.type))
   {
 	fprintf(stderr, "Error: halotype=%d, not an NFW halo\n", T->halo.type);
 	exit(1);
   }
   halo_set_param(pars, &T->halo);
+  if(T->halo.IsForbidden) return -INFINITY;
   double lnL=log(T->halo.Rhos)*T->nP-(halo_mass(T->rmax, &T->halo)-halo_mass(T->rmin, &T->halo))/T->mP; //the normalizations
   int i;
   #pragma omp parallel for reduction(+: lnL)

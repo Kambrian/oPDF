@@ -257,7 +257,7 @@ void resample_tracer_particles(unsigned long int seed, Tracer_t *ReSample, Trace
 }
 
 void copy_tracer_particles(int offset, int sample_size, Tracer_t *Sample, Tracer_t *FullSample)
-{
+{//only copy particles, user should manage halo, views, and radial_counts
   if(sample_size<0) //null copy
   {
 	Sample->nP=0;

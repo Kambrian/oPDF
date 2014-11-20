@@ -22,7 +22,7 @@ void halo_set_type(HaloType_t t, VirType_t virtype, double Redshift, const doubl
 	if(cid!=TMPid)
 	{
 	  if(cid>=0)
-		fprintf(stderr, "Warning: changing halo template from %d to %d\n"
+		fprintf(stderr, "==INFO: Changing halo template from %d to %d\n"
 		"Note a maximum of only one template can be loaded at any time.\n"
 		"The old template is now replaced\n", cid, TMPid);
 	  free_potential_spline();
@@ -44,8 +44,8 @@ void halo_set_param(const double pars[], Halo_t *halo)
 	case HT_NFWMC:
 	  halo->M=phypar[0];
 	  halo->c=phypar[1];
-	  decode_NFWprof(halo);
 	  halo->IsForbidden=!(ISPHYSICAL(halo->M)&&ISPHYSICAL(halo->c));
+	  if(!halo->IsForbidden) decode_NFWprof(halo);
 	  break;
 	case HT_NFWPotsRs:
 	case HT_CorePotsRs://same as NFWPotsRs
@@ -66,8 +66,8 @@ void halo_set_param(const double pars[], Halo_t *halo)
 	case HT_TMPMC:
 	  halo->M=phypar[0];
 	  halo->c=phypar[1];
-	  decode_TemplateProf(halo);
 	  halo->IsForbidden=!(ISPHYSICAL(halo->M)&&ISPHYSICAL(halo->c));
+	  if(!halo->IsForbidden) decode_TemplateProf(halo);
 	  break;
 	case HT_TMPPotScaleRScale:
 	  halo->PotScale=phypar[0];
