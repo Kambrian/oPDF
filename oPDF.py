@@ -4,7 +4,7 @@ It wraps the C functions into python classes with ctypes."""
 from math import *
 import numpy as np
 import ctypes,os
-from myutils import Chi2Sig,AD2Sig,density_of_points,get_extent,NamedEnum,NamedValues
+from myutils import Chi2Sig,AD2Sig,density_of_points,get_extent,NamedValues,NamedEnum
 #from myutils import fmin_gsl
 #from scipy.optimize import fmin, fmin_powell
 import matplotlib.pyplot as plt
@@ -67,8 +67,22 @@ class globals_t(ctypes.Structure):
 	print 'Length:', self.units.LengthInKpch, 'kpc/h'
 	print 'Vel   :', self.units.VelInKms, 'km/s'
 	return (self.units.MassInMsunh, self.units.LengthInKpch, self.units.VelInKms)
-VirTypes=NamedEnum('TH C200 B200')	
+class _NamedEnum(NamedEnum):
+#just an alias of NamedEnum
+#it is here just because sphinx does not auto-doc instances of imported classes,
+#so we make it a native class by aliasing it.
+  pass
+
+VirTypes=_NamedEnum('TH C200 B200')
+'''Collection of virial definitions. It contains 
+
+    - ``VirTH``: the spherical collapse prediction (i.e, Bryan & Norman 98 fitting).
+    - ``VirB200``: the 200 times mean density deifinition.
+    - ``VirC200``: the 200 times critical density definition.
+'''
 Globals=globals_t.in_dll(lib, 'Globals')
+'''    Collection of global variables of the module, of class :class:`globals_t`. It controls numerical precision, internal units, and cosmology. 
+'''
 
 #===halo.h
 MaxNPar=10
@@ -102,7 +116,18 @@ lib.halo_pot.argtypes=[ctypes.c_double, Halo_p]
 lib.isNFW.restype=ctypes.c_int
 lib.isNFW.argtypes=[ctypes.c_int]
 
-HaloTypes=NamedEnum('NFWMC NFWPotsRs NFWRhosRs TMPMC TMPPotScaleRScale CoreRhosRs CorePotsRs')
+HaloTypes=_NamedEnum('NFWMC NFWPotsRs NFWRhosRs TMPMC TMPPotScaleRScale CoreRhosRs CorePotsRs')
+''' Collection of halo types. It contains
+
+    -  ``NFWMC``: NFW halo parametrized by :math:`(M,c)`
+    -  ``NFWRhosRs``: NFW, :math:`(\\rho_s,r_s)`
+    -  ``NFWPotsRs``: NFW, (:math:`\\psi_s, r_s`\ ), with :math:`\\psi_s=4\\pi G\\rho_s r_s^2`\ .
+    -  ``CorePotsRs``: Cored Generalized NFW Potential (inner density slope=0), parametrized by (:math:`\\psi_s,r_s`\ )
+    -  ``CoreRhosRs``: Cored GNFW, :math:`(\\rho_s,r_s)`
+    -  ``TMPMC``: Template profile, :math:`(M,c)` parametrization
+    -  ``TMPPotScaleRScale``: Template, :math:`\\psi_s/\\psi_{s0}, r_s/r_{s0}`
+'''
+
 class Halo(Halo_t):
   '''a general halo describing the potential. It has the following properties
   
@@ -116,11 +141,11 @@ class Halo(Halo_t):
   :ivar M: mass 
   :ivar c: concentration
   :ivar Rv: virial radius
-  :ivar Pots: Pots=4*pi*G*Rhos*Rs^2.
+  :ivar Pots: :math:`\\psi_s=4\\pi G\\rho_s r_s^2`.
   :ivar Rhos: scale density for NFW
   :ivar Rs: scale radius 
-  :ivar RScale: Rs/Rs0 for TMP profile
-  :ivar PotScale: Pots/Pots0 for TMP profile
+  :ivar RScale: :math:`r_s/r_{s0}` for TMP profile
+  :ivar PotScale: :math:`\psi_s/\psi_{s0}` for TMP profile
   '''
   def __init__(self, halotype=HaloTypes.NFWMC, virtype=VirTypes.C200, redshift=0., scales=None, TMPid=-1):
 	'''define a halo by specifiying the parametrization, virial definition and redshift of halo
@@ -283,10 +308,19 @@ class NamedEstimators(object):
 	for number, name in enumerate(names.split()):
 	  setattr(self, name, NamedValuesEst(number, name))
 Estimators=NamedEstimators('RBinLike AD MeanPhase MeanPhaseRaw')
-Estimators.RBinLike.need_phase=False
-Estimators.RBinLike.nbin=20
-Estimators.RBinLike.logscale=True
+'''   Collection of dynamical estimators. It contains
 
+    - ``RBinLike``: binned radial likelihood. 
+    
+	Use ``RBinLike.nbin`` (``integer``) and ``RBinLike.logscale`` (``True`` or ``False``) to control the number and scale of bins. 
+	Since the purpose of the binning is purely to suppress shot noise, a larger number of bins is generally better, as long as it is not too noisy. On the other hand, when the likelihood contours appear too irregular, one should try reducing the number of radial bins to ensure the irregularities are not caused by shot noise. In our analysis, we have adopted 30 bins for an ideal sample of 1000 particles, and 50 bins for :math:`10^6` particles in a realistic halo, although a bin number as low as 5 could still work.
+    
+    - ``AD``: Anderson-Darling distance.
+    - ``MeanPhaseRaw``: Normalized mean phase deviation :math:`\\bar{\\Theta}=(\\bar{\\theta}-0.5)/\\sigma_{\\theta}`\ , to be compared to a standard normal variable.
+    - ``MeanPhase``: :math:`\\bar{\\Theta}^2`\ , to be compared to a chi-square variable.'''
+Estimators.RBinLike.need_phase=False
+Estimators.RBinLike.nbin=20 #: The number of radial bins.
+Estimators.RBinLike.logscale=True
 lib.alloc_integration_space.restype=None
 lib.alloc_integration_space.argtypes=[]
 lib.free_integration_space.restype=None
@@ -460,7 +494,13 @@ class Tracer(Tracer_t):
 	  
   def radial_count(self, nbin=10, logscale=True):
 	'''bin the particles radially, to be used for radial likelihood calculation.
-	The histogram will be recorded in Tracer.RadialCount[].'''
+	The histogram will be recorded in Tracer.RadialCount[]. 
+	
+	.. note::
+	   This function is automatically called by the relevant likelihood functions such as :func:`likelihood`,
+	   :func:`dyn_fit`, :func:`scan_confidence` when the :member:`Estimators.RBinLike` is used. In these cases,
+	   `nbin` and `logscale` will be determined according to :member:`Estimators.RBinLike.nbin` and :member:`Estimators.RBinLike.logscale`.
+	   So usually you do not need to call this function explicitly.'''
 	lib.count_tracer_radial(self._pointer, nbin, logscale)
 
   def predict_radial_count(self, nbin=100, logscale=True):
