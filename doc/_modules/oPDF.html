@@ -53,7 +53,7 @@
 <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">ctypes</span><span class="o">,</span><span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">myutils</span> <span class="kn">import</span> <span class="n">Chi2Sig</span><span class="p">,</span><span class="n">AD2Sig</span><span class="p">,</span><span class="n">density_of_points</span><span class="p">,</span><span class="n">get_extent</span><span class="p">,</span><span class="n">NamedEnum</span><span class="p">,</span><span class="n">NamedValues</span>
+<span class="kn">from</span> <span class="nn">myutils</span> <span class="kn">import</span> <span class="n">Chi2Sig</span><span class="p">,</span><span class="n">AD2Sig</span><span class="p">,</span><span class="n">density_of_points</span><span class="p">,</span><span class="n">get_extent</span><span class="p">,</span><span class="n">NamedValues</span><span class="p">,</span><span class="n">NamedEnum</span>
 <span class="c">#from myutils import fmin_gsl</span>
 <span class="c">#from scipy.optimize import fmin, fmin_powell</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
@@ -116,8 +116,22 @@
 	<span class="k">print</span> <span class="s">&#39;Length:&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">LengthInKpch</span><span class="p">,</span> <span class="s">&#39;kpc/h&#39;</span>
 	<span class="k">print</span> <span class="s">&#39;Vel   :&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">VelInKms</span><span class="p">,</span> <span class="s">&#39;km/s&#39;</span>
 	<span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">MassInMsunh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">LengthInKpch</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">VelInKms</span><span class="p">)</span></div></div>
-<span class="n">VirTypes</span><span class="o">=</span><span class="n">NamedEnum</span><span class="p">(</span><span class="s">&#39;TH C200 B200&#39;</span><span class="p">)</span>	
+<span class="k">class</span> <span class="nc">_NamedEnum</span><span class="p">(</span><span class="n">NamedEnum</span><span class="p">):</span>
+<span class="c">#just an alias of NamedEnum</span>
+<span class="c">#it is here just because sphinx does not auto-doc instances of imported classes,</span>
+<span class="c">#so we make it a native class by aliasing it.</span>
+  <span class="k">pass</span>
+
+<span class="n">VirTypes</span><span class="o">=</span><span class="n">_NamedEnum</span><span class="p">(</span><span class="s">&#39;TH C200 B200&#39;</span><span class="p">)</span>
+<span class="sd">&#39;&#39;&#39;Collection of virial definitions. It contains </span>
+
+<span class="sd">    - ``VirTH``: the spherical collapse prediction (i.e, Bryan &amp; Norman 98 fitting).</span>
+<span class="sd">    - ``VirB200``: the 200 times mean density deifinition.</span>
+<span class="sd">    - ``VirC200``: the 200 times critical density definition.</span>
+<span class="sd">&#39;&#39;&#39;</span>
 <span class="n">Globals</span><span class="o">=</span><span class="n">globals_t</span><span class="o">.</span><span class="n">in_dll</span><span class="p">(</span><span class="n">lib</span><span class="p">,</span> <span class="s">&#39;Globals&#39;</span><span class="p">)</span>
+<span class="sd">&#39;&#39;&#39;    Collection of global variables of the module, of class :class:`globals_t`. It controls numerical precision, internal units, and cosmology. </span>
+<span class="sd">&#39;&#39;&#39;</span>
 
 <span class="c">#===halo.h</span>
 <span class="n">MaxNPar</span><span class="o">=</span><span class="mi">10</span>
@@ -151,7 +165,18 @@
 <span class="n">lib</span><span class="o">.</span><span class="n">isNFW</span><span class="o">.</span><span class="n">restype</span><span class="o">=</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">isNFW</span><span class="o">.</span><span class="n">argtypes</span><span class="o">=</span><span class="p">[</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">]</span>
 
-<span class="n">HaloTypes</span><span class="o">=</span><span class="n">NamedEnum</span><span class="p">(</span><span class="s">&#39;NFWMC NFWPotsRs NFWRhosRs TMPMC TMPPotScaleRScale CoreRhosRs CorePotsRs&#39;</span><span class="p">)</span>
+<span class="n">HaloTypes</span><span class="o">=</span><span class="n">_NamedEnum</span><span class="p">(</span><span class="s">&#39;NFWMC NFWPotsRs NFWRhosRs TMPMC TMPPotScaleRScale CoreRhosRs CorePotsRs&#39;</span><span class="p">)</span>
+<span class="sd">&#39;&#39;&#39; Collection of halo types. It contains</span>
+
+<span class="sd">    -  ``NFWMC``: NFW halo parametrized by :math:`(M,c)`</span>
+<span class="sd">    -  ``NFWRhosRs``: NFW, :math:`(\\rho_s,r_s)`</span>
+<span class="sd">    -  ``NFWPotsRs``: NFW, (:math:`\\psi_s, r_s`\ ), with :math:`\\psi_s=4\\pi G\\rho_s r_s^2`\ .</span>
+<span class="sd">    -  ``CorePotsRs``: Cored Generalized NFW Potential (inner density slope=0), parametrized by (:math:`\\psi_s,r_s`\ )</span>
+<span class="sd">    -  ``CoreRhosRs``: Cored GNFW, :math:`(\\rho_s,r_s)`</span>
+<span class="sd">    -  ``TMPMC``: Template profile, :math:`(M,c)` parametrization</span>
+<span class="sd">    -  ``TMPPotScaleRScale``: Template, :math:`\\psi_s/\\psi_{s0}, r_s/r_{s0}`</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
 <div class="viewcode-block" id="Halo"><a class="viewcode-back" href="../api.html#oPDF.Halo">[docs]</a><span class="k">class</span> <span class="nc">Halo</span><span class="p">(</span><span class="n">Halo_t</span><span class="p">):</span>
   <span class="sd">&#39;&#39;&#39;a general halo describing the potential. It has the following properties</span>
 <span class="sd">  </span>
@@ -165,11 +190,11 @@
 <span class="sd">  :ivar M: mass </span>
 <span class="sd">  :ivar c: concentration</span>
 <span class="sd">  :ivar Rv: virial radius</span>
-<span class="sd">  :ivar Pots: Pots=4*pi*G*Rhos*Rs^2.</span>
+<span class="sd">  :ivar Pots: :math:`\\psi_s=4\\pi G\\rho_s r_s^2`.</span>
 <span class="sd">  :ivar Rhos: scale density for NFW</span>
 <span class="sd">  :ivar Rs: scale radius </span>
-<span class="sd">  :ivar RScale: Rs/Rs0 for TMP profile</span>
-<span class="sd">  :ivar PotScale: Pots/Pots0 for TMP profile</span>
+<span class="sd">  :ivar RScale: :math:`r_s/r_{s0}` for TMP profile</span>
+<span class="sd">  :ivar PotScale: :math:`\psi_s/\psi_{s0}` for TMP profile</span>
 <span class="sd">  &#39;&#39;&#39;</span>
   <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">halotype</span><span class="o">=</span><span class="n">HaloTypes</span><span class="o">.</span><span class="n">NFWMC</span><span class="p">,</span> <span class="n">virtype</span><span class="o">=</span><span class="n">VirTypes</span><span class="o">.</span><span class="n">C200</span><span class="p">,</span> <span class="n">redshift</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scales</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">TMPid</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;define a halo by specifiying the parametrization, virial definition and redshift of halo</span>
@@ -332,15 +357,28 @@
 	<span class="k">for</span> <span class="n">number</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">names</span><span class="o">.</span><span class="n">split</span><span class="p">()):</span>
 	  <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">NamedValuesEst</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
 <span class="n">Estimators</span><span class="o">=</span><span class="n">NamedEstimators</span><span class="p">(</span><span class="s">&#39;RBinLike AD MeanPhase MeanPhaseRaw&#39;</span><span class="p">)</span>
-<span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="o">.</span><span class="n">need_phase</span><span class="o">=</span><span class="bp">False</span>
-<span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="o">.</span><span class="n">nbin</span><span class="o">=</span><span class="mi">20</span>
-<span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="o">.</span><span class="n">logscale</span><span class="o">=</span><span class="bp">True</span>
+<span class="sd">&#39;&#39;&#39;   Collection of dynamical estimators. It contains</span>
 
+<span class="sd">    - ``RBinLike``: binned radial likelihood. </span>
+<span class="sd">    </span>
+<span class="sd">	Use ``RBinLike.nbin`` (``integer``) and ``RBinLike.logscale`` (``True`` or ``False``) to control the number and scale of bins. </span>
+<span class="sd">	Since the purpose of the binning is purely to suppress shot noise, a larger number of bins is generally better, as long as it is not too noisy. On the other hand, when the likelihood contours appear too irregular, one should try reducing the number of radial bins to ensure the irregularities are not caused by shot noise. In our analysis, we have adopted 30 bins for an ideal sample of 1000 particles, and 50 bins for :math:`10^6` particles in a realistic halo, although a bin number as low as 5 could still work.</span>
+<span class="sd">    </span>
+<span class="sd">    - ``AD``: Anderson-Darling distance.</span>
+<span class="sd">    - ``MeanPhaseRaw``: Normalized mean phase deviation :math:`\\bar{\\Theta}=(\\bar{\\theta}-0.5)/\\sigma_{\\theta}`\ , to be compared to a standard normal variable.</span>
+<span class="sd">    - ``MeanPhase``: :math:`\\bar{\\Theta}^2`\ , to be compared to a chi-square variable.&#39;&#39;&#39;</span>
+<span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="o">.</span><span class="n">need_phase</span><span class="o">=</span><span class="bp">False</span>
+<span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="o">.</span><span class="n">nbin</span><span class="o">=</span><span class="mi">20</span> <span class="c">#: The number of radial bins.</span>
+<span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="o">.</span><span class="n">logscale</span><span class="o">=</span><span class="bp">True</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">alloc_integration_space</span><span class="o">.</span><span class="n">restype</span><span class="o">=</span><span class="bp">None</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">alloc_integration_space</span><span class="o">.</span><span class="n">argtypes</span><span class="o">=</span><span class="p">[]</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">free_integration_space</span><span class="o">.</span><span class="n">restype</span><span class="o">=</span><span class="bp">None</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">free_integration_space</span><span class="o">.</span><span class="n">argtypes</span><span class="o">=</span><span class="p">[]</span>
 
+<span class="n">TestData</span><span class="o">=</span><span class="n">NamedEstimators</span><span class="p">(</span><span class="s">&#39;c d&#39;</span><span class="p">)</span>
+<span class="sd">&#39;&#39;&#39;test data&#39;&#39;&#39;</span>
+<span class="n">Test2</span><span class="o">=</span><span class="n">NamedEnum</span><span class="p">(</span><span class="s">&#39;a b&#39;</span><span class="p">)</span>
+<span class="sd">&#39;&#39;&#39; test2&#39;&#39;&#39;</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">like_eval</span><span class="o">.</span><span class="n">restype</span><span class="o">=</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">like_eval</span><span class="o">.</span><span class="n">argtypes</span><span class="o">=</span><span class="p">[</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">,</span> <span class="n">Tracer_p</span><span class="p">]</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">nested_views_like</span><span class="o">.</span><span class="n">restype</span><span class="o">=</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span>
@@ -509,7 +547,13 @@
 	  </div>
 <div class="viewcode-block" id="Tracer.radial_count"><a class="viewcode-back" href="../api.html#oPDF.Tracer.radial_count">[docs]</a>  <span class="k">def</span> <span class="nf">radial_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">logscale</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;bin the particles radially, to be used for radial likelihood calculation.</span>
-<span class="sd">	The histogram will be recorded in Tracer.RadialCount[].&#39;&#39;&#39;</span>
+<span class="sd">	The histogram will be recorded in Tracer.RadialCount[]. </span>
+<span class="sd">	</span>
+<span class="sd">	.. note::</span>
+<span class="sd">	   This function is automatically called by the relevant likelihood functions such as :func:`likelihood`,</span>
+<span class="sd">	   :func:`dyn_fit`, :func:`scan_confidence` when the :member:`Estimators.RBinLike` is used. In these cases,</span>
+<span class="sd">	   `nbin` and `logscale` will be determined according to :member:`Estimators.RBinLike.nbin` and :member:`Estimators.RBinLike.logscale`.</span>
+<span class="sd">	   So usually you do not need to call this function explicitly.&#39;&#39;&#39;</span>
 	<span class="n">lib</span><span class="o">.</span><span class="n">count_tracer_radial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">,</span> <span class="n">nbin</span><span class="p">,</span> <span class="n">logscale</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="Tracer.predict_radial_count"><a class="viewcode-back" href="../api.html#oPDF.Tracer.predict_radial_count">[docs]</a>  <span class="k">def</span> <span class="nf">predict_radial_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">logscale</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>

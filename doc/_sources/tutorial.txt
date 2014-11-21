@@ -348,6 +348,16 @@ change the RBinLike to use 20 linear bins.
 
     Estimators.RBinLike.nbin=20
     Estimators.RBinLike.logscale=False
+You can then pass this customized ``Estimators.RBinLike`` to your
+likelihood functions. Since the purpose of the binning is purely to
+suppress shot noise, a larger number of bins is generally better, as
+long as it is not too noisy. On the other hand, when the likelihood
+contours appear too irregular, one should try reducing the number of
+radial bins to ensure the irregularities are not caused by shot noise.
+In our analysis, we have adopted 30 logarithmic bins for an ideal sample
+of 1000 particles, and 50 bins for :math:`10^6` particles in a realistic
+halo, although a bin number as low as 5 could still work.
+
 units
 ~~~~~
 
@@ -511,7 +521,7 @@ You can set\_type(), set\_param(), get the mass and potential profiles
 
 
 
-.. image:: tutorial_files/tutorial_47_1.png
+.. image:: tutorial_files/tutorial_48_1.png
 
 
 selecting and cutting

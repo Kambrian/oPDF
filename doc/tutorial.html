@@ -337,6 +337,15 @@ change the RBinLike to use 20 linear bins.</p>
 <span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="o">.</span><span class="n">logscale</span><span class="o">=</span><span class="bp">False</span>
 </pre></div>
 </div>
+<p>You can then pass this customized <code class="docutils literal"><span class="pre">Estimators.RBinLike</span></code> to your
+likelihood functions. Since the purpose of the binning is purely to
+suppress shot noise, a larger number of bins is generally better, as
+long as it is not too noisy. On the other hand, when the likelihood
+contours appear too irregular, one should try reducing the number of
+radial bins to ensure the irregularities are not caused by shot noise.
+In our analysis, we have adopted 30 logarithmic bins for an ideal sample
+of 1000 particles, and 50 bins for <img class="math" src="_images/math/550df0159f2d6d5bf2a137c8484c0b557cf6edde.png" alt="10^6"/> particles in a realistic
+halo, although a bin number as low as 5 could still work.</p>
 </div>
 <div class="section" id="units">
 <h3>units<a class="headerlink" href="#units" title="Permalink to this headline">¶</a></h3>
@@ -466,7 +475,7 @@ You can set_type(), set_param(), get the mass and potential profiles</p>
 <div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x53971d0&gt;
 </pre></div>
 </div>
-<img alt="_images/tutorial_47_1.png" src="_images/tutorial_47_1.png" />
+<img alt="_images/tutorial_48_1.png" src="_images/tutorial_48_1.png" />
 </div>
 </div>
 <div class="section" id="selecting-and-cutting">
