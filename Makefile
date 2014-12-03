@@ -32,7 +32,7 @@ endif
 DEBUG=on
 
 ifeq ($(CC),icc)
-LDFLAGS+= -limf
+LDFLAGS+= -limf -lirc
 OMPLIB= -openmp
 endif
 ifeq ($(CC),gcc)

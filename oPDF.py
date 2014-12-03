@@ -12,11 +12,11 @@ from iminuit import Minuit
 from iminuit.ConsoleFrontend import ConsoleFrontend
 #import copy
 
-rootdir=os.path.dirname(__file__)
-if rootdir=='':
-  rootdir='.'
+oPDFdir=os.path.dirname(__file__)
+if oPDFdir=='':
+  oPDFdir='.'
 #=======================load the library===============================
-lib=ctypes.CDLL(rootdir+"/liboPDF.so")
+lib=ctypes.CDLL(oPDFdir+"/liboPDF.so")
 #=======================prototype the library==========================
 #==globals.h
 class global_tol(ctypes.Structure):
@@ -121,8 +121,8 @@ HaloTypes=_NamedEnum('NFWMC NFWPotsRs NFWRhosRs TMPMC TMPPotScaleRScale CoreRhos
 
     -  ``NFWMC``: NFW halo parametrized by :math:`(M,c)`
     -  ``NFWRhosRs``: NFW, :math:`(\\rho_s,r_s)`
-    -  ``NFWPotsRs``: NFW, (:math:`\\psi_s, r_s`\ ), with :math:`\\psi_s=4\\pi G\\rho_s r_s^2`\ .
-    -  ``CorePotsRs``: Cored Generalized NFW Potential (inner density slope=0), parametrized by (:math:`\\psi_s,r_s`\ )
+    -  ``NFWPotsRs``: NFW, (:math:`|\\psi_s|, r_s`\ ), with :math:`|\\psi_s|=4\\pi G\\rho_s r_s^2`\ .
+    -  ``CorePotsRs``: Cored Generalized NFW Potential (inner density slope=0), parametrized by (:math:`|\\psi_s|,r_s`\ )
     -  ``CoreRhosRs``: Cored GNFW, :math:`(\\rho_s,r_s)`
     -  ``TMPMC``: Template profile, :math:`(M,c)` parametrization
     -  ``TMPPotScaleRScale``: Template, :math:`\\psi_s/\\psi_{s0}, r_s/r_{s0}`
@@ -451,7 +451,7 @@ class Tracer(Tracer_t):
 	lib.squeeze_tracer_particles(self._pointer)
 	self.__update_array()
 	
-  def shuffle(self, seed=1024):
+  def shuffle(self, seed=100):
 	'''shuffle particles randomly.
 	
 	seed: optional, seeds the random number generator for the shuffle'''
@@ -469,7 +469,7 @@ class Tracer(Tracer_t):
 	sort_func={'flag': lib.sort_part_flag, 'E': lib.sort_part_E, 'L': lib.sort_part_L, 'r': lib.sort_part_R}
 	sort_func[proxy](ctypes.byref(Particle_t.from_buffer(self.P[offset])), n)
 
-  def resample(self, seed=1024):
+  def resample(self, seed=100):
 	''' create a bootstrap sample (sampling with replacement) of the same size from tracer
 	return the new sample'''
 	newsample=Tracer()
@@ -861,7 +861,7 @@ class Tracer(Tracer_t):
 _lib_open() #allocate integration space
 
 if __name__=="__main__":
-  datafile=rootdir+'/data/mockhalo.hdf5'
+  datafile=oPDFdir+'/data/mockhalo.hdf5'
   FullSample=Tracer(datafile=datafile)
   Sample=FullSample.copy(0,1000)
   FullSample.print_data(10)
