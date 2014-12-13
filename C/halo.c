@@ -87,7 +87,8 @@ double halo_mass(double r, Halo_t *halo)
   {
 	case HT_TMPMC:
 	case HT_TMPPotScaleRScale:
-	  return eval_density_spline(r/halo->Rs)*halo->PotScale/halo->RScale/halo->RScale*4.*M_PI/3.*r*r*r; //use spline if inited.
+	  return eval_density_spline(r/halo->RScale)*halo->PotScale/halo->RScale/halo->RScale*4.*M_PI/3.*r*r*r; //use spline if inited. rho(r)=A/B^2 rho0(r/B).
+	  //bugfix: r/halo->Rs to r/halo->RScale
 	case HT_NFWMC:
 	case HT_NFWPotsRs:
 	case HT_NFWRhosRs:
