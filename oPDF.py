@@ -46,13 +46,17 @@ class globals_t(ctypes.Structure):
 	including precision, cosmology and units'''
 	lib.default_global_pars()
   
-  def set_units(self, MassInMsunh=1e10, LengthInKpch=1., VelInKms=1.):
+  def set_units(self, MassInMsunh=1.e10, LengthInKpch=1., VelInKms=1.):
 	'''set system of units.
 	specify Mass in Msun/h, Length in kpc/h, Velocity in km/s.
 	
-	If you want to use (1e10Msun, kpc, km/s) as units, and you adopt $h=0.73$ in your model, then you can set the units like below
-	>>>h=0.73
-	>>>Globals.set_units(1e10*h,h,1)
+	:example:
+	
+	  If you want to use (1e10Msun, kpc, km/s) as units, and you adopt :math:`h=0.73`  in your model, then you can set the units like below
+	
+	  >>> h=0.73
+	  >>> Globals.set_units(1e10*h,h,1)
+	
 	That is, to set them to (1e10h Msun/h, h kpc/h, km/s).
 	
 	.. note::
@@ -133,8 +137,8 @@ class Halo(Halo_t):
   
   :ivar pars: raw parameter values. do not change them manually, use :func:`set_param` to set them.
   :ivar scales: parameter scales. use :func:`set_type` to set them.
-  :ivar virtype: virial definition
-  :ivar type: parametrization type. One of :data:`HaloTypes`.
+  :ivar virtype: virial definition. One of :const:`VirTypes'.
+  :ivar type: parametrization type. One of :const:`HaloTypes`.
   
   Depending on the type of the halo, some of the following properties may be calculated during :func:`set_param`:
   
@@ -146,19 +150,25 @@ class Halo(Halo_t):
   :ivar Rs: scale radius 
   :ivar RScale: :math:`r_s/r_{s0}` for TMP profile
   :ivar PotScale: :math:`\psi_s/\psi_{s0}` for TMP profile
+  
   '''
   def __init__(self, halotype=HaloTypes.NFWMC, virtype=VirTypes.C200, redshift=0., scales=None, TMPid=-1):
-	'''define a halo by specifiying the parametrization, virial definition and redshift of halo
+	'''
+	:initializer:
 	
-	halotype: halo parametrization, one of the :data:`HaloTypes` members
+	  define a halo by specifiying the parametrization, virial definition and redshift of halo
+	  
+	  :param halotype: halo parametrization, one of the :const:`HaloTypes` members
+	  
+	  :param virtype: virial definition, one of the :const:`VirTypes` members
+	  
+	  :param redshift: redshift of halo
+	  
+	  :param scales: scales of halo parameters, array-like, of the same shape as parameters. default to all-ones if None. physical parameters will be params*scales
+	  
+	  :param TMPid: template id. only required when halotype is of template type
 	
-	virtype: virial definition, one of the VirTypes members
-	
-	redshift: redshift of halo
-	
-	scales: scales of halo parameters, array-like, of the same shape as parameters. default to all-ones if None. physical parameters will be params*scales
-	
-	TMPid: template id. only required when halotype is of template type'''
+	'''
 	Halo_t.__init__(self)
 	#print "initing halo"
 	self.set_type(halotype, virtype, redshift, scales, TMPid)
@@ -168,7 +178,7 @@ class Halo(Halo_t):
 	
 	halotype: halo parametrization, one of the :data:`HaloTypes` members
 	
-	virtype: virial definition, one of the VirTypes members
+	virtype: virial definition, one of the :const:`VirTypes` members
 	
 	redshift: redshift of halo
 	
@@ -369,7 +379,10 @@ class Tracer(Tracer_t):
   :ivar rmax: upper radial cut.
   '''
   def __init__(self, datafile=None, rmin=None, rmax=None, shuffle=True):
-	'''it loads a tracer from the datafile. 
+	'''
+	:Initializer: 
+	
+	loading a tracer from a datafile. 
 	
 	optionally, can apply radial cut given by rmin and rmax
 	
@@ -498,8 +511,8 @@ class Tracer(Tracer_t):
 	
 	.. note::
 	   This function is automatically called by the relevant likelihood functions such as :func:`likelihood`,
-	   :func:`dyn_fit`, :func:`scan_confidence` when the :member:`Estimators.RBinLike` is used. In these cases,
-	   `nbin` and `logscale` will be determined according to :member:`Estimators.RBinLike.nbin` and :member:`Estimators.RBinLike.logscale`.
+	   :func:`dyn_fit`, :func:`scan_confidence` when the estimator is :const:`Estimators` ``.RBinLike``. In these cases,
+	   `nbin` and `logscale` will be determined according to :attr:`Estimators.RBinLike.nbin` and :attr:`Estimators.RBinLike.logscale`.
 	   So usually you do not need to call this function explicitly.'''
 	lib.count_tracer_radial(self._pointer, nbin, logscale)
 
@@ -579,13 +592,29 @@ class Tracer(Tracer_t):
 	self.set_orbits(need_theta)
 
   def like_eval(self, estimator):
-	'''evaluate likelihood or fig of merit with the given estimator in the attached halo.
-	one has to call :func:`set_phase` before this.
+	'''evaluate likelihood or TS with the given estimator. 
+	
+	.. note::
+	This is a low-leve function. One has to call :func:`set_phase` before calling this.
+	Use :func:`likelihood` which combines :func:`like_eval` and :func:`set_phase` automatically, unless you do want to call them separately. 
+	
+	:param estimator: estimator to use for the likelihood or TS calculation.
+	
+	:returns: the likelihood (if estimator= :const:`Estimators` ``.RBin``) or TS value (:math:`\\bar{\\Theta}`\  for :const:`Estimators` ``.MeanPhaseRaw``, :math:`\\bar{\\Theta}^2`\  for :const:`Estimators` ``.MeanPhase``, or AD distance for :const:`Estimators` ``.AD``).
 	'''
 	return lib.like_eval(estimator.value, self._pointer)
   	
-  def likelihood(self, pars, estimator, auto_rbin=True):
-	'''calculate likelihood. automatically prepare binning, orbits and eval like.'''
+  def likelihood(self, pars=[1,1], estimator=Estimators.MeanPhaseRaw, auto_rbin=True):
+	'''calculate likelihood or test-statistic.
+	it automatically prepares orbits and then calculates the likelihood or TS
+	(i.e., it combines :func:`set_phase` and :func:`like_eval`).
+	
+	:param pars: parameter values
+	:param estimator: estimator to use for the likelihood or TS calculation.
+	:param auto_rbin: whether to prepare radial bins automatically. Only relevant if you are using Estimators.RBin. default to True. set to false if you have prepared the bins manually (by calling :func:`radial_count`).
+	
+	:returns: the likelihood (if estimator= :const:`Estimators` ``.RBin``) or TS value (:math:`\\bar{\\Theta}`\  for :const:`Estimators` ``.MeanPhaseRaw``, :math:`\\bar{\\Theta}^2`\  for :const:`Estimators` ``.MeanPhase``, or AD distance for :const:`Estimators` ``.AD``).
+	'''
 	if auto_rbin and estimator==Estimators.RBinLike:
 	  self.radial_count(estimator.nbin, estimator.logscale)
 	self.set_phase(pars, estimator.need_phase)
