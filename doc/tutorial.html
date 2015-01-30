@@ -165,9 +165,9 @@ according to their separations, but not dynamics.</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">oPDF</span> <span class="kn">import</span> <span class="o">*</span>
 </pre></div>
 </div>
-<p>Now the <code class="docutils literal"><span class="pre">rootdir</span></code> should have been automatically set to the directory
+<p>Now the <code class="docutils literal"><span class="pre">oPDFdir</span></code> should have been automatically set to the directory
 of the <code class="docutils literal"><span class="pre">oPDF</span></code> code. Let&#8217;s load the sample data</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">datafile</span><span class="o">=</span><span class="n">rootdir</span><span class="o">+</span><span class="s">&quot;/data/mockhalo.hdf5&quot;</span>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">datafile</span><span class="o">=</span><span class="n">oPDFdir</span><span class="o">+</span><span class="s">&quot;/data/mockhalo.hdf5&quot;</span>
 <span class="n">FullSample</span><span class="o">=</span><span class="n">Tracer</span><span class="p">(</span><span class="n">datafile</span><span class="p">)</span>
 <span class="n">Sample</span><span class="o">=</span><span class="n">FullSample</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1000</span><span class="p">)</span>
 </pre></div>
@@ -531,8 +531,9 @@ set_phase() function, e.g.,</li>
 </div>
 <div class="section" id="extending-the-code">
 <h3>Extending the code<a class="headerlink" href="#extending-the-code" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="to-add-new-types-of-potential">
+<h4>To add new types of potential:<a class="headerlink" href="#to-add-new-types-of-potential" title="Permalink to this headline">¶</a></h4>
 <ul class="simple">
-<li>To add new types of potential</li>
 <li>in C/halo.h: add your HaloType identifier in HaloType_t</li>
 <li>in C/halo.c:<ul>
 <li>write your halo initializer in halo_set_param().</li>
@@ -546,7 +547,11 @@ and add any initilization in halo_set_type() if needed.</li>
 <code class="docutils literal"><span class="pre">HaloTypes=NamedEnum(...</span></code></li>
 </ul>
 </li>
-<li>To add new template profiles</li>
+</ul>
+</div>
+<div class="section" id="to-add-new-template-profiles">
+<h4>To add new template profiles:<a class="headerlink" href="#to-add-new-template-profiles" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
 <li>Generate your template in the form of (<img class="math" src="_images/math/2cb2800f6a05e3f058ab8a355978af183021f8f7.png" alt="r,\psi,\rho(&lt; r)"/>)
 arrays, and append to <code class="docutils literal"><span class="pre">PotentialTemplate</span></code> in <code class="docutils literal"><span class="pre">C/TemplateData.h</span></code>.</li>
 <li>Append the scale radius of the new template to <code class="docutils literal"><span class="pre">TemplateScale</span></code> in
@@ -560,12 +565,17 @@ this scale radius, I get the real <img class="math" src="_images/math/65868d23a5
 <code class="docutils literal"><span class="pre">TMPMC</span></code> parametrization. If you only want to use
 <code class="docutils literal"><span class="pre">TMPPotScaleRScale</span></code> parametrization, you can fill <img class="math" src="_images/math/2eca59ef6a923ae3e9ef42ab65fed9f7486510ea.png" alt="\rho(&lt;r)"/>
 and <img class="math" src="_images/math/5a56f25d5a5f42e0b8d477397dac166f964ba407.png" alt="r_s"/> with ones or any value.</li>
-<li>To add new estimators</li>
-<li>check C/models.c</li>
+</ul>
+</div>
+<div class="section" id="to-add-new-estimators">
+<h4>To add new estimators:<a class="headerlink" href="#to-add-new-estimators" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li>check <code class="docutils literal"><span class="pre">C/models.c</span></code>.</li>
 </ul>
 <p>You need to recompile the C library once this is done.
 <code class="docutils literal"><span class="pre">PotentialProf.py</span></code> can help you in generating the templates from DM
 distributions.</p>
+</div>
 </div>
 </div>
 <div class="section" id="additional-features">
@@ -704,7 +714,12 @@ you need to comment out the <code class="docutils literal"><span class="pre">imi
 </ul>
 </li>
 <li><a class="reference internal" href="#selecting-and-cutting">selecting and cutting</a></li>
-<li><a class="reference internal" href="#extending-the-code">Extending the code</a></li>
+<li><a class="reference internal" href="#extending-the-code">Extending the code</a><ul>
+<li><a class="reference internal" href="#to-add-new-types-of-potential">To add new types of potential:</a></li>
+<li><a class="reference internal" href="#to-add-new-template-profiles">To add new template profiles:</a></li>
+<li><a class="reference internal" href="#to-add-new-estimators">To add new estimators:</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#additional-features">Additional Features</a><ul>

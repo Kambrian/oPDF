@@ -80,8 +80,8 @@
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">NFWMC</span></code>: NFW halo parametrized by <img class="math" src="_images/math/ebfe80b31de3ff59c32669ad5a92686427629d21.png" alt="(M,c)"/></li>
 <li><code class="docutils literal"><span class="pre">NFWRhosRs</span></code>: NFW, <img class="math" src="_images/math/98b221d714b31c14edce2f33ab6be0c23164c6f0.png" alt="(\rho_s,r_s)"/></li>
-<li><code class="docutils literal"><span class="pre">NFWPotsRs</span></code>: NFW, (<img class="math" src="_images/math/34f07bb6c51d693ccf6809c687856f428391ae4d.png" alt="\psi_s, r_s"/>), with <img class="math" src="_images/math/58461b5beddd43d20087fdee4121fb4f49795f49.png" alt="\psi_s=4\pi G\rho_s r_s^2"/>.</li>
-<li><code class="docutils literal"><span class="pre">CorePotsRs</span></code>: Cored Generalized NFW Potential (inner density slope=0), parametrized by (<img class="math" src="_images/math/80f3e7ed57c124be00759e699b1c8d8beb2fd8ff.png" alt="\psi_s,r_s"/>)</li>
+<li><code class="docutils literal"><span class="pre">NFWPotsRs</span></code>: NFW, (<img class="math" src="_images/math/c6e07e7605359696dd58633a4e5cc4a081503a96.png" alt="|\psi_s|, r_s"/>), with <img class="math" src="_images/math/63ecad0cf33464858f4f811db6898a220f604529.png" alt="|\psi_s|=4\pi G\rho_s r_s^2"/>.</li>
+<li><code class="docutils literal"><span class="pre">CorePotsRs</span></code>: Cored Generalized NFW Potential (inner density slope=0), parametrized by (<img class="math" src="_images/math/dac55ecc5fb3e1ee6f82919a235f3465c84ebee5.png" alt="|\psi_s|,r_s"/>)</li>
 <li><code class="docutils literal"><span class="pre">CoreRhosRs</span></code>: Cored GNFW, <img class="math" src="_images/math/98b221d714b31c14edce2f33ab6be0c23164c6f0.png" alt="(\rho_s,r_s)"/></li>
 <li><code class="docutils literal"><span class="pre">TMPMC</span></code>: Template profile, <img class="math" src="_images/math/ebfe80b31de3ff59c32669ad5a92686427629d21.png" alt="(M,c)"/> parametrization</li>
 <li><code class="docutils literal"><span class="pre">TMPPotScaleRScale</span></code>: Template, <img class="math" src="_images/math/7a947bb3fb1e0cc69d0b627a2307ad16cc89e7bf.png" alt="\psi_s/\psi_{s0}, r_s/r_{s0}"/></li>
@@ -135,10 +135,20 @@ including precision, cosmology and units</p>
 <code class="descname">set_units</code><span class="sig-paren">(</span><em>MassInMsunh=10000000000.0</em>, <em>LengthInKpch=1.0</em>, <em>VelInKms=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#globals_t.set_units"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.globals_t.set_units" title="Permalink to this definition">¶</a></dt>
 <dd><p>set system of units.
 specify Mass in Msun/h, Length in kpc/h, Velocity in km/s.</p>
-<p>If you want to use (1e10Msun, kpc, km/s) as units, and you adopt $h=0.73$ in your model, then you can set the units like below
-&gt;&gt;&gt;h=0.73
-&gt;&gt;&gt;Globals.set_units(1e10*h,h,1)
-That is, to set them to (1e10h Msun/h, h kpc/h, km/s).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><p class="first">If you want to use (1e10Msun, kpc, km/s) as units, and you adopt <img class="math" src="_images/math/c0e0a14e7c3300c80e44a70768a1ba74e1721614.png" alt="h=0.73"/>  in your model, then you can set the units like below</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">=</span><span class="mf">0.73</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Globals</span><span class="o">.</span><span class="n">set_units</span><span class="p">(</span><span class="mf">1e10</span><span class="o">*</span><span class="n">h</span><span class="p">,</span><span class="n">h</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<p>That is, to set them to (1e10h Msun/h, h kpc/h, km/s).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <ul class="last simple">
@@ -164,8 +174,8 @@ That is, to set them to (1e10h Msun/h, h kpc/h, km/s).</p>
 <tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
 <li><strong>pars</strong> &#8211; raw parameter values. do not change them manually, use <a class="reference internal" href="#oPDF.Halo.set_param" title="oPDF.Halo.set_param"><code class="xref py py-func docutils literal"><span class="pre">set_param()</span></code></a> to set them.</li>
 <li><strong>scales</strong> &#8211; parameter scales. use <a class="reference internal" href="#oPDF.Halo.set_type" title="oPDF.Halo.set_type"><code class="xref py py-func docutils literal"><span class="pre">set_type()</span></code></a> to set them.</li>
-<li><strong>virtype</strong> &#8211; virial definition</li>
-<li><strong>type</strong> &#8211; parametrization type. One of <a class="reference internal" href="#oPDF.HaloTypes" title="oPDF.HaloTypes"><code class="xref py py-data docutils literal"><span class="pre">HaloTypes</span></code></a>.</li>
+<li><strong>virtype</strong> &#8211; virial definition. One of :const:<a href="#id3"><span class="problematic" id="id4">`</span></a>VirTypes&#8217;.</li>
+<li><strong>type</strong> &#8211; parametrization type. One of <a class="reference internal" href="#oPDF.HaloTypes" title="oPDF.HaloTypes"><code class="xref py py-const docutils literal"><span class="pre">HaloTypes</span></code></a>.</li>
 </ul>
 </td>
 </tr>
@@ -176,7 +186,7 @@ That is, to set them to (1e10h Msun/h, h kpc/h, km/s).</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first simple">
 <li><strong>M</strong> &#8211; mass</li>
 <li><strong>c</strong> &#8211; concentration</li>
 <li><strong>Rv</strong> &#8211; virial radius</li>
@@ -188,14 +198,26 @@ That is, to set them to (1e10h Msun/h, h kpc/h, km/s).</p>
 </ul>
 </td>
 </tr>
+<tr class="field-even field"><th class="field-name">Initializer:</th><td class="field-body"></td>
+</tr>
 </tbody>
 </table>
 <p>define a halo by specifiying the parametrization, virial definition and redshift of halo</p>
-<p>halotype: halo parametrization, one of the <a class="reference internal" href="#oPDF.HaloTypes" title="oPDF.HaloTypes"><code class="xref py py-data docutils literal"><span class="pre">HaloTypes</span></code></a> members</p>
-<p>virtype: virial definition, one of the VirTypes members</p>
-<p>redshift: redshift of halo</p>
-<p>scales: scales of halo parameters, array-like, of the same shape as parameters. default to all-ones if None. physical parameters will be params*scales</p>
-<p>TMPid: template id. only required when halotype is of template type</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>halotype</strong> &#8211; halo parametrization, one of the <a class="reference internal" href="#oPDF.HaloTypes" title="oPDF.HaloTypes"><code class="xref py py-const docutils literal"><span class="pre">HaloTypes</span></code></a> members</li>
+<li><strong>virtype</strong> &#8211; virial definition, one of the <a class="reference internal" href="#oPDF.VirTypes" title="oPDF.VirTypes"><code class="xref py py-const docutils literal"><span class="pre">VirTypes</span></code></a> members</li>
+<li><strong>redshift</strong> &#8211; redshift of halo</li>
+<li><strong>scales</strong> &#8211; scales of halo parameters, array-like, of the same shape as parameters. default to all-ones if None. physical parameters will be params*scales</li>
+<li><strong>TMPid</strong> &#8211; template id. only required when halotype is of template type</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="oPDF.Halo.get_current_TMPid">
 <code class="descname">get_current_TMPid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Halo.get_current_TMPid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Halo.get_current_TMPid" title="Permalink to this definition">¶</a></dt>
@@ -236,7 +258,7 @@ is the template of the current halo, just in case the template does not match</p
 <code class="descname">set_type</code><span class="sig-paren">(</span><em>halotype=NFWMC</em>, <em>virtype=C200</em>, <em>redshift=0.0</em>, <em>scales=None</em>, <em>TMPid=-1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Halo.set_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Halo.set_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>set the parametrization, virial definition and redshift of halo</p>
 <p>halotype: halo parametrization, one of the <a class="reference internal" href="#oPDF.HaloTypes" title="oPDF.HaloTypes"><code class="xref py py-data docutils literal"><span class="pre">HaloTypes</span></code></a> members</p>
-<p>virtype: virial definition, one of the VirTypes members</p>
+<p>virtype: virial definition, one of the <a class="reference internal" href="#oPDF.VirTypes" title="oPDF.VirTypes"><code class="xref py py-const docutils literal"><span class="pre">VirTypes</span></code></a> members</p>
 <p>redshift: redshift of halo</p>
 <p>scales: scales of halo parameters, array-like, of the same shape as parameters. default to ones if not specified. physical parameters will be params*scales</p>
 </dd></dl>
@@ -282,7 +304,7 @@ is the template of the current halo, just in case the template does not match</p
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first simple">
 <li><strong>nbin_r</strong> &#8211; number of radial bins.</li>
 <li><strong>FlagRLogBin</strong> &#8211; whether radial binning is in logspace.</li>
 <li><strong>RadialCount</strong> &#8211; counts in radial bins.</li>
@@ -291,9 +313,11 @@ is the template of the current halo, just in case the template does not match</p
 </ul>
 </td>
 </tr>
+<tr class="field-even field"><th class="field-name">Initializer:</th><td class="field-body"></td>
+</tr>
 </tbody>
 </table>
-<p>it loads a tracer from the datafile.</p>
+<p>loading a tracer from a datafile.</p>
 <p>optionally, can apply radial cut given by rmin and rmax</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -439,14 +463,43 @@ the energy need to have been set before calling if proxy is E</p>
 <dl class="method">
 <dt id="oPDF.Tracer.like_eval">
 <code class="descname">like_eval</code><span class="sig-paren">(</span><em>estimator</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.like_eval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.like_eval" title="Permalink to this definition">¶</a></dt>
-<dd><p>evaluate likelihood or fig of merit with the given estimator in the attached halo.
-one has to call <a class="reference internal" href="#oPDF.Tracer.set_phase" title="oPDF.Tracer.set_phase"><code class="xref py py-func docutils literal"><span class="pre">set_phase()</span></code></a> before this.</p>
+<dd><p>evaluate likelihood or TS with the given estimator.</p>
+<p>This is a low-leve function. One has to call <a class="reference internal" href="#oPDF.Tracer.set_phase" title="oPDF.Tracer.set_phase"><code class="xref py py-func docutils literal"><span class="pre">set_phase()</span></code></a> before calling this.
+Use <a class="reference internal" href="#oPDF.Tracer.likelihood" title="oPDF.Tracer.likelihood"><code class="xref py py-func docutils literal"><span class="pre">likelihood()</span></code></a> which combines <a class="reference internal" href="#oPDF.Tracer.like_eval" title="oPDF.Tracer.like_eval"><code class="xref py py-func docutils literal"><span class="pre">like_eval()</span></code></a> and <a class="reference internal" href="#oPDF.Tracer.set_phase" title="oPDF.Tracer.set_phase"><code class="xref py py-func docutils literal"><span class="pre">set_phase()</span></code></a> automatically, unless you do want to call them separately.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>estimator</strong> &#8211; estimator to use for the likelihood or TS calculation.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the likelihood (if estimator= <a class="reference internal" href="#oPDF.Estimators" title="oPDF.Estimators"><code class="xref py py-const docutils literal"><span class="pre">Estimators</span></code></a> <code class="docutils literal"><span class="pre">.RBin</span></code>) or TS value (<img class="math" src="_images/math/c8739fd905123d1e91991fb56413e53342a34e59.png" alt="\bar{\Theta}"/> for <a class="reference internal" href="#oPDF.Estimators" title="oPDF.Estimators"><code class="xref py py-const docutils literal"><span class="pre">Estimators</span></code></a> <code class="docutils literal"><span class="pre">.MeanPhaseRaw</span></code>, <img class="math" src="_images/math/08dd2b672dd3b757c173f61047fed6f9e4dae575.png" alt="\bar{\Theta}^2"/> for <a class="reference internal" href="#oPDF.Estimators" title="oPDF.Estimators"><code class="xref py py-const docutils literal"><span class="pre">Estimators</span></code></a> <code class="docutils literal"><span class="pre">.MeanPhase</span></code>, or AD distance for <a class="reference internal" href="#oPDF.Estimators" title="oPDF.Estimators"><code class="xref py py-const docutils literal"><span class="pre">Estimators</span></code></a> <code class="docutils literal"><span class="pre">.AD</span></code>).</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="oPDF.Tracer.likelihood">
-<code class="descname">likelihood</code><span class="sig-paren">(</span><em>pars</em>, <em>estimator</em>, <em>auto_rbin=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.likelihood"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.likelihood" title="Permalink to this definition">¶</a></dt>
-<dd><p>calculate likelihood. automatically prepare binning, orbits and eval like.</p>
+<code class="descname">likelihood</code><span class="sig-paren">(</span><em>pars=[1, 1], estimator=MeanPhaseRaw, auto_rbin=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.likelihood"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.likelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate likelihood or test-statistic.
+it automatically prepares orbits and then calculates the likelihood or TS
+(i.e., it combines <a class="reference internal" href="#oPDF.Tracer.set_phase" title="oPDF.Tracer.set_phase"><code class="xref py py-func docutils literal"><span class="pre">set_phase()</span></code></a> and <a class="reference internal" href="#oPDF.Tracer.like_eval" title="oPDF.Tracer.like_eval"><code class="xref py py-func docutils literal"><span class="pre">like_eval()</span></code></a>).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pars</strong> &#8211; parameter values</li>
+<li><strong>estimator</strong> &#8211; estimator to use for the likelihood or TS calculation.</li>
+<li><strong>auto_rbin</strong> &#8211; whether to prepare radial bins automatically. Only relevant if you are using Estimators.RBin. default to True. set to false if you have prepared the bins manually (by calling <a class="reference internal" href="#oPDF.Tracer.radial_count" title="oPDF.Tracer.radial_count"><code class="xref py py-func docutils literal"><span class="pre">radial_count()</span></code></a>).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the likelihood (if estimator= <a class="reference internal" href="#oPDF.Estimators" title="oPDF.Estimators"><code class="xref py py-const docutils literal"><span class="pre">Estimators</span></code></a> <code class="docutils literal"><span class="pre">.RBin</span></code>) or TS value (<img class="math" src="_images/math/c8739fd905123d1e91991fb56413e53342a34e59.png" alt="\bar{\Theta}"/> for <a class="reference internal" href="#oPDF.Estimators" title="oPDF.Estimators"><code class="xref py py-const docutils literal"><span class="pre">Estimators</span></code></a> <code class="docutils literal"><span class="pre">.MeanPhaseRaw</span></code>, <img class="math" src="_images/math/08dd2b672dd3b757c173f61047fed6f9e4dae575.png" alt="\bar{\Theta}^2"/> for <a class="reference internal" href="#oPDF.Estimators" title="oPDF.Estimators"><code class="xref py py-const docutils literal"><span class="pre">Estimators</span></code></a> <code class="docutils literal"><span class="pre">.MeanPhase</span></code>, or AD distance for <a class="reference internal" href="#oPDF.Estimators" title="oPDF.Estimators"><code class="xref py py-const docutils literal"><span class="pre">Estimators</span></code></a> <code class="docutils literal"><span class="pre">.AD</span></code>).</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -512,8 +565,8 @@ The histogram will be recorded in Tracer.RadialCount[].</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">This function is automatically called by the relevant likelihood functions such as <a class="reference internal" href="#oPDF.Tracer.likelihood" title="oPDF.Tracer.likelihood"><code class="xref py py-func docutils literal"><span class="pre">likelihood()</span></code></a>,
-<a class="reference internal" href="#oPDF.Tracer.dyn_fit" title="oPDF.Tracer.dyn_fit"><code class="xref py py-func docutils literal"><span class="pre">dyn_fit()</span></code></a>, <a class="reference internal" href="#oPDF.Tracer.scan_confidence" title="oPDF.Tracer.scan_confidence"><code class="xref py py-func docutils literal"><span class="pre">scan_confidence()</span></code></a> when the <a href="#id4"><span class="problematic" id="id5">:member:`Estimators.RBinLike`</span></a> is used. In these cases,
-<cite>nbin</cite> and <cite>logscale</cite> will be determined according to <a href="#id6"><span class="problematic" id="id7">:member:`Estimators.RBinLike.nbin`</span></a> and <a href="#id8"><span class="problematic" id="id9">:member:`Estimators.RBinLike.logscale`</span></a>.
+<a class="reference internal" href="#oPDF.Tracer.dyn_fit" title="oPDF.Tracer.dyn_fit"><code class="xref py py-func docutils literal"><span class="pre">dyn_fit()</span></code></a>, <a class="reference internal" href="#oPDF.Tracer.scan_confidence" title="oPDF.Tracer.scan_confidence"><code class="xref py py-func docutils literal"><span class="pre">scan_confidence()</span></code></a> when the estimator is <a class="reference internal" href="#oPDF.Estimators" title="oPDF.Estimators"><code class="xref py py-const docutils literal"><span class="pre">Estimators</span></code></a> <code class="docutils literal"><span class="pre">.RBinLike</span></code>. In these cases,
+<cite>nbin</cite> and <cite>logscale</cite> will be determined according to <code class="xref py py-attr docutils literal"><span class="pre">Estimators.RBinLike.nbin</span></code> and <code class="xref py py-attr docutils literal"><span class="pre">Estimators.RBinLike.logscale</span></code>.
 So usually you do not need to call this function explicitly.</p>
 </div>
 </dd></dl>
@@ -531,7 +584,7 @@ if only rmin or rmax is given, the other bound is not changed.</p>
 
 <dl class="method">
 <dt id="oPDF.Tracer.resample">
-<code class="descname">resample</code><span class="sig-paren">(</span><em>seed=1024</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.resample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.resample" title="Permalink to this definition">¶</a></dt>
+<code class="descname">resample</code><span class="sig-paren">(</span><em>seed=100</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.resample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.resample" title="Permalink to this definition">¶</a></dt>
 <dd><p>create a bootstrap sample (sampling with replacement) of the same size from tracer
 return the new sample</p>
 </dd></dl>
@@ -609,7 +662,7 @@ see estimator.need_phase for each estimator.</dd>
 
 <dl class="method">
 <dt id="oPDF.Tracer.shuffle">
-<code class="descname">shuffle</code><span class="sig-paren">(</span><em>seed=1024</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.shuffle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.shuffle" title="Permalink to this definition">¶</a></dt>
+<code class="descname">shuffle</code><span class="sig-paren">(</span><em>seed=100</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.shuffle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.shuffle" title="Permalink to this definition">¶</a></dt>
 <dd><p>shuffle particles randomly.</p>
 <p>seed: optional, seeds the random number generator for the shuffle</p>
 </dd></dl>

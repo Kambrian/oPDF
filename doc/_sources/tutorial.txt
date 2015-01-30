@@ -131,12 +131,12 @@ Let's import the module first
 .. code:: python
 
     from oPDF import *
-Now the ``rootdir`` should have been automatically set to the directory
+Now the ``oPDFdir`` should have been automatically set to the directory
 of the ``oPDF`` code. Let's load the sample data
 
 .. code:: python
 
-    datafile=rootdir+"/data/mockhalo.hdf5"
+    datafile=oPDFdir+"/data/mockhalo.hdf5"
     FullSample=Tracer(datafile)
     Sample=FullSample.copy(0,1000)
 This will load the data into FullSample, and make a subsample of 1000
@@ -587,7 +587,8 @@ Note:
 Extending the code
 ~~~~~~~~~~~~~~~~~~
 
--  To add new types of potential
+To add new types of potential:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 -  in C/halo.h: add your HaloType identifier in HaloType\_t
 -  in C/halo.c:
@@ -602,7 +603,9 @@ Extending the code
    -  add your newly defined halotype to the following line
       ``HaloTypes=NamedEnum(...``
 
--  To add new template profiles
+To add new template profiles:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 -  Generate your template in the form of (:math:`r,\psi,\rho(< r)`\ )
    arrays, and append to ``PotentialTemplate`` in ``C/TemplateData.h``.
 -  Append the scale radius of the new template to ``TemplateScale`` in
@@ -617,8 +620,10 @@ Extending the code
    ``TMPPotScaleRScale`` parametrization, you can fill :math:`\rho(<r)`
    and :math:`r_s` with ones or any value.
 
--  To add new estimators
--  check C/models.c
+To add new estimators:
+^^^^^^^^^^^^^^^^^^^^^^
+
+-  check ``C/models.c``.
 
 You need to recompile the C library once this is done.
 ``PotentialProf.py`` can help you in generating the templates from DM
