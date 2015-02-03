@@ -22,7 +22,7 @@ Sample=FullSample.copy(0,npart)
 Sample.mP=FullSample.mP*FullSample.nP/Sample.nP #rescale particle mass to account for selection
 FullSample.clean()
 
-xbin=np.logspace(np.log10(0.5), np.log10(500), nbin)
+xbin=np.logspace(np.log10(0.1), np.log10(500), nbin)
 xcen=xbin/np.sqrt(xbin[1]/xbin[0])
 vol=np.diff(np.hstack([0., xbin])**3)*np.pi*4/3
 

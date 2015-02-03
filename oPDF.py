@@ -218,7 +218,18 @@ class Halo(Halo_t):
   def isNFW(self):
 	''' return True if halo is NFW, False if not '''
 	return bool(lib.isNFW(self.type))
-	
+  
+  def vr_inv(self, r, E, L):
+	''' inverse of radial velocity, 1/v_r, for a particle at r with binding energy E and angular momentum L'''
+	vr2=2*(-E-0.5*(L/r)**2-self.pot(r))
+	ivr=1./np.sqrt(vr2)
+	try:
+	  ivr[vr2<=0]=0.
+	except:
+	  if vr2<=0:
+		ivr=0.
+	return ivr
+  
 #==tracer.h
 class Particle_t(ctypes.Structure):
   _fields_=[('haloid', ctypes.c_int),

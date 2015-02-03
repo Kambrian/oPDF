@@ -1,3 +1,4 @@
+//linear interpolation instead of cubic
 #include <math.h>
 #include <stdio.h>
 #include <gsl/gsl_spline.h>
@@ -35,14 +36,17 @@ void init_potential_spline(int TMPid)
 	  DEBUGPRINT("Error: TMPid=%d, no profile data\n", TMPid);
 	  exit(1);
 	}
+//FIXME: use shape-preserving spline (e.g., pchip)
+#define TMP_INTERP_TYPE gsl_interp_linear  
+//#define TMP_INTERP_TYPE gsl_interp_cspline //gsl_interp_cspline could introduce wiggles (not monotonicity preserving)
 	#pragma omp parallel 
 	{
 		PotSpline.acc= gsl_interp_accel_alloc ();
-		PotSpline.spline= gsl_spline_alloc (gsl_interp_cspline, LEN_PROF);
+		PotSpline.spline= gsl_spline_alloc (TMP_INTERP_TYPE, LEN_PROF);
 		gsl_spline_init(PotSpline.spline, PotentialTemplate[TMPid][0], PotentialTemplate[TMPid][1], LEN_PROF);
 		
 		PotSpline.acc_dens= gsl_interp_accel_alloc ();
-		PotSpline.spline_dens= gsl_spline_alloc (gsl_interp_cspline, LEN_PROF);
+		PotSpline.spline_dens= gsl_spline_alloc (TMP_INTERP_TYPE, LEN_PROF);
 		gsl_spline_init(PotSpline.spline_dens, PotentialTemplate[TMPid][0], PotentialTemplate[TMPid][2], LEN_PROF);
 		
 		PotSpline.FlagUseSpline=1;
