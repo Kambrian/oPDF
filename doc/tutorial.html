@@ -173,9 +173,10 @@ of the <code class="docutils literal"><span class="pre">oPDF</span></code> code.
 </pre></div>
 </div>
 <p>This will load the data into FullSample, and make a subsample of 1000
-particles from the FullSample. You may want to do your analysis with the
-full sample. We extract the subsample just for illustrution purpose, to
-speed up the calculation in this tutorial.</p>
+particles from the FullSample (starting from particle 0 in FullSample).
+You may want to do your analysis with the full sample. We extract the
+subsample just for illustrution purpose, to speed up the calculation in
+this tutorial.</p>
 </div>
 <div class="section" id="perform-the-fitting">
 <h3>Perform the fitting.<a class="headerlink" href="#perform-the-fitting" title="Permalink to this headline">¶</a></h3>
@@ -186,7 +187,7 @@ speed up the calculation in this tutorial.</p>
 <span class="k">print</span> <span class="n">x</span><span class="p">,</span><span class="n">fval</span><span class="p">,</span><span class="n">status</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>[ 118.17712485   19.81948425] 5014.14688443 1
+<div class="highlight-python"><div class="highlight"><pre>[ 100.43937117   26.62967127] 5020.3693017 1
 </pre></div>
 </div>
 <p>In one or two minutes, you will get the results above, where</p>
@@ -196,21 +197,21 @@ speed up the calculation in this tutorial.</p>
 <li><code class="docutils literal"><span class="pre">status</span></code> =1 means fitting is successful, =0 means fit failed.</li>
 </ul>
 <p>That&#8217;s it! You have got the best-fitting
-<img class="math" src="_images/math/31491564a3e51f63ff89b8caef5c079fbb9c19d8.png" alt="M=118.18\times10^{10} M_\odot/h"/> and <img class="math" src="_images/math/8eb6fb7dc92a93b422cff9d20ef4fa95d34b08b5.png" alt="c=19.82"/>. ###
+<img class="math" src="_images/math/4a3b66972e8278bc625f194bdd90a7e0209c6b35.png" alt="M=100.44\times10^{10} M_\odot/h"/> and <img class="math" src="_images/math/688b4132d6ed60009c4b01b2a503c4a9d57292ec.png" alt="c=26.63"/>. ###
 Estimate significances How does that compare to the real parameters of
 <img class="math" src="_images/math/3765ec709412cb6e345903abc98ffebb13258fb1.png" alt="M=133.96\times 10^{10}M_\odot/h"/>, <img class="math" src="_images/math/ac925496c4eb44cdcde263d8440b82821d86a8a0.png" alt="c=16.16"/>? Not too
-far, but let&#8217;s check the likelihood ratio of the two models</p>
+bad, but let&#8217;s check the likelihood ratio of the two models</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="n">x0</span><span class="o">=</span><span class="p">[</span><span class="mf">133.96</span><span class="p">,</span><span class="mf">16.16</span><span class="p">]</span>
 <span class="n">f0</span><span class="o">=</span><span class="n">Sample</span><span class="o">.</span><span class="n">likelihood</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="p">)</span>
 <span class="n">likerat</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">fval</span><span class="o">-</span><span class="n">f0</span><span class="p">)</span>
 <span class="k">print</span> <span class="n">likerat</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="mf">1.09277867155</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="mf">2.78983807112</span>
 </pre></div>
 </div>
-<p>So we got a likelihood ratio of 1.09. How significant is that? According
-to Wilks&#8217; theorem, if the data follows the null model (with the real
+<p>So we got a likelihood ratio of 2.79. How significant is that? According
+to Wilks&#8217;s theorem, if the data follows the null model (with the real
 parameters), then the likelihood ratio between the best-fit and the null
 would follow a <img class="math" src="_images/math/8bd0685e3bf9101859d24cf0e851651f182364c9.png" alt="\chi^2"/> distribution. Since we have two free
 parameters, we should compare our likelihood ratio to a
@@ -223,13 +224,13 @@ Chi2Sig() utility function</p>
 <span class="k">print</span> <span class="n">significance</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="mf">0.554792280618</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="mf">1.15557973053</span>
 </pre></div>
 </div>
 <p>So the best-fitting differs from the real parameters by
-<img class="math" src="_images/math/fce2453c2151d9f47ee442d273cc5f2dc188aecf.png" alt="0.55\sigma"/>, which is not significant at all. In other words,
-the best-fitting parameters are quite consistent with the real
-parameters!</p>
+<img class="math" src="_images/math/38b9cdf26104f7469838f494f6b91bdd4bb4f4bd.png" alt="\sim1\sigma"/>. It seems we are not very lucky and the fit is
+only marginally consistent with the real parameters, but still
+acceptable.</p>
 </div>
 <div class="section" id="confidence-contour">
 <h3>Confidence Contour<a class="headerlink" href="#confidence-contour" title="Permalink to this headline">¶</a></h3>
@@ -258,7 +259,7 @@ values:</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">r&#39;$c/c_0$&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x46d50d0&gt;
+<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x46ff790&gt;
 </pre></div>
 </div>
 <img alt="_images/tutorial_16_1.png" src="_images/tutorial_16_1.png" />
@@ -287,7 +288,7 @@ potential with parameters <code class="docutils literal"><span class="pre">x0</s
 <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Real Potential&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x4963f50&gt;
+<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x497a690&gt;
 </pre></div>
 </div>
 <img alt="_images/tutorial_19_1.png" src="_images/tutorial_19_1.png" />
@@ -309,9 +310,9 @@ phase deviation or AD distance (Test Statistics, or TS) inside different
 </pre></div>
 </div>
 <img alt="_images/tutorial_22_0.png" src="_images/tutorial_22_0.png" />
-<p>See, the mean phase deviations are within 3:math:<cite>sigma</cite> everywhere.
-Note that the raw mean phase is a standard normal variable if the tracer
-is in steady-state under the potential.</p>
+<p>See, the mean phase deviations are within 3:math:<cite>sigma</cite> almost
+everywhere. Note that the raw mean phase is a standard normal variable
+if the tracer is in steady-state under the potential.</p>
 </div>
 </div>
 <div class="section" id="customizing-the-analysis">
@@ -459,8 +460,8 @@ best fit, but the physical values are not changed.</p>
 halo object. There are several methods associated with a halo object.
 You can set_type(), set_param(), get the mass and potential profiles</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="n">halo</span><span class="o">=</span><span class="n">Halo</span><span class="p">(</span><span class="n">halotype</span><span class="o">=</span><span class="n">HaloTypes</span><span class="o">.</span><span class="n">NFWMC</span><span class="p">)</span>
-<span class="n">halo</span><span class="o">.</span><span class="n">set_param</span><span class="p">([</span><span class="mi">180</span><span class="p">,</span><span class="mi">13</span><span class="p">])</span>
-<span class="n">r</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">halo</span><span class="o">.</span><span class="n">set_param</span><span class="p">([</span><span class="mi">180</span><span class="p">,</span><span class="mi">15</span><span class="p">])</span>
+<span class="n">r</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">halo</span><span class="o">.</span><span class="n">mass</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
@@ -472,7 +473,7 @@ You can set_type(), set_param(), get the mass and potential profiles</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">r&#39;$-\psi(r)$&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x53971d0&gt;
+<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x45a4510&gt;
 </pre></div>
 </div>
 <img alt="_images/tutorial_48_1.png" src="_images/tutorial_48_1.png" />
@@ -524,8 +525,8 @@ set_phase() function, e.g.,</li>
 <span class="k">print</span> <span class="n">Sample</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;theta&#39;</span><span class="p">][</span><span class="mi">35</span><span class="p">]</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="mf">7683944.45129</span>
-<span class="mf">0.976090318526</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="mf">16450988.2168</span>
+<span class="mf">0.809988602192</span>
 </pre></div>
 </div>
 </div>
@@ -635,8 +636,8 @@ fitting the distribution of dark matter particles in a halo)</p>
 <pre class="literal-block">
 <strong>******************************************************************</strong>
 ---------------------------------------------------------------------------------------
-fval = 6359.824931628151 | nfcn = 82 | ncalls = 82
-edm = 2.5643562125341275e-05 (Goal: 5e-05) | up = 0.5
+fval = 6431.376199877743 | nfcn = 85 | ncalls = 85
+edm = 7.617534910937361e-07 (Goal: 5e-05) | up = 0.5
 ---------------------------------------------------------------------------------------
 |          Valid |    Valid Param | Accurate Covar |         Posdef |    Made Posdef |
 ---------------------------------------------------------------------------------------
@@ -650,23 +651,23 @@ edm = 2.5643562125341275e-05 (Goal: 5e-05) | up = 0.5
 ----------------------------------------------------------------------------------------------
 |      | Name  |  Value   | Para Err |   Err-   |   Err+   |  Limit-  |  Limit+  |          |
 ----------------------------------------------------------------------------------------------
-|    0 |     m =  15.45   |  0.5484  |          |          |          |          |          |
-|    1 |     c =  25.63   |  2.777   |          |          |          |          |          |
+|    0 |     m =  15.61   |  0.558   |          |          |          |          |          |
+|    1 |     c =  22.71   |  2.325   |          |          |          |          |          |
 ----------------------------------------------------------------------------------------------
 
 <strong>******************************************************************</strong>
 ['m', 'c']
-((1.0, -0.14515703500808705), (-0.14515703500808705, 1.0))
+((1.0, -0.15685653218642692), (-0.15685653218642692, 1.0))
        |    0    1
 --------------------
-m    0 | 1.00 -0.15
-c    1 | -0.15 1.00
+m    0 | 1.00 -0.16
+c    1 | -0.16 1.00
 --------------------
 </pre>
-<div class="highlight-python"><div class="highlight"><pre>(({&#39;hesse_failed&#39;: False, &#39;has_reached_call_limit&#39;: False, &#39;has_accurate_covar&#39;: True, &#39;has_posdef_covar&#39;: True, &#39;up&#39;: 0.5, &#39;edm&#39;: 2.5643562125341275e-05, &#39;is_valid&#39;: True, &#39;is_above_max_edm&#39;: False, &#39;has_covariance&#39;: True, &#39;has_made_posdef_covar&#39;: False, &#39;has_valid_parameters&#39;: True, &#39;fval&#39;: 6359.824931628151, &#39;nfcn&#39;: 82},
-  [{&#39;is_const&#39;: False, &#39;name&#39;: &#39;m&#39;, &#39;has_limits&#39;: False, &#39;value&#39;: 15.448578108847226, &#39;number&#39;: 0L, &#39;has_lower_limit&#39;: False, &#39;upper_limit&#39;: 0.0, &#39;lower_limit&#39;: 0.0, &#39;has_upper_limit&#39;: False, &#39;error&#39;: 0.5483502684570201, &#39;is_fixed&#39;: False},
-   {&#39;is_const&#39;: False, &#39;name&#39;: &#39;c&#39;, &#39;has_limits&#39;: False, &#39;value&#39;: 25.626752919175534, &#39;number&#39;: 1L, &#39;has_lower_limit&#39;: False, &#39;upper_limit&#39;: 0.0, &#39;lower_limit&#39;: 0.0, &#39;has_upper_limit&#39;: False, &#39;error&#39;: 2.776610327787978, &#39;is_fixed&#39;: False}]),
- &lt;iminuit._libiminuit.Minuit at 0x5360910&gt;)
+<div class="highlight-python"><div class="highlight"><pre>(({&#39;hesse_failed&#39;: False, &#39;has_reached_call_limit&#39;: False, &#39;has_accurate_covar&#39;: True, &#39;has_posdef_covar&#39;: True, &#39;up&#39;: 0.5, &#39;edm&#39;: 7.617534910937361e-07, &#39;is_valid&#39;: True, &#39;is_above_max_edm&#39;: False, &#39;has_covariance&#39;: True, &#39;has_made_posdef_covar&#39;: False, &#39;has_valid_parameters&#39;: True, &#39;fval&#39;: 6431.376199877743, &#39;nfcn&#39;: 85},
+  [{&#39;is_const&#39;: False, &#39;name&#39;: &#39;m&#39;, &#39;has_limits&#39;: False, &#39;value&#39;: 15.611655846491168, &#39;number&#39;: 0L, &#39;has_lower_limit&#39;: False, &#39;upper_limit&#39;: 0.0, &#39;lower_limit&#39;: 0.0, &#39;has_upper_limit&#39;: False, &#39;error&#39;: 0.5579761869376265, &#39;is_fixed&#39;: False},
+   {&#39;is_const&#39;: False, &#39;name&#39;: &#39;c&#39;, &#39;has_limits&#39;: False, &#39;value&#39;: 22.711151959873327, &#39;number&#39;: 1L, &#39;has_lower_limit&#39;: False, &#39;upper_limit&#39;: 0.0, &#39;lower_limit&#39;: 0.0, &#39;has_upper_limit&#39;: False, &#39;error&#39;: 2.3251728403151706, &#39;is_fixed&#39;: False}]),
+ &lt;iminuit._libiminuit.Minuit at 0x4a64bd0&gt;)
 </pre></div>
 </div>
 <p>In order for this to make sense, <code class="docutils literal"><span class="pre">Sample</span></code> should be loaded with dark
@@ -678,6 +679,19 @@ python package before you can use this function. If you don&#8217;t have that,
 you need to comment out the <code class="docutils literal"><span class="pre">iminuit</span></code> related imports in the header of
 <code class="docutils literal"><span class="pre">oPDF.py</span></code>. Please consult the <code class="docutils literal"><span class="pre">iminuit</span></code> documentation for the
 <code class="docutils literal"><span class="pre">iminuit</span></code> outputs.</p>
+</div>
+<div class="section" id="numerical-precision">
+<h3>Numerical precision<a class="headerlink" href="#numerical-precision" title="Permalink to this headline">¶</a></h3>
+<p>The relative precision for integration of orbits is controlled by
+<code class="docutils literal"><span class="pre">Globals.tol.rel</span></code>, which defaults to <code class="docutils literal"><span class="pre">1e-3</span></code>. You can adjust the
+numerical accuracy (either for speed or for accuracy concerns), by
+assigning to <code class="docutils literal"><span class="pre">Globals.tol.rel</span></code>. For example,</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">Globals</span><span class="o">.</span><span class="n">tol</span><span class="o">.</span><span class="n">rel</span><span class="o">=</span><span class="mf">1e-2</span>
+</pre></div>
+</div>
+<p>Typically a value of <code class="docutils literal"><span class="pre">1e-2</span></code> should be sufficient for most applications
+such as likelihood inference or phase angle evaluation. Of course, the
+lower the precision, the faster the code will be.</p>
 </div>
 </div>
 </div>
@@ -727,6 +741,7 @@ you need to comment out the <code class="docutils literal"><span class="pre">imi
 <li><a class="reference internal" href="#memory-management">Memory management</a></li>
 <li><a class="reference internal" href="#bootstrap-sampling">Bootstrap sampling</a></li>
 <li><a class="reference internal" href="#nfw-likelihood">NFW-likelihood</a></li>
+<li><a class="reference internal" href="#numerical-precision">Numerical precision</a></li>
 </ul>
 </li>
 </ul>

@@ -116,7 +116,9 @@ Since the purpose of the binning is purely to suppress shot noise, a larger numb
 <dl class="class">
 <dt id="oPDF.globals_t">
 <em class="property">class </em><code class="descclassname">oPDF.</code><code class="descname">globals_t</code><a class="reference internal" href="_modules/oPDF.html#globals_t"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.globals_t" title="Permalink to this definition">¶</a></dt>
-<dd><p>global variables of the module. It controls numerical precision, internal units, and cosmology.</p>
+<dd><p>global variables of the module. It controls numerical precision, internal units, and cosmology. 
+The numerical precision for orbit integration is controlled by Globals.tol.rel, which defaults to 1e-3 
+(Globals.tol.rel=1e-2 should already be sufficient for likelihood inference and phase calculations).</p>
 <dl class="method">
 <dt id="oPDF.globals_t.get_units">
 <code class="descname">get_units</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#globals_t.get_units"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.globals_t.get_units" title="Permalink to this definition">¶</a></dt>
@@ -261,6 +263,12 @@ is the template of the current halo, just in case the template does not match</p
 <p>virtype: virial definition, one of the <a class="reference internal" href="#oPDF.VirTypes" title="oPDF.VirTypes"><code class="xref py py-const docutils literal"><span class="pre">VirTypes</span></code></a> members</p>
 <p>redshift: redshift of halo</p>
 <p>scales: scales of halo parameters, array-like, of the same shape as parameters. default to ones if not specified. physical parameters will be params*scales</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Halo.vr_inv">
+<code class="descname">vr_inv</code><span class="sig-paren">(</span><em>r</em>, <em>E</em>, <em>L</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Halo.vr_inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Halo.vr_inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>inverse of radial velocity, 1/v_r, for a particle at r with binding energy E and angular momentum L</p>
 </dd></dl>
 
 </dd></dl>

@@ -140,9 +140,10 @@ of the ``oPDF`` code. Let's load the sample data
     FullSample=Tracer(datafile)
     Sample=FullSample.copy(0,1000)
 This will load the data into FullSample, and make a subsample of 1000
-particles from the FullSample. You may want to do your analysis with the
-full sample. We extract the subsample just for illustrution purpose, to
-speed up the calculation in this tutorial.
+particles from the FullSample (starting from particle 0 in FullSample).
+You may want to do your analysis with the full sample. We extract the
+subsample just for illustrution purpose, to speed up the calculation in
+this tutorial.
 
 Perform the fitting.
 ~~~~~~~~~~~~~~~~~~~~
@@ -158,7 +159,7 @@ Now let's fit the data with the radial binned likelihood estimator with
 
 .. parsed-literal::
 
-    [ 118.17712485   19.81948425] 5014.14688443 1
+    [ 100.43937117   26.62967127] 5020.3693017 1
 
 
 In one or two minutes, you will get the results above, where
@@ -168,10 +169,10 @@ In one or two minutes, you will get the results above, where
 -  ``status`` =1 means fitting is successful, =0 means fit failed.
 
 That's it! You have got the best-fitting
-:math:`M=118.18\times10^{10} M_\odot/h` and :math:`c=19.82`\ . ###
+:math:`M=100.44\times10^{10} M_\odot/h` and :math:`c=26.63`\ . ###
 Estimate significances How does that compare to the real parameters of
 :math:`M=133.96\times 10^{10}M_\odot/h`\ , :math:`c=16.16`\ ? Not too
-far, but let's check the likelihood ratio of the two models
+bad, but let's check the likelihood ratio of the two models
 
 .. code:: python
 
@@ -182,11 +183,11 @@ far, but let's check the likelihood ratio of the two models
 
 .. parsed-literal::
 
-    1.09277867155
+    2.78983807112
 
 
-So we got a likelihood ratio of 1.09. How significant is that? According
-to Wilks' theorem, if the data follows the null model (with the real
+So we got a likelihood ratio of 2.79. How significant is that? According
+to Wilks's theorem, if the data follows the null model (with the real
 parameters), then the likelihood ratio between the best-fit and the null
 would follow a :math:`\chi^2` distribution. Since we have two free
 parameters, we should compare our likelihood ratio to a
@@ -203,13 +204,13 @@ Chi2Sig() utility function
 
 .. parsed-literal::
 
-    0.554792280618
+    1.15557973053
 
 
 So the best-fitting differs from the real parameters by
-:math:`0.55\sigma`\ , which is not significant at all. In other words,
-the best-fitting parameters are quite consistent with the real
-parameters!
+:math:`\sim1\sigma`\ . It seems we are not very lucky and the fit is
+only marginally consistent with the real parameters, but still
+acceptable.
 
 Confidence Contour
 ~~~~~~~~~~~~~~~~~~
@@ -246,7 +247,7 @@ values:
 
 .. parsed-literal::
 
-    <matplotlib.text.Text at 0x46d50d0>
+    <matplotlib.text.Text at 0x46ff790>
 
 
 
@@ -286,7 +287,7 @@ potential with parameters ``x0``.
 
 .. parsed-literal::
 
-    <matplotlib.text.Text at 0x4963f50>
+    <matplotlib.text.Text at 0x497a690>
 
 
 
@@ -318,9 +319,9 @@ phase deviation or AD distance (Test Statistics, or TS) inside different
 .. image:: tutorial_files/tutorial_22_0.png
 
 
-See, the mean phase deviations are within 3:math:`\sigma` everywhere.
-Note that the raw mean phase is a standard normal variable if the tracer
-is in steady-state under the potential.
+See, the mean phase deviations are within 3:math:`\sigma` almost
+everywhere. Note that the raw mean phase is a standard normal variable
+if the tracer is in steady-state under the potential.
 
 Customizing the analysis
 ------------------------
@@ -500,8 +501,8 @@ You can set\_type(), set\_param(), get the mass and potential profiles
 .. code:: python
 
     halo=Halo(halotype=HaloTypes.NFWMC)
-    halo.set_param([180,13])
-    r=np.logspace(-2,1,10)
+    halo.set_param([180,15])
+    r=np.logspace(0,2,10)
     plt.figure(figsize=(16,4))
     plt.subplot(121)
     plt.loglog(r, halo.mass(r))
@@ -516,7 +517,7 @@ You can set\_type(), set\_param(), get the mass and potential profiles
 
 .. parsed-literal::
 
-    <matplotlib.text.Text at 0x53971d0>
+    <matplotlib.text.Text at 0x45a4510>
 
 
 
@@ -580,8 +581,8 @@ Note:
 
 .. parsed-literal::
 
-    7683944.45129
-    0.976090318526
+    16450988.2168
+    0.809988602192
 
 
 Extending the code
@@ -701,8 +702,8 @@ fitting the distribution of dark matter particles in a halo)
 
     **********************************************************************
     ---------------------------------------------------------------------------------------
-    fval = 6359.824931628151 | nfcn = 82 | ncalls = 82
-    edm = 2.5643562125341275e-05 (Goal: 5e-05) | up = 0.5
+    fval = 6431.376199877743 | nfcn = 85 | ncalls = 85
+    edm = 7.617534910937361e-07 (Goal: 5e-05) | up = 0.5
     ---------------------------------------------------------------------------------------
     |          Valid |    Valid Param | Accurate Covar |         Posdef |    Made Posdef |
     ---------------------------------------------------------------------------------------
@@ -716,17 +717,17 @@ fitting the distribution of dark matter particles in a halo)
     ----------------------------------------------------------------------------------------------
     |      | Name  |  Value   | Para Err |   Err-   |   Err+   |  Limit-  |  Limit+  |          |
     ----------------------------------------------------------------------------------------------
-    |    0 |     m =  15.45   |  0.5484  |          |          |          |          |          |
-    |    1 |     c =  25.63   |  2.777   |          |          |          |          |          |
+    |    0 |     m =  15.61   |  0.558   |          |          |          |          |          |
+    |    1 |     c =  22.71   |  2.325   |          |          |          |          |          |
     ----------------------------------------------------------------------------------------------
     
     **********************************************************************
     ['m', 'c']
-    ((1.0, -0.14515703500808705), (-0.14515703500808705, 1.0))
+    ((1.0, -0.15685653218642692), (-0.15685653218642692, 1.0))
            |    0    1 
     --------------------
-    m    0 | 1.00 -0.15 
-    c    1 | -0.15 1.00 
+    m    0 | 1.00 -0.16 
+    c    1 | -0.16 1.00 
     --------------------
     
 
@@ -735,10 +736,10 @@ fitting the distribution of dark matter particles in a halo)
 
 .. parsed-literal::
 
-    (({'hesse_failed': False, 'has_reached_call_limit': False, 'has_accurate_covar': True, 'has_posdef_covar': True, 'up': 0.5, 'edm': 2.5643562125341275e-05, 'is_valid': True, 'is_above_max_edm': False, 'has_covariance': True, 'has_made_posdef_covar': False, 'has_valid_parameters': True, 'fval': 6359.824931628151, 'nfcn': 82},
-      [{'is_const': False, 'name': 'm', 'has_limits': False, 'value': 15.448578108847226, 'number': 0L, 'has_lower_limit': False, 'upper_limit': 0.0, 'lower_limit': 0.0, 'has_upper_limit': False, 'error': 0.5483502684570201, 'is_fixed': False},
-       {'is_const': False, 'name': 'c', 'has_limits': False, 'value': 25.626752919175534, 'number': 1L, 'has_lower_limit': False, 'upper_limit': 0.0, 'lower_limit': 0.0, 'has_upper_limit': False, 'error': 2.776610327787978, 'is_fixed': False}]),
-     <iminuit._libiminuit.Minuit at 0x5360910>)
+    (({'hesse_failed': False, 'has_reached_call_limit': False, 'has_accurate_covar': True, 'has_posdef_covar': True, 'up': 0.5, 'edm': 7.617534910937361e-07, 'is_valid': True, 'is_above_max_edm': False, 'has_covariance': True, 'has_made_posdef_covar': False, 'has_valid_parameters': True, 'fval': 6431.376199877743, 'nfcn': 85},
+      [{'is_const': False, 'name': 'm', 'has_limits': False, 'value': 15.611655846491168, 'number': 0L, 'has_lower_limit': False, 'upper_limit': 0.0, 'lower_limit': 0.0, 'has_upper_limit': False, 'error': 0.5579761869376265, 'is_fixed': False},
+       {'is_const': False, 'name': 'c', 'has_limits': False, 'value': 22.711151959873327, 'number': 1L, 'has_lower_limit': False, 'upper_limit': 0.0, 'lower_limit': 0.0, 'has_upper_limit': False, 'error': 2.3251728403151706, 'is_fixed': False}]),
+     <iminuit._libiminuit.Minuit at 0x4a64bd0>)
 
 
 
@@ -752,3 +753,18 @@ python package before you can use this function. If you don't have that,
 you need to comment out the ``iminuit`` related imports in the header of
 ``oPDF.py``. Please consult the ``iminuit`` documentation for the
 ``iminuit`` outputs.
+
+Numerical precision
+~~~~~~~~~~~~~~~~~~~
+
+The relative precision for integration of orbits is controlled by
+``Globals.tol.rel``, which defaults to ``1e-3``. You can adjust the
+numerical accuracy (either for speed or for accuracy concerns), by
+assigning to ``Globals.tol.rel``. For example,
+
+.. code:: python
+
+    Globals.tol.rel=1e-2
+Typically a value of ``1e-2`` should be sufficient for most applications
+such as likelihood inference or phase angle evaluation. Of course, the
+lower the precision, the faster the code will be.

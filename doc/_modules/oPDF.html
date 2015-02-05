@@ -86,7 +86,9 @@
 <span class="n">lib</span><span class="o">.</span><span class="n">set_units</span><span class="o">.</span><span class="n">restype</span><span class="o">=</span><span class="bp">None</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">set_units</span><span class="o">.</span><span class="n">argtypes</span><span class="o">=</span><span class="p">[</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">]</span>
 <div class="viewcode-block" id="globals_t"><a class="viewcode-back" href="../api.html#oPDF.globals_t">[docs]</a><span class="k">class</span> <span class="nc">globals_t</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">Structure</span><span class="p">):</span>
-  <span class="sd">&#39;&#39;&#39; global variables of the module. It controls numerical precision, internal units, and cosmology. &#39;&#39;&#39;</span>
+  <span class="sd">&#39;&#39;&#39; global variables of the module. It controls numerical precision, internal units, and cosmology. </span>
+<span class="sd">  The numerical precision for orbit integration is controlled by Globals.tol.rel, which defaults to 1e-3 </span>
+<span class="sd">  (Globals.tol.rel=1e-2 should already be sufficient for likelihood inference and phase calculations).&#39;&#39;&#39;</span>
   <span class="n">_fields_</span><span class="o">=</span><span class="p">[(</span><span class="s">&#39;tol&#39;</span><span class="p">,</span><span class="n">global_tol</span><span class="p">),</span>
 			<span class="p">(</span><span class="s">&#39;cosmology&#39;</span><span class="p">,</span><span class="n">global_cosm</span><span class="p">),</span>
 			<span class="p">(</span><span class="s">&#39;units&#39;</span><span class="p">,</span><span class="n">global_units</span><span class="p">)]</span>
@@ -267,7 +269,18 @@
 <div class="viewcode-block" id="Halo.isNFW"><a class="viewcode-back" href="../api.html#oPDF.Halo.isNFW">[docs]</a>  <span class="k">def</span> <span class="nf">isNFW</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39; return True if halo is NFW, False if not &#39;&#39;&#39;</span>
 	<span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">lib</span><span class="o">.</span><span class="n">isNFW</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">))</span>
-	
+  </div>
+<div class="viewcode-block" id="Halo.vr_inv"><a class="viewcode-back" href="../api.html#oPDF.Halo.vr_inv">[docs]</a>  <span class="k">def</span> <span class="nf">vr_inv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">L</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39; inverse of radial velocity, 1/v_r, for a particle at r with binding energy E and angular momentum L&#39;&#39;&#39;</span>
+	<span class="n">vr2</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="n">E</span><span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">L</span><span class="o">/</span><span class="n">r</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">pot</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
+	<span class="n">ivr</span><span class="o">=</span><span class="mf">1.</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">vr2</span><span class="p">)</span>
+	<span class="k">try</span><span class="p">:</span>
+	  <span class="n">ivr</span><span class="p">[</span><span class="n">vr2</span><span class="o">&lt;=</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+	<span class="k">except</span><span class="p">:</span>
+	  <span class="k">if</span> <span class="n">vr2</span><span class="o">&lt;=</span><span class="mi">0</span><span class="p">:</span>
+		<span class="n">ivr</span><span class="o">=</span><span class="mf">0.</span>
+	<span class="k">return</span> <span class="n">ivr</span>
+  
 <span class="c">#==tracer.h</span></div></div>
 <span class="k">class</span> <span class="nc">Particle_t</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">Structure</span><span class="p">):</span>
   <span class="n">_fields_</span><span class="o">=</span><span class="p">[(</span><span class="s">&#39;haloid&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span>
