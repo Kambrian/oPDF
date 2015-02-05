@@ -37,7 +37,9 @@ class global_units(ctypes.Structure):
 lib.set_units.restype=None
 lib.set_units.argtypes=[ctypes.c_double, ctypes.c_double, ctypes.c_double]
 class globals_t(ctypes.Structure):
-  ''' global variables of the module. It controls numerical precision, internal units, and cosmology. '''
+  ''' global variables of the module. It controls numerical precision, internal units, and cosmology. 
+  The numerical precision for orbit integration is controlled by Globals.tol.rel, which defaults to 1e-3 
+  (Globals.tol.rel=1e-2 should already be sufficient for likelihood inference and phase calculations).'''
   _fields_=[('tol',global_tol),
 			('cosmology',global_cosm),
 			('units',global_units)]

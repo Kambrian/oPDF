@@ -5,9 +5,9 @@ void default_global_pars()
 {
   Globals.tol.bin=1e-6;
   Globals.tol.bin_abs=1e-6;
-  Globals.tol.rel=1e-5;
+  Globals.tol.rel=1e-3;
   //tol_rel=1e-3 is good enough for a contour scan; tol_rel=1e-4 is probably good enough for fmin_gsl() scan; tol_rel=1e-5 should be enough for everything.
-//1e-3 should be sufficient, good enough to constrain mass to 1% accuracy with 100000 particles
+//1e-3 should be sufficient, good enough to constrain mass to 1% accuracy with 100000 particles; the numerical noise should not affect the statistics (since they are random), so it is safe to adopt 1e-3 (or even 1e-2) for likelihood inference, especially for large samples (e.g., N>1e5).
 //accuracy in theta and phase-TS are approximately MODEL_TOL_REL, independent of nP.
 //but it's still not accurate enough for minuit to work with the hessian; better use fmin()
   Globals.cosmology.OmegaM0=0.3;
