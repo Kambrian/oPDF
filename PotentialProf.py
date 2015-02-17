@@ -9,7 +9,7 @@ from scipy.stats import chi2
 hubble=0.73
 Globals.set_units(1e10*hubble, hubble, 1.) #set to 1e10Msun, kpc, km/s with the current h
 
-DMfile=rootdir+'/../../data/A4DM.hdf5'
+DMfile=oPDFdir+'/../../data/A4DM.hdf5'
 #real parameters, for comparison with analytical profile:
 M0=183.8 #Spherical-overdensity Mass M0
 C0=15.07 #Rv0/Rs0
@@ -82,3 +82,4 @@ plt.legend(('Template(M0,c0)', 'Template(2M0,c0)','Data','Template0'))
 plt.show()
 #finalize
 Sample.clean()
+#np.savetxt('A2density.dat',np.array([xcen*hubble,density/hubble**2]).T, header='R/(kpc/h), rho/(1e10*h^2*Msun/kpc)')
