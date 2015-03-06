@@ -104,6 +104,7 @@ void load_tracer_particles(char *datafile, Tracer_t * Sample)
       Sample->P[i].x[j]=A.x[i*3+j];
     }
     free(A.x);
+	free(A.size);
     
     sprintf(A.name,"%sv",grpname);
     load_hdfmatrixF(datafile,&A,1);
@@ -118,6 +119,7 @@ void load_tracer_particles(char *datafile, Tracer_t * Sample)
       Sample->P[i].v[j]=A.x[i*3+j];
     }
     free(A.x);
+	free(A.size);
     
 	sprintf(B.name,"%sHaloID",grpname);
     nload=load_hdfmatrix(datafile,&B,1,H5T_NATIVE_INT);
@@ -126,6 +128,7 @@ void load_tracer_particles(char *datafile, Tracer_t * Sample)
 	  p=B.x;
 	  for(i=0;i<Sample->nP;i++)	Sample->P[i].haloid=p[i];
 	  free(B.x);
+	  free(B.size);
 	}
 	
 	sprintf(B.name,"%sSubID",grpname);
@@ -135,7 +138,9 @@ void load_tracer_particles(char *datafile, Tracer_t * Sample)
 	  p=B.x;
 	  for(i=0;i<Sample->nP;i++)	Sample->P[i].subid=p[i];
 	  free(B.x);
+	  free(B.size);	  
 	}
+
 /*	
 	sprintf(B.name,"%sStrmID",grpname);
     nload=load_hdfmatrix(datafile,&B,1,H5T_NATIVE_INT);
@@ -144,6 +149,7 @@ void load_tracer_particles(char *datafile, Tracer_t * Sample)
 	  p=B.x;
 	  for(i=0;i<Sample->nP;i++)	Sample->P[i].strmid=p[i];
 	  free(B.x);
+	  free(B.size);
 	}
 */    
 /*    sprintf(B.name,"%sflag",grpname);
@@ -154,6 +160,7 @@ void load_tracer_particles(char *datafile, Tracer_t * Sample)
 	  p=B.x;
 	  for(i=0;i<Sample->nP;i++)	Sample->P[i].flag=p[i];
 	  free(B.x);
+	  free(B.size);
 	}
     else */ //do not load flags
 	  for(i=0;i<Sample->nP;i++)	Sample->P[i].flag=1;
@@ -178,7 +185,11 @@ void load_tracer_particles(char *datafile, Tracer_t * Sample)
 	  fprintf(stderr, "Error: incomplete PartMass arr %zd (expecting %d)\n", nload, Sample->nP);
 	  exit(1);
 	}
-	if(nload>0) free(A.x);
+	if(nload>0) 
+	{
+	  free(A.x);
+	  free(A.size);
+	}
 	printf("mP=%g\n", Sample->mP);
       /*    
     double x0[3]={0.},v0[3]={0.};
