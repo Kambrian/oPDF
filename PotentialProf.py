@@ -9,7 +9,7 @@ from scipy.stats import chi2
 hubble=0.73
 Globals.set_units(1e10*hubble, hubble, 1.) #set to 1e10Msun, kpc, km/s with the current h
 
-DMfile=oPDFdir+'/../../data/A4DM.hdf5'
+DMfile=oPDFdir+'/../../data/B4DM.hdf5'
 #real parameters, for comparison with analytical profile:
 M0=183.8 #Spherical-overdensity Mass M0
 C0=15.07 #Rv0/Rs0
@@ -29,6 +29,7 @@ vol=np.diff(np.hstack([0., xbin])**3)*np.pi*4/3
 countM,tmp=np.histogram(Sample.data['r'], np.hstack([0., xbin]))#dM
 countR,tmp=np.histogram(Sample.data['r'], np.hstack([0., xbin]), weights=1./Sample.data['r'])#dM/R
 density=countM*Sample.mP/vol
+density_err=np.sqrt(countM)*Sample.mP/vol
 pot=countM.cumsum()/xbin+countR.sum()-countR.cumsum() #M(<r)/r+\int_r^rmax dM/r
 pot*=Globals.units.Const.G*Sample.mP
 density_cum=countM.cumsum()/xbin**3/(4*np.pi/3)*Sample.mP
@@ -60,7 +61,7 @@ print 'AvDensity'
 print ','.join(['{:g}'.format(i) for i in density_cum])
 
 ## Now recompile and try the newly added template
-TMPid=0 #change to id of the newly added template 
+TMPid=1 #change to id of the newly added template 
 
 xnew=np.logspace(-1,3,50)
 tmphalo0=Halo(halotype=HaloTypes.TMPPotScaleRScale, TMPid=TMPid)
@@ -82,4 +83,4 @@ plt.legend(('Template(M0,c0)', 'Template(2M0,c0)','Data','Template0'))
 plt.show()
 #finalize
 Sample.clean()
-#np.savetxt('A2density.dat',np.array([xcen*hubble,density/hubble**2]).T, header='R/(kpc/h), rho/(1e10*h^2*Msun/kpc)')
+#np.savetxt('B4density.cen_mstbnd.dat',np.array([xcen*hubble,density/hubble**2, density_err/hubble**2]).T, header='R/(kpc/h), rho/(1e10*h^2*Msun/kpc), rho_err')
