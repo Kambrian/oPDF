@@ -184,7 +184,7 @@ double MeanPhaseTest(Tracer_t *Sample, int FlagRaw)
 	if(FlagRaw)  
 	  return c*sqrt(12.*Sample->nP);//raw mean phase, standard normal variable
 	else//squared mean phase
-	  return -c*c*12*Sample->nP; //a standard chisquare variable	  
+	  return c*c*12*Sample->nP; //a standard chisquare variable	  
 }
 double AndersonDarlingTest(Tracer_t *Sample)
 {//Beloborodov&Levin 2004, apj, 613:224-237; simplified equation as in the note.
@@ -341,6 +341,7 @@ double like_eval(Estimator_t estimator, Tracer_t *Sample)
       break;
     case EID_PhaseMean:
 	  lnL=MeanPhaseTest(Sample, 0);
+	  break;
 	case EID_PhaseMeanRaw:
       lnL=MeanPhaseTest(Sample, 1);
       break;
