@@ -1,8 +1,7 @@
 """ Python interface to the C code for oPDF modelling.
 
 It wraps the C functions into python classes with ctypes.
-
-TODO: integrate PhaseTickerFit with minuit or curvefit"""
+"""
 from math import *
 import numpy as np
 import ctypes,os
