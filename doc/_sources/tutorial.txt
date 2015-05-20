@@ -45,8 +45,12 @@ The oPDF code depends on the following libraries:
 
 You can customize the makefile to specify how to compile and link
 against the GSL and HDF5 libraries, by specifying the
-``GSLINC,GSLLIB,HDFINC,HDFLIB`` flags. ###build the library under the
-root directory of the code, run
+``GSLINC,GSLLIB,HDFINC,HDFLIB`` flags.
+
+Build the library
+~~~~~~~~~~~~~~~~~
+
+under the root directory of the code, run
 
 ::
 
@@ -85,13 +89,13 @@ Prepare the data files
 ~~~~~~~~~~~~~~~~~~~~~~
 
 The data files are `hdf5 <http://www.hdfgroup.org/HDF5/>`_ files listing
-the positions and velocities of tracer particles, relative to the
-position and velocity of the center of the halo. The code comes with a
-sample file under data/:
+the *physical* positions and velocities of tracer particles, relative to
+the position and velocity of the center of the halo. The code comes with
+a sample file under data/:
 
 -  mockhalo.hdf5, a mock stellar halo. The potential is NFW with
    :math:`M=133.96\times 10^{10}M_\odot/h`\ , :math:`c=16.16`\ ,
-   following the :math:`\rho_{vir}=200\rho_{crit}` definition.
+   following the :math:`\rho_{\rm vir}=200\rho_{\rm crit}` definition.
 
 Compulsory datasets in a data file:
 
@@ -107,7 +111,7 @@ Optional datasets:
 -  ``HaloID, [nx1], int32``. This is the host halo id of each particles.
 
 The default system of units are
-:math:`10^{10} M_\odot/h, {\rm kpc}/h, km/s` for Mass, Length and
+:math:`10^{10} M_\odot/h, {\rm kpc}/h, {\rm km/s}` for Mass, Length and
 Velocity. If the units in the data differ from this system, you can
 choose to either update the data so that they follows the default
 systems, or change the system of units of oPDF code at run time. See the
@@ -247,7 +251,7 @@ values:
 
 .. parsed-literal::
 
-    <matplotlib.text.Text at 0x46ff790>
+    <matplotlib.text.Text at 0x39b2a90>
 
 
 
@@ -287,7 +291,7 @@ potential with parameters ``x0``.
 
 .. parsed-literal::
 
-    <matplotlib.text.Text at 0x497a690>
+    <matplotlib.text.Text at 0x41269d0>
 
 
 
@@ -322,6 +326,174 @@ phase deviation or AD distance (Test Statistics, or TS) inside different
 See, the mean phase deviations are within 3:math:`\sigma` almost
 everywhere. Note that the raw mean phase is a standard normal variable
 if the tracer is in steady-state under the potential.
+
+Reconstructing the mass profile with Phase Ticker method
+--------------------------------------------------------
+
+The phase ticker method can reconstruct the mass profile
+non-parametrically. The reconstructed profile is typically noisier than
+that from parametric fitting, but it's non-parametric. Now we
+demonstrate how this can be done. First let's create some radial bins. A
+natural choice is to create bins with equal sample size,
+
+.. code:: python
+
+    xbin=Sample.gen_bin('r', nbin=5, equalcount=True)
+This generates a sequence containing the edges of 3 (``nbin=3``) radial
+bins. The "phase tickers", i.e., the characteristic mass point in each
+bin can be found with the ``phase_mass_bin`` function:
+
+.. code:: python
+
+    tickers=np.array([Sample.phase_mass_bin(xbin[[i,i+1]]) for i in xrange(len(xbin)-1)])
+    print tickers
+
+.. parsed-literal::
+
+    [[  2.57936422   1.00682107   0.49061393   1.36644585   1.           1.
+        1.        ]
+     [ 10.72933375  34.19464225  23.87832487  41.14018144   1.           1.
+        1.        ]
+     [ 20.34511351  11.3022633    2.16253918  32.20773525   1.           1.
+        1.        ]
+     [ 33.25358349  44.79736911  29.35741245  66.65986401   1.           1.
+        1.        ]
+     [ 64.34329628  68.22149098  60.10142383  77.56745713   1.           1.
+        1.        ]]
+
+
+The ``tickers`` is now a [nbin, 6] array, where each row contains one
+characteristic mass point. The columns are
+``[r,m,ml,mu,flag,flagl, flagu]``, where ``r`` and ``m`` give the
+characteristic radius and characteristic halo mass; ``ml`` and ``mu``
+give the lower and upper bound on ``m``; ``flag``, ``flagl``,``flagu``
+are convergence flags indicating whether the method has converged when
+solving for ``m``,``ml`` and ``mu`` respectively (0:no; 1:yes; 2: no
+solution to the phase equation, but closest point found). The points we
+can trust must at least have ``flag=1``. If one wants robust error
+estimates, then ``flagl=1`` and ``flagu=1`` is also required. All our
+data points have flag==1, meaning the fits are all successful, so we do
+not need to worry about this below.
+
+We can also fit a functional form to the phase tickers. We use the
+``curve_fit`` function from the ``scipy.optimize`` package to do the fit
+(need ``scipy`` version ``>0.15.1`` in order to use ``absolute_sigma=1``
+in ``curve_fit``). We will use the average of the upper and lower
+errors, but this is not essential.
+
+.. code:: python
+
+    halofit=Halo(HaloTypes.NFWMC)
+    def halomass(r, m,c):
+      halofit.set_param([m,c])
+      return halofit.mass(r)
+    
+    from scipy.optimize import curve_fit
+    err1=tickers[:,3]-tickers[:,1]
+    err2=tickers[:,1]-tickers[:,2]
+    err=(err1+err2)/2 
+    par,Cov=curve_fit(halomass, tickers[:,0], tickers[:,1], sigma=err, p0=[100, 10], absolute_sigma=1)
+    print 'Fitted parameters:', par
+    print 'Parameter Errors:', np.sqrt(np.diagonal(Cov))
+
+.. parsed-literal::
+
+    Fitted parameters: [ 123.25095112   14.92810808]
+    Parameter Errors: [ 24.43863481   4.36328365]
+
+
+The fitted parameters make sense. Now let's plot the tickers, the fit to
+tickers, and compare to the true mass profile:
+
+.. code:: python
+
+    fig=plt.figure()
+    plt.errorbar(tickers[:,0], tickers[:,1], yerr=[err2, err1], fmt='ro', label='Ticker')
+    r=np.logspace(0,2,10)
+    plt.plot(r, halomass(r, par[0], par[1]), 'r-', label='Ticker Fit')
+    
+    #true mass profile:
+    halo=Halo()
+    halo.set_param(x0) #x0 are the true parameters
+    plt.plot(r, halo.mass(r), 'k-', label='True')
+    
+    plt.legend(loc=4)
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.xlabel('r')
+    plt.ylabel('M(<r)')
+
+
+
+.. parsed-literal::
+
+    <matplotlib.text.Text at 0x4673f90>
+
+
+
+
+.. image:: tutorial_files/tutorial_31_1.png
+
+
+If one is more interested in fitting parametric functions to the
+reconstructed profiles, then we recommend to use only 2 radial bins.
+Adopting more radial bins lead to finer reconstruction of the profile,
+but also leaks some information so the final fit to the tickers can be
+less accurate. We provide a compact function to combine the steps for
+fitting phase tickers into a single step. For example, to fit with two
+bins, do
+
+.. code:: python
+
+    par2,Cov2,tickers2=Sample.phase_ticker_fit(par0=[100,10], nbin=2)
+    print 'ticker flags:\n', tickers2[:,4:]
+    print 'Fitted parameters:', par2
+    print 'Parameter Errors:', np.sqrt(np.diagonal(Cov2))
+
+.. parsed-literal::
+
+    ticker flags:
+    [[ 1.  1.  1.]
+     [ 1.  1.  1.]]
+    Fitted parameters: [ 124.0094324    19.67963995]
+    Parameter Errors: [ 16.39519451   3.99432376]
+
+
+As you can see, now the parameter errors are smaller. The functional
+form of the profile used in the fitting is controlled by the current
+``Sample.halo``. To use a disired profile, set the halo type **before**
+fitting. For example,
+
+.. code:: python
+
+    Sample.halo.set_type(HaloTypes.NFWMC, scales=[1,1])
+To plot the fit,
+
+.. code:: python
+
+    fig=plt.figure()
+    plt.errorbar(tickers2[:,0], tickers2[:,1], yerr=[tickers2[:,1]-tickers2[:,2], tickers2[:,3]-tickers2[:,1]], fmt='ro', label='Ticker')
+    
+    Sample.halo.set_param(par2)
+    plt.plot(r, Sample.halo.mass(r), 'r-', label='Ticker Fit')
+    plt.plot(r, halo.mass(r), 'k-', label='True')
+    plt.legend(loc=4)
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.xlabel('r')
+    plt.ylabel('M(<r)')
+
+
+
+.. parsed-literal::
+
+    <matplotlib.text.Text at 0x466acd0>
+
+
+
+
+.. image:: tutorial_files/tutorial_37_1.png
+
 
 Customizing the analysis
 ------------------------
@@ -517,12 +689,12 @@ You can set\_type(), set\_param(), get the mass and potential profiles
 
 .. parsed-literal::
 
-    <matplotlib.text.Text at 0x45a4510>
+    <matplotlib.text.Text at 0x4b3bdd0>
 
 
 
 
-.. image:: tutorial_files/tutorial_48_1.png
+.. image:: tutorial_files/tutorial_62_1.png
 
 
 selecting and cutting
@@ -702,8 +874,8 @@ fitting the distribution of dark matter particles in a halo)
 
     **********************************************************************
     ---------------------------------------------------------------------------------------
-    fval = 6431.376199877743 | nfcn = 85 | ncalls = 85
-    edm = 7.617534910937361e-07 (Goal: 5e-05) | up = 0.5
+    fval = 6431.376199877737 | nfcn = 85 | ncalls = 85
+    edm = 7.617534322259192e-07 (Goal: 5e-05) | up = 0.5
     ---------------------------------------------------------------------------------------
     |          Valid |    Valid Param | Accurate Covar |         Posdef |    Made Posdef |
     ---------------------------------------------------------------------------------------
@@ -723,7 +895,7 @@ fitting the distribution of dark matter particles in a halo)
     
     **********************************************************************
     ['m', 'c']
-    ((1.0, -0.15685653218642692), (-0.15685653218642692, 1.0))
+    ((1.0, -0.15685653066442035), (-0.15685653066442035, 1.0))
            |    0    1 
     --------------------
     m    0 | 1.00 -0.16 
@@ -736,10 +908,10 @@ fitting the distribution of dark matter particles in a halo)
 
 .. parsed-literal::
 
-    (({'hesse_failed': False, 'has_reached_call_limit': False, 'has_accurate_covar': True, 'has_posdef_covar': True, 'up': 0.5, 'edm': 7.617534910937361e-07, 'is_valid': True, 'is_above_max_edm': False, 'has_covariance': True, 'has_made_posdef_covar': False, 'has_valid_parameters': True, 'fval': 6431.376199877743, 'nfcn': 85},
-      [{'is_const': False, 'name': 'm', 'has_limits': False, 'value': 15.611655846491168, 'number': 0L, 'has_lower_limit': False, 'upper_limit': 0.0, 'lower_limit': 0.0, 'has_upper_limit': False, 'error': 0.5579761869376265, 'is_fixed': False},
-       {'is_const': False, 'name': 'c', 'has_limits': False, 'value': 22.711151959873327, 'number': 1L, 'has_lower_limit': False, 'upper_limit': 0.0, 'lower_limit': 0.0, 'has_upper_limit': False, 'error': 2.3251728403151706, 'is_fixed': False}]),
-     <iminuit._libiminuit.Minuit at 0x4a64bd0>)
+    (({'hesse_failed': False, 'has_reached_call_limit': False, 'has_accurate_covar': True, 'has_posdef_covar': True, 'up': 0.5, 'edm': 7.617534322259192e-07, 'is_valid': True, 'is_above_max_edm': False, 'has_covariance': True, 'has_made_posdef_covar': False, 'has_valid_parameters': True, 'fval': 6431.376199877737, 'nfcn': 85},
+      [{'is_const': False, 'name': 'm', 'has_limits': False, 'value': 15.611655846575905, 'number': 0L, 'has_lower_limit': False, 'upper_limit': 0.0, 'lower_limit': 0.0, 'has_upper_limit': False, 'error': 0.5579761860724324, 'is_fixed': False},
+       {'is_const': False, 'name': 'c', 'has_limits': False, 'value': 22.711151960187774, 'number': 1L, 'has_lower_limit': False, 'upper_limit': 0.0, 'lower_limit': 0.0, 'has_upper_limit': False, 'error': 2.325172838386829, 'is_fixed': False}]),
+     <iminuit._libiminuit.Minuit at 0x5383670>)
 
 
 

@@ -85,6 +85,8 @@
 <li><code class="docutils literal"><span class="pre">CoreRhosRs</span></code>: Cored GNFW, <img class="math" src="_images/math/98b221d714b31c14edce2f33ab6be0c23164c6f0.png" alt="(\rho_s,r_s)"/></li>
 <li><code class="docutils literal"><span class="pre">TMPMC</span></code>: Template profile, <img class="math" src="_images/math/ebfe80b31de3ff59c32669ad5a92686427629d21.png" alt="(M,c)"/> parametrization</li>
 <li><code class="docutils literal"><span class="pre">TMPPotScaleRScale</span></code>: Template, <img class="math" src="_images/math/7a947bb3fb1e0cc69d0b627a2307ad16cc89e7bf.png" alt="\psi_s/\psi_{s0}, r_s/r_{s0}"/></li>
+<li><code class="docutils literal"><span class="pre">PointM</span></code>: Point Mass at r=0</li>
+<li><code class="docutils literal"><span class="pre">IsothermalK</span></code>: Isothermal halo, <img class="math" src="_images/math/1c088ddbba6577c51cb53495b28f117b130c44c1.png" alt="M(r)=Kr"/></li>
 </ul>
 </dd></dl>
 
@@ -278,7 +280,7 @@ is the template of the current halo, just in case the template does not match</p
 <h4>Tracer<a class="headerlink" href="#tracer" title="Permalink to this headline">¶</a></h4>
 <dl class="class">
 <dt id="oPDF.Tracer">
-<em class="property">class </em><code class="descclassname">oPDF.</code><code class="descname">Tracer</code><span class="sig-paren">(</span><em>datafile=None</em>, <em>rmin=None</em>, <em>rmax=None</em>, <em>shuffle=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">oPDF.</code><code class="descname">Tracer</code><span class="sig-paren">(</span><em>datafile=None</em>, <em>rmin=None</em>, <em>rmax=None</em>, <em>shuffle=True</em>, <em>AddHubbleFlow=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tracer: a population of tracer particles.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -327,10 +329,12 @@ is the template of the current halo, just in case the template does not match</p
 </table>
 <p>loading a tracer from a datafile.</p>
 <p>optionally, can apply radial cut given by rmin and rmax</p>
+<p>if AddHubbleFlow=True, then also add hubble flow to the loaded velocity (only support redshift 0 data now).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">by default, the tracer particles will be shuffled after loading, for easy creation of subsamples by copying later.
-to keep the original ordering of particles, set shuffle=False</p>
+<p class="last">The datafile should contain physical positions and velocities of the tracer particles, relative to the center of the halo.
+By default, the tracer particles will be shuffled after loading, for easy creation of subsamples by copying later.
+To keep the original ordering of particles, set shuffle=False</p>
 </div>
 <dl class="method">
 <dt id="oPDF.Tracer.NFW_fit">
@@ -512,7 +516,7 @@ it automatically prepares orbits and then calculates the likelihood or TS
 
 <dl class="method">
 <dt id="oPDF.Tracer.load">
-<code class="descname">load</code><span class="sig-paren">(</span><em>datafile</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.load" title="Permalink to this definition">¶</a></dt>
+<code class="descname">load</code><span class="sig-paren">(</span><em>datafile</em>, <em>AddHubbleFlow=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.load" title="Permalink to this definition">¶</a></dt>
 <dd><p>load particles from datafile</p>
 </dd></dl>
 
@@ -537,6 +541,67 @@ The likelihood for each view is also availabel in Views[i].lnL</p>
 :param proxy: proxy to use for the proxy-theta plot, &#8216;E&#8217; or &#8216;L&#8217;.
 :param bins: binning in proxy. if an integer, create the input number of bins. If an array, use the array as the bins.
 :param logscale: True or False, whether to bin in logscale or not when bins is an integer.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.phase_mass_bin">
+<code class="descname">phase_mass_bin</code><span class="sig-paren">(</span><em>xlim</em>, <em>proxy='r'</em>, <em>m0=100.0</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.phase_mass_bin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.phase_mass_bin" title="Permalink to this definition">¶</a></dt>
+<dd><p>estimate mass <img class="math" src="_images/math/7cf5091ce3ad9cc5ac961bfd582b480d0fb14039.png" alt="M(&lt;r_c)"/> for tracer with property &#8220;proxy&#8221; selected in between xlim, using the &#8220;PhaseTicker&#8221; method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>xlim</strong> &#8211; the range of property to select the tracer.</li>
+<li><strong>proxy</strong> &#8211; the property to select the tracer, &#8216;r&#8217; or &#8216;L&#8217;</li>
+<li><strong>m0</strong> &#8211; the initial guess of the mass, optional.</li>
+<li><strong>verbose</strong> &#8211; whether to print diagnostic information, default no.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>r,m,ml,mu,flag,flagl, flagu</p>
+<p>r: the characteristic radius of the tracer in between rlim</p>
+<p>m: the mass of the halo contained inside r</p>
+<p>ml: 1-sigma lower bound on m</p>
+<p>mu: 1-sigma upper bound on m</p>
+<p>flag: whether m and r have converged (0:no; 1:yes; 2: no solution to the phase equation, but closest point found).</p>
+<p>flagl: whether ml has converged</p>
+<p>flagu: whether mu has converged</p>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.phase_ticker_fit">
+<code class="descname">phase_ticker_fit</code><span class="sig-paren">(</span><em>par0=[1, 1], nbin=2, proxy='r', equalcount=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.phase_ticker_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.phase_ticker_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>fit halo potential with phase ticker. The halo of the tracer need to be initialized to the desired type before fitting.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>par0</strong> &#8211; initial parameter values. len(par0) also gives the number of free parameters.</li>
+<li><strong>nbin</strong> &#8211; number of bins. if nbin&lt;len(par0), then the number of bins is set to len(par0) to avoid overfitting.</li>
+<li><strong>proxy</strong> &#8211; the tracer property used to bin the sample into subsamples. &#8216;r&#8217; or &#8216;L&#8217;.</li>
+<li><strong>equalcount</strong> &#8211; whether to use equalcount bins (each subsample has equal number of particles) or logarithmic bins in proxy.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>par: best-fit parameter</p>
+<p>Cov: covariance matrix of the parameters</p>
+<p>data: phase-ticker data, array of shape [nbin, 7]. each column is the fitting result [r,m,ml,mu,flag,flagl, flagu] to one bin, with (r,m) giving the radius and mass, (ml,mu) giving the lower and upper bound on mass, (flag, flagl, flagu) specifying whether the fit converged for mass and its lower and upper bounds (0:no; 1:yes; 2: no solution to the phase equation, but closest point found).</p>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">if the code complains about curve_fit() keyword error, you need to upgrade your scipy to version 0.15.1 or newer.</p>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -676,6 +741,42 @@ see estimator.need_phase for each estimator.</dd>
 </dd></dl>
 
 <dl class="method">
+<dt id="oPDF.Tracer.solve_meanphase">
+<code class="descname">solve_meanphase</code><span class="sig-paren">(</span><em>x0</em>, <em>y0=0.0</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.solve_meanphase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.solve_meanphase" title="Permalink to this definition">¶</a></dt>
+<dd><p>find the halo parameter x at which MeanPhaseRaw(x)=y0.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x0</strong> &#8211; the initial value of x to start the search.</li>
+<li><strong>y0</strong> &#8211; the mean phase value, so that MeanPhaseRaw(x)=y0.</li>
+<li><strong>verbose</strong> &#8211; 0 or 1, whether to print additional convergence information.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>(x,y,flag).</p>
+<p>x: solution</p>
+<p>y: MeanPhaseRaw(x)-y0</p>
+<dl class="docutils">
+<dt>success flag:</dt>
+<dd><p class="first last">0: fail to converge;
+1: successfully found solution; 
+2: failed to find solution for MeanPhaseRaw(x)-y0=0, but found minimum for (MeanPhaseRaw(x)-y0)**2.</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The tracer halo type must be set before invoking this function.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
 <dt id="oPDF.Tracer.sort">
 <code class="descname">sort</code><span class="sig-paren">(</span><em>proxy</em>, <em>offset=0</em>, <em>n=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.sort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.sort" title="Permalink to this definition">¶</a></dt>
 <dd><p>sort the particles according to proxy</p>
@@ -690,6 +791,35 @@ see estimator.need_phase for each estimator.</dd>
 <dt id="oPDF.Tracer.squeeze">
 <code class="descname">squeeze</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.squeeze"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.squeeze" title="Permalink to this definition">¶</a></dt>
 <dd><p>remove P.flag==0 (data[&#8216;flag&#8217;]==0) particles</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oPDF.Tracer.tick_phase_mass">
+<code class="descname">tick_phase_mass</code><span class="sig-paren">(</span><em>m0=100.0</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.tick_phase_mass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.tick_phase_mass" title="Permalink to this definition">¶</a></dt>
+<dd><p>estimate mass <img class="math" src="_images/math/7cf5091ce3ad9cc5ac961bfd582b480d0fb14039.png" alt="M(&lt;r_c)"/> using the &#8220;PhaseTicker&#8221; method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>m0</strong> &#8211; the initial guess of the mass, optional.</li>
+<li><strong>verbose</strong> &#8211; whether to print diagnostic information, default no.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>r,m,ml,mu,flag,flagl, flagu</p>
+<p>r: the characteristic radius of the tracer in between rlim</p>
+<p>m: the mass of the halo contained inside r</p>
+<p>ml: 1-sigma lower bound on m</p>
+<p>mu: 1-sigma upper bound on m</p>
+<p>flag: whether m and r have converged (0:no; 1:yes; 2: no solution to the phase equation, but closest point found).</p>
+<p>flagl: whether ml has converged</p>
+<p>flagu: whether mu has converged</p>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
