@@ -801,16 +801,24 @@ class Tracer(Tracer_t):
 
   def solve_meanphase(self, x0, y0=0., verbose=0):
 	'''find the halo parameter x at which MeanPhaseRaw(x)=y0.
-	x0 is the initial value of x to start the search.
-	verbose: 0 or 1, whether to print additional convergence information.
+	
+	:param x0: the initial value of x to start the search.
+	
+	:param y0: the mean phase value, so that MeanPhaseRaw(x)=y0.
+	
+	:param verbose: 0 or 1, whether to print additional convergence information.
 	
 	:return: (x,y,flag).
+	
 		x: solution
+		
 		y: MeanPhaseRaw(x)-y0
+		
 		success flag:
-		  0: fail to converge
+		  0: fail to converge;
 		  1: successfully found solution; 
 		  2: failed to find solution for MeanPhaseRaw(x)-y0=0, but found minimum for (MeanPhaseRaw(x)-y0)**2.
+		  
 	.. note::
 		 The tracer halo type must be set before invoking this function.
 	'''
@@ -856,16 +864,25 @@ class Tracer(Tracer_t):
   
   def tick_phase_mass(self, m0=100., verbose=0):
 	''' estimate mass :math:`M(<r_c)` using the "PhaseTicker" method.
+	
 	:param m0: the initial guess of the mass, optional.
+	
 	:param verbose: whether to print diagnostic information, default no.
 	
 	:return: r,m,ml,mu,flag,flagl, flagu
+	
 		  r: the characteristic radius of the tracer in between rlim
+	
 		  m: the mass of the halo contained inside r
+		  
 		  ml: 1-sigma lower bound on m
+		  
 		  mu: 1-sigma upper bound on m
+		  
 		  flag: whether m and r have converged (0:no; 1:yes; 2: no solution to the phase equation, but closest point found).
+		  
 		  flagl: whether ml has converged
+		  
 		  flagu: whether mu has converged
 	'''
 	
@@ -900,20 +917,28 @@ class Tracer(Tracer_t):
 	  
 	return r,m,ml,mu,flag,flagl,flagu 
 	
-  def phase_mass_select(self, xlim, proxy='r', m0=100., verbose=0):
+  def phase_mass_bin(self, xlim, proxy='r', m0=100., verbose=0):
 	''' estimate mass :math:`M(<r_c)` for tracer with property "proxy" selected in between xlim, using the "PhaseTicker" method.
+	
 	:param xlim: the range of property to select the tracer.
 	:param proxy: the property to select the tracer, 'r' or 'L'
 	:param m0: the initial guess of the mass, optional.
 	:param verbose: whether to print diagnostic information, default no.
 	
 	:return: r,m,ml,mu,flag,flagl, flagu
+	
 		  r: the characteristic radius of the tracer in between rlim
+		  
 		  m: the mass of the halo contained inside r
+		  
 		  ml: 1-sigma lower bound on m
+		  
 		  mu: 1-sigma upper bound on m
+		  
 		  flag: whether m and r have converged (0:no; 1:yes; 2: no solution to the phase equation, but closest point found).
+		  
 		  flagl: whether ml has converged
+		  
 		  flagu: whether mu has converged
 	'''
 	
@@ -935,9 +960,12 @@ class Tracer(Tracer_t):
 	:param equalcount: whether to use equalcount bins (each subsample has equal number of particles) or logarithmic bins in proxy.
 	
 	:return:
+	  
 	  par: best-fit parameter
+	  
 	  Cov: covariance matrix of the parameters
-	  data: phase-ticker data, array of shape [nbin, 7]. each column is the fit to one bin, [r,m,ml,mu,flag,flagl, flagu], with (r,m) giving the radius and mass, (ml,mu) giving the lower and upper bound on mass, (flag, flagl, flagu) specifying whether the fit converged for mass and its lower and upper bounds (0:no; 1:yes; 2: no solution to the phase equation, but closest point found).
+	  
+	  data: phase-ticker data, array of shape [nbin, 7]. each column is the fitting result [r,m,ml,mu,flag,flagl, flagu] to one bin, with (r,m) giving the radius and mass, (ml,mu) giving the lower and upper bound on mass, (flag, flagl, flagu) specifying whether the fit converged for mass and its lower and upper bounds (0:no; 1:yes; 2: no solution to the phase equation, but closest point found).
 	  
 	.. note::
 	  if the code complains about curve_fit() keyword error, you need to upgrade your scipy to version 0.15.1 or newer.
@@ -945,7 +973,7 @@ class Tracer(Tracer_t):
 	
 	nbin=max(nbin, len(par0))
 	x=self.gen_bin(proxy, nbin, equalcount=equalcount)
-	data=np.array([self.phase_mass_select(x[[i,i+1]], proxy) for i in xrange(len(x)-1)])
+	data=np.array([self.phase_mass_bin(x[[i,i+1]], proxy) for i in xrange(len(x)-1)])
 	flag=(data[:,4]==1)
 	sig1=data[:,3]-data[:,1]
 	sig2=data[:,1]-data[:,2]
