@@ -70,8 +70,10 @@ void calibrate_particle_weights(Tracer_t *Sample)
   Sample->mP*=w;
 }
 
-void load_tracer_particles(char *datafile, Tracer_t * Sample)
+void load_tracer_particles(char *datafile, Tracer_t * Sample, int AddHubbleFlow)
 {
+  //TODO: add redshift to tracer (convert comoving positions to physical); also generalize AddHubbleFlow to high redshift.
+  //in the current form, feed a datafile containing physical coordinates should be fine.
 	size_t nload;
     int i,j, *p;
     FloatMat A;
@@ -116,7 +118,11 @@ void load_tracer_particles(char *datafile, Tracer_t * Sample)
     for(i=0;i<Sample->nP;i++)
     {
       for(j=0;j<3;j++)
-      Sample->P[i].v[j]=A.x[i*3+j];
+	  {
+		Sample->P[i].v[j]=A.x[i*3+j];
+		if(AddHubbleFlow)
+		  Sample->P[i].v[j]+=Sample->P[i].x[j]*Globals.units.Const.H0;
+	  }
     }
     free(A.x);
 	free(A.size);
@@ -214,7 +220,14 @@ void load_tracer_particles(char *datafile, Tracer_t * Sample)
 	Sample->P[i].v[j]-=v0[j];
       }
     }
-*/    
+*/  
+	if(AddHubbleFlow)
+	{
+	  double H0=Globals.units.Const.H0;
+	  for(i=0;i<Sample->nP;i++)
+		for(j=0;j<3;j++)
+		  Sample->P[i].v[j]+=Sample->P[i].x[j]*H0;
+    }
     for(i=0;i<Sample->nP;i++)
     {
       Sample->P[i].r=sqrt(VecNorm(Sample->P[i].x));

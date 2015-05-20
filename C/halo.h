@@ -13,6 +13,8 @@ typedef enum
   HT_TMPPotScaleRScale,
   HT_CoreRhosRs,
   HT_CorePotsRs,
+  HT_PointM,
+  HT_IsothermalK
 } HaloType_t;
 
 typedef struct Halo
@@ -29,6 +31,7 @@ typedef struct Halo
   double Ms;//4*pi*rs^3*rhos
   double RScale; //for TMP profile, Rs/Rs0
   double PotScale; //for TMP profile, Pots/Pots0
+  double K; //M=KR, for isothermal profile, where K=Vc^2/G.
   int IsForbidden; //flag telling whether the parameters are forbidden (e.g, negative mass parameter)
 //   int TMPid;//for TMP profile
   int virtype;

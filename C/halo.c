@@ -74,6 +74,14 @@ void halo_set_param(const double pars[], Halo_t *halo)
 	  halo->RScale=phypar[1];
 	  halo->IsForbidden=!(ISPHYSICAL(halo->PotScale)&&ISPHYSICAL(halo->RScale));
 	  break;
+	case HT_PointM:
+	  halo->M=phypar[0];
+	  halo->IsForbidden=!(ISPHYSICAL(halo->M));
+	  break;
+	case HT_IsothermalK:
+	  halo->K=phypar[0];
+	  halo->IsForbidden=!(ISPHYSICAL(halo->K));
+	  break;
 	default:
 	  DEBUGPRINT("Error: Unknown halo parametrization %d\n", halo->type);
 	  exit(1);
@@ -81,7 +89,7 @@ void halo_set_param(const double pars[], Halo_t *halo)
 }
 
 double halo_mass(double r, Halo_t *halo)
-{
+{//M(<r)
   if(halo->IsForbidden) return 0.;
   switch(halo->type)
   {
@@ -93,6 +101,10 @@ double halo_mass(double r, Halo_t *halo)
 	case HT_NFWPotsRs:
 	case HT_NFWRhosRs:
 	  return NFW_mass(r, halo);
+	case HT_PointM:
+	  return halo->M;
+	case HT_IsothermalK:
+	  return halo->K*r;
 	default:
 	  DEBUGPRINT("Error: mass profile does not support parametrization %d yet\n", halo->type);
 	  exit(1);
@@ -100,7 +112,7 @@ double halo_mass(double r, Halo_t *halo)
 }
 
 double halo_pot(double r, Halo_t *halo)
-{ 
+{ //Pot(r)
   if(halo->IsForbidden) return 0.;
   double x=r/halo->Rs;
   switch(halo->type)
@@ -117,6 +129,10 @@ double halo_pot(double r, Halo_t *halo)
 	case HT_TMPMC:
 	case HT_TMPPotScaleRScale:
 	  return eval_potential_spline(r/halo->RScale)*halo->PotScale; 
+	case HT_PointM:
+	  return -Globals.units.Const.G*halo->M/r;
+	case HT_IsothermalK:
+	  return Globals.units.Const.G*halo->K*log(r); //psi=G*K*ln(R/Rmax), but omitting Rmax here.
 	default:
 	  DEBUGPRINT("Error: halo type %d not supported by halo_pot yet", halo->type);
 	  exit(1);

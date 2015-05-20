@@ -82,7 +82,7 @@ void solve_radial_limits ( Particle_t *P, double rmin, double rmax, Halo_t *halo
 
 double vr_inv_part(double r, double E, double L2, Halo_t *halo)
 {//E: binding energy, -(K+psi)
-  double vr2=2*(-E-L2/2./r/r-halo_pot(r, halo));//what about hubble flow? this is physical velocity. after excluding hubble flow, the comoving velocity would be asymmetric for in-out motions...
+  double vr2=2*(-E-L2/2./r/r-halo_pot(r, halo));//what about hubble flow?
   if(vr2<=0) return 0.;
   return 1./sqrt(vr2);
 }

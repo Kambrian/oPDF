@@ -1,6 +1,8 @@
 """ Python interface to the C code for oPDF modelling.
 
-It wraps the C functions into python classes with ctypes."""
+It wraps the C functions into python classes with ctypes.
+
+TODO: integrate PhaseTickerFit with minuit or curvefit"""
 from math import *
 import numpy as np
 import ctypes,os
@@ -10,6 +12,7 @@ from myutils import Chi2Sig,AD2Sig,density_of_points,get_extent,NamedValues,Name
 import matplotlib.pyplot as plt
 from iminuit import Minuit
 from iminuit.ConsoleFrontend import ConsoleFrontend
+from scipy.optimize import newton,brentq,fmin,curve_fit
 #import copy
 
 oPDFdir=os.path.dirname(__file__)
@@ -106,6 +109,7 @@ class Halo_t(ctypes.Structure):
 			('Ms',ctypes.c_double),#4*pi*rs^3*rhos
 			('RScale',ctypes.c_double),#for TMP profile, Rs/Rs0
 			('PotScale',ctypes.c_double),#for TMP profile, Pots/Pots0
+			('K', ctypes.c_double), #M=KR, for isothermal profile, where K=Vc^2/G.
 			('IsForbidden', ctypes.c_int), #whether the halo parameters are forbidden(e.g, negative mass)
 			('virtype',ctypes.c_int),
 			('type',ctypes.c_int)
@@ -122,7 +126,7 @@ lib.halo_pot.argtypes=[ctypes.c_double, Halo_p]
 lib.isNFW.restype=ctypes.c_int
 lib.isNFW.argtypes=[ctypes.c_int]
 
-HaloTypes=_NamedEnum('NFWMC NFWPotsRs NFWRhosRs TMPMC TMPPotScaleRScale CoreRhosRs CorePotsRs')
+HaloTypes=_NamedEnum('NFWMC NFWPotsRs NFWRhosRs TMPMC TMPPotScaleRScale CoreRhosRs CorePotsRs PointM IsothermalK')
 ''' Collection of halo types. It contains
 
     -  ``NFWMC``: NFW halo parametrized by :math:`(M,c)`
@@ -132,6 +136,8 @@ HaloTypes=_NamedEnum('NFWMC NFWPotsRs NFWRhosRs TMPMC TMPPotScaleRScale CoreRhos
     -  ``CoreRhosRs``: Cored GNFW, :math:`(\\rho_s,r_s)`
     -  ``TMPMC``: Template profile, :math:`(M,c)` parametrization
     -  ``TMPPotScaleRScale``: Template, :math:`\\psi_s/\\psi_{s0}, r_s/r_{s0}`
+    -  ``PointM``: Point Mass at r=0
+    -  ``IsothermalK``: Isothermal halo, :math:`M(r)=Kr`
 '''
 
 class Halo(Halo_t):
@@ -273,7 +279,7 @@ Tracer_t._fields_=[('lnL', ctypes.c_double),
 				   ('Views', Tracer_p)
 				  ]#: Tracer fields
 lib.load_tracer_particles.restype=None
-lib.load_tracer_particles.argtypes=[ctypes.c_char_p, Tracer_p]
+lib.load_tracer_particles.argtypes=[ctypes.c_char_p, Tracer_p, ctypes.c_int]
 lib.cut_tracer_particles.restype=None
 lib.cut_tracer_particles.argtypes=[Tracer_p, ctypes.c_double, ctypes.c_double]
 lib.shuffle_tracer_particles.restype=None
@@ -391,7 +397,7 @@ class Tracer(Tracer_t):
   :ivar rmin: lower radial cut.
   :ivar rmax: upper radial cut.
   '''
-  def __init__(self, datafile=None, rmin=None, rmax=None, shuffle=True):
+  def __init__(self, datafile=None, rmin=None, rmax=None, shuffle=True, AddHubbleFlow=False):
 	'''
 	:Initializer: 
 	
@@ -399,16 +405,19 @@ class Tracer(Tracer_t):
 	
 	optionally, can apply radial cut given by rmin and rmax
 	
+	if AddHubbleFlow=True, then also add hubble flow to the loaded velocity (only support redshift 0 data now).
+	
 	.. note:: 
-	   by default, the tracer particles will be shuffled after loading, for easy creation of subsamples by copying later.
-	   to keep the original ordering of particles, set shuffle=False'''
+	   The datafile should contain physical positions and velocities of the tracer particles, relative to the center of the halo.
+	   By default, the tracer particles will be shuffled after loading, for easy creation of subsamples by copying later.
+	   To keep the original ordering of particles, set shuffle=False'''
 	Tracer_t.__init__(self)
 	self._pointer=ctypes.byref(self)
 	self.nP=0
 	self.nView=0
 	self.halo=Halo()
 	if datafile!=None:
-	  self.load(datafile)
+	  self.load(datafile, AddHubbleFlow)
 	  self.radial_cut(rmin,rmax)
 	  if shuffle:
 		self.shuffle()
@@ -425,11 +434,11 @@ class Tracer(Tracer_t):
 	Parr=(Particle_t*self.nP).from_address(ctypes.addressof(self.P.contents)) #struct array
 	self.data=np.frombuffer(Parr, np.dtype(Parr))[0] #the numpy array
 
-  def load(self, datafile):
+  def load(self, datafile, AddHubbleFlow=False):
 	'''load particles from datafile'''
 	if self.nP>0:
 	  lib.free_tracer(self._pointer)
-	lib.load_tracer_particles(datafile, self._pointer)
+	lib.load_tracer_particles(datafile, self._pointer, AddHubbleFlow)
 	self.__update_array()
 	self.rmin=self.data['r'].min()
 	self.rmax=self.data['r'].max()
@@ -791,6 +800,163 @@ class Tracer(Tracer_t):
 	  ts=ts[-1::-1]
 	return np.array(bins),np.array(ts),np.array(n)
 
+  def solve_meanphase(self, x0, y0=0., verbose=0):
+	'''find the halo parameter x at which MeanPhaseRaw(x)=y0.
+	x0 is the initial value of x to start the search.
+	verbose: 0 or 1, whether to print additional convergence information.
+	
+	:return: (x,y,flag).
+		x: solution
+		y: MeanPhaseRaw(x)-y0
+		success flag:
+		  0: fail to converge
+		  1: successfully found solution; 
+		  2: failed to find solution for MeanPhaseRaw(x)-y0=0, but found minimum for (MeanPhaseRaw(x)-y0)**2.
+	.. note::
+		 The tracer halo type must be set before invoking this function.
+	'''
+	likeraw=lambda m: self.likelihood([m], Estimators.MeanPhaseRaw, False)-y0
+	likeln=lambda x: likeraw(np.exp(x))
+	like=lambda m: likeraw(m)**2
+	#initialize the interval bracketing the root
+	d=2.
+	a=[x0*d,x0]
+	f=[likeraw(x) for x in a]
+	if abs(f[1])<abs(f[0]):
+	  f=f[::-1]
+	  a=a[::-1]
+	  d=1./d
+	niter=0
+	while f[0]*f[1]>0 and niter<10:
+	  a[1]=a[0]
+	  a[0]*=d #push a[0] toward root
+	  f[1]=f[0]
+	  f[0]=likeraw(a[0])
+	  niter+=1
+	if niter>=10:
+	  if verbose>0:
+		print "Failed to bracket root after %d iterations; now search for func minimum instead."%niter
+	  result=fmin(like, x0, full_output=True, disp=verbose)
+	  success=2 #retreat to fmin
+	  if result[4]>0:
+		success=0 #failed to converge
+	  return result[0][0], result[1], success
+	
+	#find the root
+	#print a,f, np.log(a), [likeln(np.log(a[0])), likeln(np.log(a[1]))]
+	x=brentq(likeln, np.log(a[0]),np.log(a[1]), rtol=1e-4)
+	x0=np.sqrt(a[0]*a[1])
+	#x=newton(likeln, np.log(x0),tol=1e-4)
+	y=likeln(x)
+	x=np.exp(x)
+	#x=brentq(likeraw, a[0],a[1], rtol=1e-2)
+	#x=newton(likeraw, x0,tol=1e-4)
+	#y=likeraw(x)
+	success=abs(y)<1e-2
+	return x,y,success
+  
+  def tick_phase_mass(self, m0=100., verbose=0):
+	''' estimate mass :math:`M(<r_c)` using the "PhaseTicker" method.
+	:param m0: the initial guess of the mass, optional.
+	:param verbose: whether to print diagnostic information, default no.
+	
+	:return: r,m,ml,mu,flag,flagl, flagu
+		  r: the characteristic radius of the tracer in between rlim
+		  m: the mass of the halo contained inside r
+		  ml: 1-sigma lower bound on m
+		  mu: 1-sigma upper bound on m
+		  flag: whether m and r have converged (0:no; 1:yes; 2: no solution to the phase equation, but closest point found).
+		  flagl: whether ml has converged
+		  flagu: whether mu has converged
+	'''
+	
+	rmed=np.median(self.data['r'])
+	self.halo.set_type(HaloTypes.PointM)
+	
+	result=self.solve_meanphase(m0, verbose=verbose)
+	flag1=result[-1]
+	if verbose>0:
+	  print result
+	m=result[0]
+	ml,_,flagl=self.solve_meanphase(m, -1., verbose=verbose)
+	mu,_,flagu=self.solve_meanphase(m, 1., verbose=verbose)
+	
+	self.halo.set_type(HaloTypes.IsothermalK)
+	result=self.solve_meanphase(m0/rmed, verbose=verbose)
+	flag2=result[-1]
+	if verbose>0:
+	  print result
+	k=result[0]
+	#kl=self.solve_meanphase(k, -1.)[0]
+	#ku=self.solve_meanphase(k, 1.)[0]
+	
+	r=m/k
+	#rl,ru=rlim
+	#rl=max(ml/ku,rlim[0])
+	#ru=min(mu/kl,rlim[1])
+	
+	flag=flag1&flag2
+	if flag>0:
+	  flag=max(flag1, flag2) #in case any of them equal to 2
+	  
+	return r,m,ml,mu,flag,flagl,flagu 
+	
+  def phase_mass_select(self, xlim, proxy='r', m0=100., verbose=0):
+	''' estimate mass :math:`M(<r_c)` for tracer with property "proxy" selected in between xlim, using the "PhaseTicker" method.
+	:param xlim: the range of property to select the tracer.
+	:param proxy: the property to select the tracer, 'r' or 'L'
+	:param m0: the initial guess of the mass, optional.
+	:param verbose: whether to print diagnostic information, default no.
+	
+	:return: r,m,ml,mu,flag,flagl, flagu
+		  r: the characteristic radius of the tracer in between rlim
+		  m: the mass of the halo contained inside r
+		  ml: 1-sigma lower bound on m
+		  mu: 1-sigma upper bound on m
+		  flag: whether m and r have converged (0:no; 1:yes; 2: no solution to the phase equation, but closest point found).
+		  flagl: whether ml has converged
+		  flagu: whether mu has converged
+	'''
+	
+	if proxy in 'rR':
+	  S=self.copy()
+	  S.radial_cut(xlim[0], xlim[1])
+	else:
+	  S=self.select((self.data[proxy]>xlim[0])&(self.data[proxy]<xlim[1]))
+	out=S.tick_phase_mass(m0, verbose)
+	S.clean()
+	return out
+  
+  def phase_ticker_fit(self, par0=[1,1], nbin=2, proxy='r', equalcount=True):
+	'''fit halo potential with phase ticker. The halo of the tracer need to be initialized to the desired type before fitting.
+	
+	:param par0: initial parameter values. len(par0) also gives the number of free parameters.
+	:param nbin: number of bins. if nbin<len(par0), then the number of bins is set to len(par0) to avoid overfitting.
+	:param proxy: the tracer property used to bin the sample into subsamples. 'r' or 'L'.
+	:param equalcount: whether to use equalcount bins (each subsample has equal number of particles) or logarithmic bins in proxy.
+	
+	:return:
+	  par: best-fit parameter
+	  Cov: covariance matrix of the parameters
+	  data: phase-ticker data, array of shape [nbin, 7]. each column is the fit to one bin, [r,m,ml,mu,flag,flagl, flagu], with (r,m) giving the radius and mass, (ml,mu) giving the lower and upper bound on mass, (flag, flagl, flagu) specifying whether the fit converged for mass and its lower and upper bounds (0:no; 1:yes; 2: no solution to the phase equation, but closest point found).
+	  
+	.. note::
+	  if the code complains about curve_fit() keyword error, you need to upgrade your scipy to version 0.15.1 or newer.
+	'''	
+	
+	nbin=max(nbin, len(par0))
+	x=self.gen_bin(proxy, nbin, equalcount=equalcount)
+	data=np.array([self.phase_mass_select(x[[i,i+1]], proxy) for i in xrange(len(x)-1)])
+	flag=(data[:,4]==1)
+	sig1=data[:,3]-data[:,1]
+	sig2=data[:,1]-data[:,2]
+	sig=(sig1+sig2)/2 
+	def halomass(r, *pars):
+	  self.halo.set_param(pars)
+	  return self.halo.mass(r)
+	par,Cov=curve_fit(halomass, data[flag,0], data[flag,1], sigma=sig[flag], p0=par0, absolute_sigma=1) #need scipy version >0.15.1
+	return par,Cov,data
+  
   def NFW_fit(self, x0=[1,1], minuittol=1):
 	''' to fit an NFW density PDF with maximum likelihood.
 	
