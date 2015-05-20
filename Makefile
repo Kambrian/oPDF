@@ -97,7 +97,7 @@ docclean:
 .PHONY : clean depend distclean docclean
 
 depend:
-	makedepend --$(CFLAGS)-- -Y $(SRC_COMM) $(SRC_MAIN) $(SRC)
+	makedepend -Y -- $(CFLAGS) -- $(SRC_COMM) $(SRC_MAIN) $(SRC)
 	
 clean:
 	rm -f $(OBJS) $(OBJS_COMM) $(OBJS_MAIN)
@@ -106,13 +106,3 @@ distclean: clean docclean
 	rm -f $(EXEC) $(OPDF_LIB) *~ *.pyc py/*.pyc
 #-----end--- auto dependencies below---------	
 # DO NOT DELETE
-
-hdf_util.o: hdf_util.h mymath.h
-globals.o: globals.h
-cosmology.o: cosmology.h globals.h
-mymath.o: mymath.h
-models.o: mymath.h globals.h cosmology.h tracer.h halo.h models.h
-tracer.o: mymath.h globals.h hdf_util.h tracer.h halo.h models.h
-halo.o: mymath.h globals.h cosmology.h halo.h template.h nfw.h tracer.h
-template.o: mymath.h globals.h cosmology.h halo.h template.h TemplateData.h
-nfw.o: globals.h cosmology.h halo.h tracer.h
