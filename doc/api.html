@@ -521,6 +521,35 @@ it automatically prepares orbits and then calculates the likelihood or TS
 </dd></dl>
 
 <dl class="method">
+<dt id="oPDF.Tracer.mark_phase_mass">
+<code class="descname">mark_phase_mass</code><span class="sig-paren">(</span><em>m0=100.0</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.mark_phase_mass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.mark_phase_mass" title="Permalink to this definition">¶</a></dt>
+<dd><p>estimate mass <img class="math" src="_images/math/7cf5091ce3ad9cc5ac961bfd582b480d0fb14039.png" alt="M(&lt;r_c)"/> using the &#8220;PhaseMark&#8221; method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>m0</strong> &#8211; the initial guess of the mass, optional.</li>
+<li><strong>verbose</strong> &#8211; whether to print diagnostic information, default no.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>r,m,ml,mu,flag,flagl, flagu</p>
+<p>r: the characteristic radius of the tracer in between rlim</p>
+<p>m: the mass of the halo contained inside r</p>
+<p>ml: 1-sigma lower bound on m</p>
+<p>mu: 1-sigma upper bound on m</p>
+<p>flag: whether m and r have converged (0:no; 1:yes; 2: no solution to the phase equation, but closest point found).</p>
+<p>flagl: whether ml has converged</p>
+<p>flagu: whether mu has converged</p>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="oPDF.Tracer.nested_views_like">
 <code class="descname">nested_views_like</code><span class="sig-paren">(</span><em>estimator=AD</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.nested_views_like"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.nested_views_like" title="Permalink to this definition">¶</a></dt>
 <dd><p>evaluate likelihood in at the deepest views, and return the sum of them.
@@ -544,9 +573,39 @@ The likelihood for each view is also availabel in Views[i].lnL</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="oPDF.Tracer.phase_mark_fit">
+<code class="descname">phase_mark_fit</code><span class="sig-paren">(</span><em>par0=[1, 1], nbin=2, proxy='r', equalcount=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.phase_mark_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.phase_mark_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>fit halo potential with phase mark. The halo of the tracer need to be initialized to the desired type before fitting.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>par0</strong> &#8211; initial parameter values. len(par0) also gives the number of free parameters.</li>
+<li><strong>nbin</strong> &#8211; number of bins. if nbin&lt;len(par0), then the number of bins is set to len(par0) to avoid overfitting.</li>
+<li><strong>proxy</strong> &#8211; the tracer property used to bin the sample into subsamples. &#8216;r&#8217; or &#8216;L&#8217;.</li>
+<li><strong>equalcount</strong> &#8211; whether to use equalcount bins (each subsample has equal number of particles) or logarithmic bins in proxy.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>par: best-fit parameter</p>
+<p>Cov: covariance matrix of the parameters</p>
+<p>data: phase-mark data, array of shape [nbin, 7]. each column is the fitting result [r,m,ml,mu,flag,flagl, flagu] to one bin, with (r,m) giving the radius and mass, (ml,mu) giving the lower and upper bound on mass, (flag, flagl, flagu) specifying whether the fit converged for mass and its lower and upper bounds (0:no; 1:yes; 2: no solution to the phase equation, but closest point found).</p>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">if the code complains about curve_fit() keyword error, you need to upgrade your scipy to version 0.15.1 or newer.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
 <dt id="oPDF.Tracer.phase_mass_bin">
 <code class="descname">phase_mass_bin</code><span class="sig-paren">(</span><em>xlim</em>, <em>proxy='r'</em>, <em>m0=100.0</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.phase_mass_bin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.phase_mass_bin" title="Permalink to this definition">¶</a></dt>
-<dd><p>estimate mass <img class="math" src="_images/math/7cf5091ce3ad9cc5ac961bfd582b480d0fb14039.png" alt="M(&lt;r_c)"/> for tracer with property &#8220;proxy&#8221; selected in between xlim, using the &#8220;PhaseTicker&#8221; method.</p>
+<dd><p>estimate mass <img class="math" src="_images/math/7cf5091ce3ad9cc5ac961bfd582b480d0fb14039.png" alt="M(&lt;r_c)"/> for tracer with property &#8220;proxy&#8221; selected in between xlim, using the &#8220;PhaseMark&#8221; method.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -572,36 +631,6 @@ The likelihood for each view is also availabel in Views[i].lnL</p>
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
-<dl class="method">
-<dt id="oPDF.Tracer.phase_ticker_fit">
-<code class="descname">phase_ticker_fit</code><span class="sig-paren">(</span><em>par0=[1, 1], nbin=2, proxy='r', equalcount=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.phase_ticker_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.phase_ticker_fit" title="Permalink to this definition">¶</a></dt>
-<dd><p>fit halo potential with phase ticker. The halo of the tracer need to be initialized to the desired type before fitting.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>par0</strong> &#8211; initial parameter values. len(par0) also gives the number of free parameters.</li>
-<li><strong>nbin</strong> &#8211; number of bins. if nbin&lt;len(par0), then the number of bins is set to len(par0) to avoid overfitting.</li>
-<li><strong>proxy</strong> &#8211; the tracer property used to bin the sample into subsamples. &#8216;r&#8217; or &#8216;L&#8217;.</li>
-<li><strong>equalcount</strong> &#8211; whether to use equalcount bins (each subsample has equal number of particles) or logarithmic bins in proxy.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>par: best-fit parameter</p>
-<p>Cov: covariance matrix of the parameters</p>
-<p>data: phase-ticker data, array of shape [nbin, 7]. each column is the fitting result [r,m,ml,mu,flag,flagl, flagu] to one bin, with (r,m) giving the radius and mass, (ml,mu) giving the lower and upper bound on mass, (flag, flagl, flagu) specifying whether the fit converged for mass and its lower and upper bounds (0:no; 1:yes; 2: no solution to the phase equation, but closest point found).</p>
-</p>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">if the code complains about curve_fit() keyword error, you need to upgrade your scipy to version 0.15.1 or newer.</p>
-</div>
 </dd></dl>
 
 <dl class="method">
@@ -791,35 +820,6 @@ see estimator.need_phase for each estimator.</dd>
 <dt id="oPDF.Tracer.squeeze">
 <code class="descname">squeeze</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.squeeze"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.squeeze" title="Permalink to this definition">¶</a></dt>
 <dd><p>remove P.flag==0 (data[&#8216;flag&#8217;]==0) particles</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="oPDF.Tracer.tick_phase_mass">
-<code class="descname">tick_phase_mass</code><span class="sig-paren">(</span><em>m0=100.0</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.tick_phase_mass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.tick_phase_mass" title="Permalink to this definition">¶</a></dt>
-<dd><p>estimate mass <img class="math" src="_images/math/7cf5091ce3ad9cc5ac961bfd582b480d0fb14039.png" alt="M(&lt;r_c)"/> using the &#8220;PhaseTicker&#8221; method.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>m0</strong> &#8211; the initial guess of the mass, optional.</li>
-<li><strong>verbose</strong> &#8211; whether to print diagnostic information, default no.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>r,m,ml,mu,flag,flagl, flagu</p>
-<p>r: the characteristic radius of the tracer in between rlim</p>
-<p>m: the mass of the halo contained inside r</p>
-<p>ml: 1-sigma lower bound on m</p>
-<p>mu: 1-sigma upper bound on m</p>
-<p>flag: whether m and r have converged (0:no; 1:yes; 2: no solution to the phase equation, but closest point found).</p>
-<p>flagl: whether ml has converged</p>
-<p>flagu: whether mu has converged</p>
-</p>
-</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 </dd></dl>

@@ -251,7 +251,7 @@ values:
 
 .. parsed-literal::
 
-    <matplotlib.text.Text at 0x39b2a90>
+    <matplotlib.text.Text at 0x4585bd0>
 
 
 
@@ -291,7 +291,7 @@ potential with parameters ``x0``.
 
 .. parsed-literal::
 
-    <matplotlib.text.Text at 0x41269d0>
+    <matplotlib.text.Text at 0x4d04b50>
 
 
 
@@ -327,10 +327,10 @@ See, the mean phase deviations are within 3:math:`\sigma` almost
 everywhere. Note that the raw mean phase is a standard normal variable
 if the tracer is in steady-state under the potential.
 
-Reconstructing the mass profile with Phase Ticker method
---------------------------------------------------------
+Reconstructing the mass profile with Phase-Mark method
+------------------------------------------------------
 
-The phase ticker method can reconstruct the mass profile
+The phase-mark method can reconstruct the mass profile
 non-parametrically. The reconstructed profile is typically noisier than
 that from parametric fitting, but it's non-parametric. Now we
 demonstrate how this can be done. First let's create some radial bins. A
@@ -340,29 +340,29 @@ natural choice is to create bins with equal sample size,
 
     xbin=Sample.gen_bin('r', nbin=5, equalcount=True)
 This generates a sequence containing the edges of 3 (``nbin=3``) radial
-bins. The "phase tickers", i.e., the characteristic mass point in each
-bin can be found with the ``phase_mass_bin`` function:
+bins. The "phase marks", i.e., the characteristic mass point in each bin
+can be found with the ``phase_mass_bin`` function:
 
 .. code:: python
 
-    tickers=np.array([Sample.phase_mass_bin(xbin[[i,i+1]]) for i in xrange(len(xbin)-1)])
-    print tickers
+    marks=np.array([Sample.phase_mass_bin(xbin[[i,i+1]]) for i in xrange(len(xbin)-1)])
+    print marks
 
 .. parsed-literal::
 
-    [[  2.57936422   1.00682107   0.49061393   1.36644585   1.           1.
+    [[  2.57914729   1.00683005   0.49058258   1.36649516   1.           1.
         1.        ]
-     [ 10.72933375  34.19464225  23.87832487  41.14018144   1.           1.
+     [ 10.7295808   34.19465065  23.87852203  41.14360851   1.           1.
         1.        ]
-     [ 20.34511351  11.3022633    2.16253918  32.20773525   1.           1.
+     [ 20.34998195  11.30505188   2.16321596  32.20870383   1.           1.
         1.        ]
-     [ 33.25358349  44.79736911  29.35741245  66.65986401   1.           1.
+     [ 33.25517089  44.79736911  29.35628579  66.65986211   1.           1.
         1.        ]
      [ 64.34329628  68.22149098  60.10142383  77.56745713   1.           1.
         1.        ]]
 
 
-The ``tickers`` is now a [nbin, 6] array, where each row contains one
+The ``marks`` is now a [nbin, 6] array, where each row contains one
 characteristic mass point. The columns are
 ``[r,m,ml,mu,flag,flagl, flagu]``, where ``r`` and ``m`` give the
 characteristic radius and characteristic halo mass; ``ml`` and ``mu``
@@ -375,7 +375,7 @@ estimates, then ``flagl=1`` and ``flagu=1`` is also required. All our
 data points have flag==1, meaning the fits are all successful, so we do
 not need to worry about this below.
 
-We can also fit a functional form to the phase tickers. We use the
+We can also fit a functional form to the phase marks. We use the
 ``curve_fit`` function from the ``scipy.optimize`` package to do the fit
 (need ``scipy`` version ``>0.15.1`` in order to use ``absolute_sigma=1``
 in ``curve_fit``). We will use the average of the upper and lower
@@ -389,28 +389,28 @@ errors, but this is not essential.
       return halofit.mass(r)
     
     from scipy.optimize import curve_fit
-    err1=tickers[:,3]-tickers[:,1]
-    err2=tickers[:,1]-tickers[:,2]
+    err1=marks[:,3]-marks[:,1]
+    err2=marks[:,1]-marks[:,2]
     err=(err1+err2)/2 
-    par,Cov=curve_fit(halomass, tickers[:,0], tickers[:,1], sigma=err, p0=[100, 10], absolute_sigma=1)
+    par,Cov=curve_fit(halomass, marks[:,0], marks[:,1], sigma=err, p0=[100, 10], absolute_sigma=1)
     print 'Fitted parameters:', par
     print 'Parameter Errors:', np.sqrt(np.diagonal(Cov))
 
 .. parsed-literal::
 
-    Fitted parameters: [ 123.25095112   14.92810808]
-    Parameter Errors: [ 24.43863481   4.36328365]
+    Fitted parameters: [ 123.24507653   14.92927574]
+    Parameter Errors: [ 24.43777446   4.36420908]
 
 
-The fitted parameters make sense. Now let's plot the tickers, the fit to
-tickers, and compare to the true mass profile:
+The fitted parameters make sense. Now let's plot the marks, the fit to
+marks, and compare to the true mass profile:
 
 .. code:: python
 
     fig=plt.figure()
-    plt.errorbar(tickers[:,0], tickers[:,1], yerr=[err2, err1], fmt='ro', label='Ticker')
+    plt.errorbar(marks[:,0], marks[:,1], yerr=[err2, err1], fmt='ro', label='Mark')
     r=np.logspace(0,2,10)
-    plt.plot(r, halomass(r, par[0], par[1]), 'r-', label='Ticker Fit')
+    plt.plot(r, halomass(r, par[0], par[1]), 'r-', label='Mark Fit')
     
     #true mass profile:
     halo=Halo()
@@ -427,7 +427,7 @@ tickers, and compare to the true mass profile:
 
 .. parsed-literal::
 
-    <matplotlib.text.Text at 0x4673f90>
+    <matplotlib.text.Text at 0x5217250>
 
 
 
@@ -438,25 +438,25 @@ tickers, and compare to the true mass profile:
 If one is more interested in fitting parametric functions to the
 reconstructed profiles, then we recommend to use only 2 radial bins.
 Adopting more radial bins lead to finer reconstruction of the profile,
-but also leaks some information so the final fit to the tickers can be
+but also leaks some information so the final fit to the marks can be
 less accurate. We provide a compact function to combine the steps for
-fitting phase tickers into a single step. For example, to fit with two
+fitting phase marks into a single step. For example, to fit with two
 bins, do
 
 .. code:: python
 
-    par2,Cov2,tickers2=Sample.phase_ticker_fit(par0=[100,10], nbin=2)
-    print 'ticker flags:\n', tickers2[:,4:]
+    par2,Cov2,marks2=Sample.phase_mark_fit(par0=[100,10], nbin=2)
+    print 'mark flags:\n', marks2[:,4:]
     print 'Fitted parameters:', par2
     print 'Parameter Errors:', np.sqrt(np.diagonal(Cov2))
 
 .. parsed-literal::
 
-    ticker flags:
+    mark flags:
     [[ 1.  1.  1.]
      [ 1.  1.  1.]]
-    Fitted parameters: [ 124.0094324    19.67963995]
-    Parameter Errors: [ 16.39519451   3.99432376]
+    Fitted parameters: [ 124.0093333    19.67968255]
+    Parameter Errors: [ 16.39555491   3.99462691]
 
 
 As you can see, now the parameter errors are smaller. The functional
@@ -472,10 +472,10 @@ To plot the fit,
 .. code:: python
 
     fig=plt.figure()
-    plt.errorbar(tickers2[:,0], tickers2[:,1], yerr=[tickers2[:,1]-tickers2[:,2], tickers2[:,3]-tickers2[:,1]], fmt='ro', label='Ticker')
+    plt.errorbar(marks2[:,0], marks2[:,1], yerr=[marks2[:,1]-marks2[:,2], marks2[:,3]-marks2[:,1]], fmt='ro', label='Mark')
     
     Sample.halo.set_param(par2)
-    plt.plot(r, Sample.halo.mass(r), 'r-', label='Ticker Fit')
+    plt.plot(r, Sample.halo.mass(r), 'r-', label='Mark Fit')
     plt.plot(r, halo.mass(r), 'k-', label='True')
     plt.legend(loc=4)
     plt.xscale('log')
@@ -487,7 +487,7 @@ To plot the fit,
 
 .. parsed-literal::
 
-    <matplotlib.text.Text at 0x466acd0>
+    <matplotlib.text.Text at 0x45946d0>
 
 
 
@@ -689,7 +689,7 @@ You can set\_type(), set\_param(), get the mass and potential profiles
 
 .. parsed-literal::
 
-    <matplotlib.text.Text at 0x4b3bdd0>
+    <matplotlib.text.Text at 0x570efd0>
 
 
 
@@ -875,7 +875,7 @@ fitting the distribution of dark matter particles in a halo)
     **********************************************************************
     ---------------------------------------------------------------------------------------
     fval = 6431.376199877737 | nfcn = 85 | ncalls = 85
-    edm = 7.617534322259192e-07 (Goal: 5e-05) | up = 0.5
+    edm = 7.617539575663999e-07 (Goal: 5e-05) | up = 0.5
     ---------------------------------------------------------------------------------------
     |          Valid |    Valid Param | Accurate Covar |         Posdef |    Made Posdef |
     ---------------------------------------------------------------------------------------
@@ -895,7 +895,7 @@ fitting the distribution of dark matter particles in a halo)
     
     **********************************************************************
     ['m', 'c']
-    ((1.0, -0.15685653066442035), (-0.15685653066442035, 1.0))
+    ((1.0, -0.15685653025406016), (-0.15685653025406016, 1.0))
            |    0    1 
     --------------------
     m    0 | 1.00 -0.16 
@@ -908,10 +908,10 @@ fitting the distribution of dark matter particles in a halo)
 
 .. parsed-literal::
 
-    (({'hesse_failed': False, 'has_reached_call_limit': False, 'has_accurate_covar': True, 'has_posdef_covar': True, 'up': 0.5, 'edm': 7.617534322259192e-07, 'is_valid': True, 'is_above_max_edm': False, 'has_covariance': True, 'has_made_posdef_covar': False, 'has_valid_parameters': True, 'fval': 6431.376199877737, 'nfcn': 85},
-      [{'is_const': False, 'name': 'm', 'has_limits': False, 'value': 15.611655846575905, 'number': 0L, 'has_lower_limit': False, 'upper_limit': 0.0, 'lower_limit': 0.0, 'has_upper_limit': False, 'error': 0.5579761860724324, 'is_fixed': False},
-       {'is_const': False, 'name': 'c', 'has_limits': False, 'value': 22.711151960187774, 'number': 1L, 'has_lower_limit': False, 'upper_limit': 0.0, 'lower_limit': 0.0, 'has_upper_limit': False, 'error': 2.325172838386829, 'is_fixed': False}]),
-     <iminuit._libiminuit.Minuit at 0x5383670>)
+    (({'hesse_failed': False, 'has_reached_call_limit': False, 'has_accurate_covar': True, 'has_posdef_covar': True, 'up': 0.5, 'edm': 7.617539575663999e-07, 'is_valid': True, 'is_above_max_edm': False, 'has_covariance': True, 'has_made_posdef_covar': False, 'has_valid_parameters': True, 'fval': 6431.376199877737, 'nfcn': 85},
+      [{'is_const': False, 'name': 'm', 'has_limits': False, 'value': 15.611655846563332, 'number': 0L, 'has_lower_limit': False, 'upper_limit': 0.0, 'lower_limit': 0.0, 'has_upper_limit': False, 'error': 0.5579761861939552, 'is_fixed': False},
+       {'is_const': False, 'name': 'c', 'has_limits': False, 'value': 22.711151960080375, 'number': 1L, 'has_lower_limit': False, 'upper_limit': 0.0, 'lower_limit': 0.0, 'has_upper_limit': False, 'error': 2.325172837557389, 'is_fixed': False}]),
+     <iminuit._libiminuit.Minuit at 0x53f77b0>)
 
 
 

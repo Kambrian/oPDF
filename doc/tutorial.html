@@ -262,7 +262,7 @@ values:</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">r&#39;$c/c_0$&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x39b2a90&gt;
+<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x4585bd0&gt;
 </pre></div>
 </div>
 <img alt="_images/tutorial_16_1.png" src="_images/tutorial_16_1.png" />
@@ -291,7 +291,7 @@ potential with parameters <code class="docutils literal"><span class="pre">x0</s
 <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Real Potential&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x41269d0&gt;
+<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x4d04b50&gt;
 </pre></div>
 </div>
 <img alt="_images/tutorial_19_1.png" src="_images/tutorial_19_1.png" />
@@ -318,9 +318,9 @@ everywhere. Note that the raw mean phase is a standard normal variable
 if the tracer is in steady-state under the potential.</p>
 </div>
 </div>
-<div class="section" id="reconstructing-the-mass-profile-with-phase-ticker-method">
-<h2>Reconstructing the mass profile with Phase Ticker method<a class="headerlink" href="#reconstructing-the-mass-profile-with-phase-ticker-method" title="Permalink to this headline">¶</a></h2>
-<p>The phase ticker method can reconstruct the mass profile
+<div class="section" id="reconstructing-the-mass-profile-with-phase-mark-method">
+<h2>Reconstructing the mass profile with Phase-Mark method<a class="headerlink" href="#reconstructing-the-mass-profile-with-phase-mark-method" title="Permalink to this headline">¶</a></h2>
+<p>The phase-mark method can reconstruct the mass profile
 non-parametrically. The reconstructed profile is typically noisier than
 that from parametric fitting, but it&#8217;s non-parametric. Now we
 demonstrate how this can be done. First let&#8217;s create some radial bins. A
@@ -329,25 +329,25 @@ natural choice is to create bins with equal sample size,</p>
 </pre></div>
 </div>
 <p>This generates a sequence containing the edges of 3 (<code class="docutils literal"><span class="pre">nbin=3</span></code>) radial
-bins. The &#8220;phase tickers&#8221;, i.e., the characteristic mass point in each
-bin can be found with the <code class="docutils literal"><span class="pre">phase_mass_bin</span></code> function:</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">tickers</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">Sample</span><span class="o">.</span><span class="n">phase_mass_bin</span><span class="p">(</span><span class="n">xbin</span><span class="p">[[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xbin</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)])</span>
-<span class="k">print</span> <span class="n">tickers</span>
+bins. The &#8220;phase marks&#8221;, i.e., the characteristic mass point in each bin
+can be found with the <code class="docutils literal"><span class="pre">phase_mass_bin</span></code> function:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">marks</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">Sample</span><span class="o">.</span><span class="n">phase_mass_bin</span><span class="p">(</span><span class="n">xbin</span><span class="p">[[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xbin</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)])</span>
+<span class="k">print</span> <span class="n">marks</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>[[  2.57936422   1.00682107   0.49061393   1.36644585   1.           1.
+<div class="highlight-python"><div class="highlight"><pre>[[  2.57914729   1.00683005   0.49058258   1.36649516   1.           1.
     1.        ]
- [ 10.72933375  34.19464225  23.87832487  41.14018144   1.           1.
+ [ 10.7295808   34.19465065  23.87852203  41.14360851   1.           1.
     1.        ]
- [ 20.34511351  11.3022633    2.16253918  32.20773525   1.           1.
+ [ 20.34998195  11.30505188   2.16321596  32.20870383   1.           1.
     1.        ]
- [ 33.25358349  44.79736911  29.35741245  66.65986401   1.           1.
+ [ 33.25517089  44.79736911  29.35628579  66.65986211   1.           1.
     1.        ]
  [ 64.34329628  68.22149098  60.10142383  77.56745713   1.           1.
     1.        ]]
 </pre></div>
 </div>
-<p>The <code class="docutils literal"><span class="pre">tickers</span></code> is now a [nbin, 6] array, where each row contains one
+<p>The <code class="docutils literal"><span class="pre">marks</span></code> is now a [nbin, 6] array, where each row contains one
 characteristic mass point. The columns are
 <code class="docutils literal"><span class="pre">[r,m,ml,mu,flag,flagl,</span> <span class="pre">flagu]</span></code>, where <code class="docutils literal"><span class="pre">r</span></code> and <code class="docutils literal"><span class="pre">m</span></code> give the
 characteristic radius and characteristic halo mass; <code class="docutils literal"><span class="pre">ml</span></code> and <code class="docutils literal"><span class="pre">mu</span></code>
@@ -359,7 +359,7 @@ can trust must at least have <code class="docutils literal"><span class="pre">fl
 estimates, then <code class="docutils literal"><span class="pre">flagl=1</span></code> and <code class="docutils literal"><span class="pre">flagu=1</span></code> is also required. All our
 data points have flag==1, meaning the fits are all successful, so we do
 not need to worry about this below.</p>
-<p>We can also fit a functional form to the phase tickers. We use the
+<p>We can also fit a functional form to the phase marks. We use the
 <code class="docutils literal"><span class="pre">curve_fit</span></code> function from the <code class="docutils literal"><span class="pre">scipy.optimize</span></code> package to do the fit
 (need <code class="docutils literal"><span class="pre">scipy</span></code> version <code class="docutils literal"><span class="pre">&gt;0.15.1</span></code> in order to use <code class="docutils literal"><span class="pre">absolute_sigma=1</span></code>
 in <code class="docutils literal"><span class="pre">curve_fit</span></code>). We will use the average of the upper and lower
@@ -370,24 +370,24 @@ errors, but this is not essential.</p>
   <span class="k">return</span> <span class="n">halofit</span><span class="o">.</span><span class="n">mass</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
 
 <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">curve_fit</span>
-<span class="n">err1</span><span class="o">=</span><span class="n">tickers</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]</span><span class="o">-</span><span class="n">tickers</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">err2</span><span class="o">=</span><span class="n">tickers</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">tickers</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>
+<span class="n">err1</span><span class="o">=</span><span class="n">marks</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]</span><span class="o">-</span><span class="n">marks</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">err2</span><span class="o">=</span><span class="n">marks</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">marks</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>
 <span class="n">err</span><span class="o">=</span><span class="p">(</span><span class="n">err1</span><span class="o">+</span><span class="n">err2</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
-<span class="n">par</span><span class="p">,</span><span class="n">Cov</span><span class="o">=</span><span class="n">curve_fit</span><span class="p">(</span><span class="n">halomass</span><span class="p">,</span> <span class="n">tickers</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">tickers</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">sigma</span><span class="o">=</span><span class="n">err</span><span class="p">,</span> <span class="n">p0</span><span class="o">=</span><span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="n">absolute_sigma</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">par</span><span class="p">,</span><span class="n">Cov</span><span class="o">=</span><span class="n">curve_fit</span><span class="p">(</span><span class="n">halomass</span><span class="p">,</span> <span class="n">marks</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">marks</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">sigma</span><span class="o">=</span><span class="n">err</span><span class="p">,</span> <span class="n">p0</span><span class="o">=</span><span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="n">absolute_sigma</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="k">print</span> <span class="s">&#39;Fitted parameters:&#39;</span><span class="p">,</span> <span class="n">par</span>
 <span class="k">print</span> <span class="s">&#39;Parameter Errors:&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">Cov</span><span class="p">))</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>Fitted parameters: [ 123.25095112   14.92810808]
-Parameter Errors: [ 24.43863481   4.36328365]
+<div class="highlight-python"><div class="highlight"><pre>Fitted parameters: [ 123.24507653   14.92927574]
+Parameter Errors: [ 24.43777446   4.36420908]
 </pre></div>
 </div>
-<p>The fitted parameters make sense. Now let&#8217;s plot the tickers, the fit to
-tickers, and compare to the true mass profile:</p>
+<p>The fitted parameters make sense. Now let&#8217;s plot the marks, the fit to
+marks, and compare to the true mass profile:</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="n">fig</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">tickers</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">tickers</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">yerr</span><span class="o">=</span><span class="p">[</span><span class="n">err2</span><span class="p">,</span> <span class="n">err1</span><span class="p">],</span> <span class="n">fmt</span><span class="o">=</span><span class="s">&#39;ro&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Ticker&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">marks</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">marks</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">yerr</span><span class="o">=</span><span class="p">[</span><span class="n">err2</span><span class="p">,</span> <span class="n">err1</span><span class="p">],</span> <span class="n">fmt</span><span class="o">=</span><span class="s">&#39;ro&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Mark&#39;</span><span class="p">)</span>
 <span class="n">r</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">halomass</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">par</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">par</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="s">&#39;r-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Ticker Fit&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">halomass</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">par</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">par</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="s">&#39;r-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Mark Fit&#39;</span><span class="p">)</span>
 
 <span class="c">#true mass profile:</span>
 <span class="n">halo</span><span class="o">=</span><span class="n">Halo</span><span class="p">()</span>
@@ -401,28 +401,28 @@ tickers, and compare to the true mass profile:</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;M(&lt;r)&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x4673f90&gt;
+<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x5217250&gt;
 </pre></div>
 </div>
 <img alt="_images/tutorial_31_1.png" src="_images/tutorial_31_1.png" />
 <p>If one is more interested in fitting parametric functions to the
 reconstructed profiles, then we recommend to use only 2 radial bins.
 Adopting more radial bins lead to finer reconstruction of the profile,
-but also leaks some information so the final fit to the tickers can be
+but also leaks some information so the final fit to the marks can be
 less accurate. We provide a compact function to combine the steps for
-fitting phase tickers into a single step. For example, to fit with two
+fitting phase marks into a single step. For example, to fit with two
 bins, do</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">par2</span><span class="p">,</span><span class="n">Cov2</span><span class="p">,</span><span class="n">tickers2</span><span class="o">=</span><span class="n">Sample</span><span class="o">.</span><span class="n">phase_ticker_fit</span><span class="p">(</span><span class="n">par0</span><span class="o">=</span><span class="p">[</span><span class="mi">100</span><span class="p">,</span><span class="mi">10</span><span class="p">],</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="k">print</span> <span class="s">&#39;ticker flags:</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">tickers2</span><span class="p">[:,</span><span class="mi">4</span><span class="p">:]</span>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">par2</span><span class="p">,</span><span class="n">Cov2</span><span class="p">,</span><span class="n">marks2</span><span class="o">=</span><span class="n">Sample</span><span class="o">.</span><span class="n">phase_mark_fit</span><span class="p">(</span><span class="n">par0</span><span class="o">=</span><span class="p">[</span><span class="mi">100</span><span class="p">,</span><span class="mi">10</span><span class="p">],</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="k">print</span> <span class="s">&#39;mark flags:</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">marks2</span><span class="p">[:,</span><span class="mi">4</span><span class="p">:]</span>
 <span class="k">print</span> <span class="s">&#39;Fitted parameters:&#39;</span><span class="p">,</span> <span class="n">par2</span>
 <span class="k">print</span> <span class="s">&#39;Parameter Errors:&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">Cov2</span><span class="p">))</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>ticker flags:
+<div class="highlight-python"><div class="highlight"><pre>mark flags:
 [[ 1.  1.  1.]
  [ 1.  1.  1.]]
-Fitted parameters: [ 124.0094324    19.67963995]
-Parameter Errors: [ 16.39519451   3.99432376]
+Fitted parameters: [ 124.0093333    19.67968255]
+Parameter Errors: [ 16.39555491   3.99462691]
 </pre></div>
 </div>
 <p>As you can see, now the parameter errors are smaller. The functional
@@ -434,10 +434,10 @@ fitting. For example,</p>
 </div>
 <p>To plot the fit,</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="n">fig</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">tickers2</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">tickers2</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">yerr</span><span class="o">=</span><span class="p">[</span><span class="n">tickers2</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">tickers2</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">tickers2</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]</span><span class="o">-</span><span class="n">tickers2</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]],</span> <span class="n">fmt</span><span class="o">=</span><span class="s">&#39;ro&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Ticker&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">marks2</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">marks2</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">yerr</span><span class="o">=</span><span class="p">[</span><span class="n">marks2</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">marks2</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">marks2</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]</span><span class="o">-</span><span class="n">marks2</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]],</span> <span class="n">fmt</span><span class="o">=</span><span class="s">&#39;ro&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Mark&#39;</span><span class="p">)</span>
 
 <span class="n">Sample</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">set_param</span><span class="p">(</span><span class="n">par2</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">Sample</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">mass</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="s">&#39;r-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Ticker Fit&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">Sample</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">mass</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="s">&#39;r-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Mark Fit&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">halo</span><span class="o">.</span><span class="n">mass</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="s">&#39;k-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;True&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s">&#39;log&#39;</span><span class="p">)</span>
@@ -446,7 +446,7 @@ fitting. For example,</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;M(&lt;r)&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x466acd0&gt;
+<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x45946d0&gt;
 </pre></div>
 </div>
 <img alt="_images/tutorial_37_1.png" src="_images/tutorial_37_1.png" />
@@ -609,7 +609,7 @@ You can set_type(), set_param(), get the mass and potential profiles</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">r&#39;$-\psi(r)$&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x4b3bdd0&gt;
+<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x570efd0&gt;
 </pre></div>
 </div>
 <img alt="_images/tutorial_62_1.png" src="_images/tutorial_62_1.png" />
@@ -773,7 +773,7 @@ fitting the distribution of dark matter particles in a halo)</p>
 <strong>******************************************************************</strong>
 ---------------------------------------------------------------------------------------
 fval = 6431.376199877737 | nfcn = 85 | ncalls = 85
-edm = 7.617534322259192e-07 (Goal: 5e-05) | up = 0.5
+edm = 7.617539575663999e-07 (Goal: 5e-05) | up = 0.5
 ---------------------------------------------------------------------------------------
 |          Valid |    Valid Param | Accurate Covar |         Posdef |    Made Posdef |
 ---------------------------------------------------------------------------------------
@@ -793,17 +793,17 @@ edm = 7.617534322259192e-07 (Goal: 5e-05) | up = 0.5
 
 <strong>******************************************************************</strong>
 ['m', 'c']
-((1.0, -0.15685653066442035), (-0.15685653066442035, 1.0))
+((1.0, -0.15685653025406016), (-0.15685653025406016, 1.0))
        |    0    1
 --------------------
 m    0 | 1.00 -0.16
 c    1 | -0.16 1.00
 --------------------
 </pre>
-<div class="highlight-python"><div class="highlight"><pre>(({&#39;hesse_failed&#39;: False, &#39;has_reached_call_limit&#39;: False, &#39;has_accurate_covar&#39;: True, &#39;has_posdef_covar&#39;: True, &#39;up&#39;: 0.5, &#39;edm&#39;: 7.617534322259192e-07, &#39;is_valid&#39;: True, &#39;is_above_max_edm&#39;: False, &#39;has_covariance&#39;: True, &#39;has_made_posdef_covar&#39;: False, &#39;has_valid_parameters&#39;: True, &#39;fval&#39;: 6431.376199877737, &#39;nfcn&#39;: 85},
-  [{&#39;is_const&#39;: False, &#39;name&#39;: &#39;m&#39;, &#39;has_limits&#39;: False, &#39;value&#39;: 15.611655846575905, &#39;number&#39;: 0L, &#39;has_lower_limit&#39;: False, &#39;upper_limit&#39;: 0.0, &#39;lower_limit&#39;: 0.0, &#39;has_upper_limit&#39;: False, &#39;error&#39;: 0.5579761860724324, &#39;is_fixed&#39;: False},
-   {&#39;is_const&#39;: False, &#39;name&#39;: &#39;c&#39;, &#39;has_limits&#39;: False, &#39;value&#39;: 22.711151960187774, &#39;number&#39;: 1L, &#39;has_lower_limit&#39;: False, &#39;upper_limit&#39;: 0.0, &#39;lower_limit&#39;: 0.0, &#39;has_upper_limit&#39;: False, &#39;error&#39;: 2.325172838386829, &#39;is_fixed&#39;: False}]),
- &lt;iminuit._libiminuit.Minuit at 0x5383670&gt;)
+<div class="highlight-python"><div class="highlight"><pre>(({&#39;hesse_failed&#39;: False, &#39;has_reached_call_limit&#39;: False, &#39;has_accurate_covar&#39;: True, &#39;has_posdef_covar&#39;: True, &#39;up&#39;: 0.5, &#39;edm&#39;: 7.617539575663999e-07, &#39;is_valid&#39;: True, &#39;is_above_max_edm&#39;: False, &#39;has_covariance&#39;: True, &#39;has_made_posdef_covar&#39;: False, &#39;has_valid_parameters&#39;: True, &#39;fval&#39;: 6431.376199877737, &#39;nfcn&#39;: 85},
+  [{&#39;is_const&#39;: False, &#39;name&#39;: &#39;m&#39;, &#39;has_limits&#39;: False, &#39;value&#39;: 15.611655846563332, &#39;number&#39;: 0L, &#39;has_lower_limit&#39;: False, &#39;upper_limit&#39;: 0.0, &#39;lower_limit&#39;: 0.0, &#39;has_upper_limit&#39;: False, &#39;error&#39;: 0.5579761861939552, &#39;is_fixed&#39;: False},
+   {&#39;is_const&#39;: False, &#39;name&#39;: &#39;c&#39;, &#39;has_limits&#39;: False, &#39;value&#39;: 22.711151960080375, &#39;number&#39;: 1L, &#39;has_lower_limit&#39;: False, &#39;upper_limit&#39;: 0.0, &#39;lower_limit&#39;: 0.0, &#39;has_upper_limit&#39;: False, &#39;error&#39;: 2.325172837557389, &#39;is_fixed&#39;: False}]),
+ &lt;iminuit._libiminuit.Minuit at 0x53f77b0&gt;)
 </pre></div>
 </div>
 <p>In order for this to make sense, <code class="docutils literal"><span class="pre">Sample</span></code> should be loaded with dark
@@ -856,7 +856,7 @@ lower the precision, the faster the code will be.</p>
 <li><a class="reference internal" href="#ts-profiles">TS profiles</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#reconstructing-the-mass-profile-with-phase-ticker-method">Reconstructing the mass profile with Phase Ticker method</a></li>
+<li><a class="reference internal" href="#reconstructing-the-mass-profile-with-phase-mark-method">Reconstructing the mass profile with Phase-Mark method</a></li>
 <li><a class="reference internal" href="#customizing-the-analysis">Customizing the analysis</a><ul>
 <li><a class="reference internal" href="#estimators">Estimators</a></li>
 <li><a class="reference internal" href="#units">units</a></li>

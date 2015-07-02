@@ -911,8 +911,8 @@
 	<span class="n">success</span><span class="o">=</span><span class="nb">abs</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">&lt;</span><span class="mf">1e-2</span>
 	<span class="k">return</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">success</span>
   </div>
-<div class="viewcode-block" id="Tracer.tick_phase_mass"><a class="viewcode-back" href="../api.html#oPDF.Tracer.tick_phase_mass">[docs]</a>  <span class="k">def</span> <span class="nf">tick_phase_mass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m0</span><span class="o">=</span><span class="mf">100.</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-	<span class="sd">&#39;&#39;&#39; estimate mass :math:`M(&lt;r_c)` using the &quot;PhaseTicker&quot; method.</span>
+<div class="viewcode-block" id="Tracer.mark_phase_mass"><a class="viewcode-back" href="../api.html#oPDF.Tracer.mark_phase_mass">[docs]</a>  <span class="k">def</span> <span class="nf">mark_phase_mass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m0</span><span class="o">=</span><span class="mf">100.</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39; estimate mass :math:`M(&lt;r_c)` using the &quot;PhaseMark&quot; method.</span>
 <span class="sd">	</span>
 <span class="sd">	:param m0: the initial guess of the mass, optional.</span>
 <span class="sd">	</span>
@@ -967,7 +967,7 @@
 	<span class="k">return</span> <span class="n">r</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">ml</span><span class="p">,</span><span class="n">mu</span><span class="p">,</span><span class="n">flag</span><span class="p">,</span><span class="n">flagl</span><span class="p">,</span><span class="n">flagu</span> 
 	</div>
 <div class="viewcode-block" id="Tracer.phase_mass_bin"><a class="viewcode-back" href="../api.html#oPDF.Tracer.phase_mass_bin">[docs]</a>  <span class="k">def</span> <span class="nf">phase_mass_bin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xlim</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s">&#39;r&#39;</span><span class="p">,</span> <span class="n">m0</span><span class="o">=</span><span class="mf">100.</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-	<span class="sd">&#39;&#39;&#39; estimate mass :math:`M(&lt;r_c)` for tracer with property &quot;proxy&quot; selected in between xlim, using the &quot;PhaseTicker&quot; method.</span>
+	<span class="sd">&#39;&#39;&#39; estimate mass :math:`M(&lt;r_c)` for tracer with property &quot;proxy&quot; selected in between xlim, using the &quot;PhaseMark&quot; method.</span>
 <span class="sd">	</span>
 <span class="sd">	:param xlim: the range of property to select the tracer.</span>
 <span class="sd">	:param proxy: the property to select the tracer, &#39;r&#39; or &#39;L&#39;</span>
@@ -996,12 +996,12 @@
 	  <span class="n">S</span><span class="o">.</span><span class="n">radial_cut</span><span class="p">(</span><span class="n">xlim</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xlim</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 	<span class="k">else</span><span class="p">:</span>
 	  <span class="n">S</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">select</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">proxy</span><span class="p">]</span><span class="o">&gt;</span><span class="n">xlim</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">&amp;</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">proxy</span><span class="p">]</span><span class="o">&lt;</span><span class="n">xlim</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-	<span class="n">out</span><span class="o">=</span><span class="n">S</span><span class="o">.</span><span class="n">tick_phase_mass</span><span class="p">(</span><span class="n">m0</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+	<span class="n">out</span><span class="o">=</span><span class="n">S</span><span class="o">.</span><span class="n">mark_phase_mass</span><span class="p">(</span><span class="n">m0</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
 	<span class="n">S</span><span class="o">.</span><span class="n">clean</span><span class="p">()</span>
 	<span class="k">return</span> <span class="n">out</span>
   </div>
-<div class="viewcode-block" id="Tracer.phase_ticker_fit"><a class="viewcode-back" href="../api.html#oPDF.Tracer.phase_ticker_fit">[docs]</a>  <span class="k">def</span> <span class="nf">phase_ticker_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par0</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s">&#39;r&#39;</span><span class="p">,</span> <span class="n">equalcount</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
-	<span class="sd">&#39;&#39;&#39;fit halo potential with phase ticker. The halo of the tracer need to be initialized to the desired type before fitting.</span>
+<div class="viewcode-block" id="Tracer.phase_mark_fit"><a class="viewcode-back" href="../api.html#oPDF.Tracer.phase_mark_fit">[docs]</a>  <span class="k">def</span> <span class="nf">phase_mark_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par0</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s">&#39;r&#39;</span><span class="p">,</span> <span class="n">equalcount</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39;fit halo potential with phase mark. The halo of the tracer need to be initialized to the desired type before fitting.</span>
 <span class="sd">	</span>
 <span class="sd">	:param par0: initial parameter values. len(par0) also gives the number of free parameters.</span>
 <span class="sd">	:param nbin: number of bins. if nbin&lt;len(par0), then the number of bins is set to len(par0) to avoid overfitting.</span>
@@ -1014,7 +1014,7 @@
 <span class="sd">	  </span>
 <span class="sd">	  Cov: covariance matrix of the parameters</span>
 <span class="sd">	  </span>
-<span class="sd">	  data: phase-ticker data, array of shape [nbin, 7]. each column is the fitting result [r,m,ml,mu,flag,flagl, flagu] to one bin, with (r,m) giving the radius and mass, (ml,mu) giving the lower and upper bound on mass, (flag, flagl, flagu) specifying whether the fit converged for mass and its lower and upper bounds (0:no; 1:yes; 2: no solution to the phase equation, but closest point found).</span>
+<span class="sd">	  data: phase-mark data, array of shape [nbin, 7]. each column is the fitting result [r,m,ml,mu,flag,flagl, flagu] to one bin, with (r,m) giving the radius and mass, (ml,mu) giving the lower and upper bound on mass, (flag, flagl, flagu) specifying whether the fit converged for mass and its lower and upper bounds (0:no; 1:yes; 2: no solution to the phase equation, but closest point found).</span>
 <span class="sd">	  </span>
 <span class="sd">	.. note::</span>
 <span class="sd">	  if the code complains about curve_fit() keyword error, you need to upgrade your scipy to version 0.15.1 or newer.</span>
