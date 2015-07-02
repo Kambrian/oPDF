@@ -862,8 +862,8 @@ class Tracer(Tracer_t):
 	success=abs(y)<1e-2
 	return x,y,success
   
-  def tick_phase_mass(self, m0=100., verbose=0):
-	''' estimate mass :math:`M(<r_c)` using the "PhaseTicker" method.
+  def mark_phase_mass(self, m0=100., verbose=0):
+	''' estimate mass :math:`M(<r_c)` using the "PhaseMark" method.
 	
 	:param m0: the initial guess of the mass, optional.
 	
@@ -918,7 +918,7 @@ class Tracer(Tracer_t):
 	return r,m,ml,mu,flag,flagl,flagu 
 	
   def phase_mass_bin(self, xlim, proxy='r', m0=100., verbose=0):
-	''' estimate mass :math:`M(<r_c)` for tracer with property "proxy" selected in between xlim, using the "PhaseTicker" method.
+	''' estimate mass :math:`M(<r_c)` for tracer with property "proxy" selected in between xlim, using the "PhaseMark" method.
 	
 	:param xlim: the range of property to select the tracer.
 	:param proxy: the property to select the tracer, 'r' or 'L'
@@ -947,12 +947,12 @@ class Tracer(Tracer_t):
 	  S.radial_cut(xlim[0], xlim[1])
 	else:
 	  S=self.select((self.data[proxy]>xlim[0])&(self.data[proxy]<xlim[1]))
-	out=S.tick_phase_mass(m0, verbose)
+	out=S.mark_phase_mass(m0, verbose)
 	S.clean()
 	return out
   
-  def phase_ticker_fit(self, par0=[1,1], nbin=2, proxy='r', equalcount=True):
-	'''fit halo potential with phase ticker. The halo of the tracer need to be initialized to the desired type before fitting.
+  def phase_mark_fit(self, par0=[1,1], nbin=2, proxy='r', equalcount=True):
+	'''fit halo potential with phase mark. The halo of the tracer need to be initialized to the desired type before fitting.
 	
 	:param par0: initial parameter values. len(par0) also gives the number of free parameters.
 	:param nbin: number of bins. if nbin<len(par0), then the number of bins is set to len(par0) to avoid overfitting.
@@ -965,7 +965,7 @@ class Tracer(Tracer_t):
 	  
 	  Cov: covariance matrix of the parameters
 	  
-	  data: phase-ticker data, array of shape [nbin, 7]. each column is the fitting result [r,m,ml,mu,flag,flagl, flagu] to one bin, with (r,m) giving the radius and mass, (ml,mu) giving the lower and upper bound on mass, (flag, flagl, flagu) specifying whether the fit converged for mass and its lower and upper bounds (0:no; 1:yes; 2: no solution to the phase equation, but closest point found).
+	  data: phase-mark data, array of shape [nbin, 7]. each column is the fitting result [r,m,ml,mu,flag,flagl, flagu] to one bin, with (r,m) giving the radius and mass, (ml,mu) giving the lower and upper bound on mass, (flag, flagl, flagu) specifying whether the fit converged for mass and its lower and upper bounds (0:no; 1:yes; 2: no solution to the phase equation, but closest point found).
 	  
 	.. note::
 	  if the code complains about curve_fit() keyword error, you need to upgrade your scipy to version 0.15.1 or newer.
