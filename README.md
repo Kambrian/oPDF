@@ -9,7 +9,7 @@
 
 - PDF versions are available in the doc/ directory.
 
-Please consult the science paper (coming soon) on how it works. 
+Please consult the science paper (http://arxiv.org/abs/1507.00769) on how it works. 
 
 ## Authors
 Jiaxin Han (@Kambrian)[ICC, Durham]
