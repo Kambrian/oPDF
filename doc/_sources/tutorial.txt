@@ -6,7 +6,8 @@ oPDF tutorial
 steady-state tracers in spherical potentials. For more information,
 check the `website <http://kambrian.github.io/oPDF>`_.
 
-Please consult the science paper on how it works.
+Please consult the science paper(http://arxiv.org/abs/1507.00769) on how
+it works.
 
 You can use this tutorial interactively in ipython notebook by running
 
