@@ -86,6 +86,7 @@ void halo_set_param(const double pars[], Halo_t *halo)
 	  DEBUGPRINT("Error: Unknown halo parametrization %d\n", halo->type);
 	  exit(1);
   }
+  if(halo->IsForbidden) fprintf(stderr,"WARNING: forbidden parameters %f,%f\n", pars[0],pars[1]);
 }
 
 double halo_mass(double r, Halo_t *halo)
