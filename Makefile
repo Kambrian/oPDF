@@ -7,9 +7,10 @@ ifeq ($(shell uname -n), Medivh)
 endif
 
 ifeq ($(Platform), COSMA)
-	HDFLIB= -lhdf5_hl -lhdf5
+	HDFLIB= -L/usr/lib/x86_64-linux-gnu/hdf5/serial -lhdf5_hl -lhdf5
+	HDFINC= -I/usr/include/hdf5/serial
 	GSLLIB=-lgsl -lgslcblas
-	CC = icc
+	CC = gcc
 	#CC=h5cc
 endif
 
@@ -75,11 +76,14 @@ $(OPDF_LIB): CFLAGS+=-fPIC
 $(OPDF_LIB): FFLAGS+=-fPIC
 $(OPDF_LIB):$(OBJS_COMM)
 	$(CC) -shared -Wl,-soname,$(OPDF_LIB) -o $(OPDF_LIB) $^ $(LDFLAGS)
+
+-include .Makefile_sync.inc
 #------documentation----------------------
 
 DOC_DIR=Doc
 DOC_SRC_DIR=$(DOC_DIR)/source
 $(DOC): index.rst tutorial.rst api.rst $(OPDF_LIB)
+	export PYTHONPATH=${PWD}:${PYTHONPATH};\
 	$(MAKE) $@ -C $(DOC_DIR)
 
 $(DOC_SRC_DIR)/tutorial.rst: tutorial.ipynb docclean

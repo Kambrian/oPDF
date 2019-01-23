@@ -10,7 +10,7 @@ from myutils import Chi2Sig,AD2Sig,density_of_points,get_extent,NamedValues,Name
 #from scipy.optimize import fmin, fmin_powell
 import matplotlib.pyplot as plt
 from iminuit import Minuit
-from iminuit.ConsoleFrontend import ConsoleFrontend
+from iminuit.frontends import ConsoleFrontend
 from scipy.optimize import newton,brentq,fmin,curve_fit
 #import copy
 
@@ -278,7 +278,7 @@ Tracer_t._fields_=[('lnL', ctypes.c_double),
 				   ('Views', Tracer_p)
 				  ]#: Tracer fields
 lib.load_tracer_particles.restype=None
-lib.load_tracer_particles.argtypes=[ctypes.c_char_p, Tracer_p, ctypes.c_int]
+lib.load_tracer_particles.argtypes=[ctypes.c_char_p, ctypes.c_char_p, Tracer_p, ctypes.c_int]
 lib.cut_tracer_particles.restype=None
 lib.cut_tracer_particles.argtypes=[Tracer_p, ctypes.c_double, ctypes.c_double]
 lib.shuffle_tracer_particles.restype=None
@@ -396,11 +396,11 @@ class Tracer(Tracer_t):
   :ivar rmin: lower radial cut.
   :ivar rmax: upper radial cut.
   '''
-  def __init__(self, datafile=None, rmin=None, rmax=None, shuffle=True, AddHubbleFlow=False):
+  def __init__(self, datafile=None, grpname='/', rmin=None, rmax=None, shuffle=True, AddHubbleFlow=False):
 	'''
 	:Initializer: 
 	
-	loading a tracer from a datafile. 
+	loading a tracer from a datafile. grpname specifies the path to the dataset inside the hdf5 file, in case the file contains multiple datasets.
 	
 	optionally, can apply radial cut given by rmin and rmax
 	
@@ -416,7 +416,7 @@ class Tracer(Tracer_t):
 	self.nView=0
 	self.halo=Halo()
 	if datafile!=None:
-	  self.load(datafile, AddHubbleFlow)
+	  self.load(datafile, grpname, AddHubbleFlow)
 	  self.radial_cut(rmin,rmax)
 	  if shuffle:
 		self.shuffle()
@@ -433,11 +433,12 @@ class Tracer(Tracer_t):
 	Parr=(Particle_t*self.nP).from_address(ctypes.addressof(self.P.contents)) #struct array
 	self.data=np.frombuffer(Parr, np.dtype(Parr))[0] #the numpy array
 
-  def load(self, datafile, AddHubbleFlow=False):
-	'''load particles from datafile'''
+  def load(self, datafile, grpname='/', AddHubbleFlow=False):
+	'''load particles from datafile.
+	If the datafile contains multiple datasets, `grpname` can be further used to specify the path of the dataset in the hdf5 file.'''
 	if self.nP>0:
 	  lib.free_tracer(self._pointer)
-	lib.load_tracer_particles(datafile, self._pointer, AddHubbleFlow)
+	lib.load_tracer_particles(datafile, grpname, self._pointer, AddHubbleFlow)
 	self.__update_array()
 	self.rmin=self.data['r'].min()
 	self.rmax=self.data['r'].max()

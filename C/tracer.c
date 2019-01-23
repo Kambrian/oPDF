@@ -70,7 +70,7 @@ void calibrate_particle_weights(Tracer_t *Sample)
   Sample->mP*=w;
 }
 
-void load_tracer_particles(char *datafile, Tracer_t * Sample, int AddHubbleFlow)
+void load_tracer_particles(char *datafile, char *grpname, Tracer_t * Sample, int AddHubbleFlow)
 {
   //TODO: add redshift to tracer (convert comoving positions to physical); also generalize AddHubbleFlow to high redshift.
   //in the current form, feed a datafile containing physical coordinates should be fine.
@@ -78,12 +78,12 @@ void load_tracer_particles(char *datafile, Tracer_t * Sample, int AddHubbleFlow)
     int i,j, *p;
     FloatMat A;
     GenericMat B;
-    char grpname[32];
-    int dataid=-1;
-    if(dataid<0)
-      sprintf(grpname,"/");
-    else
-      sprintf(grpname,"/sample%d/",dataid);
+//     char grpname[32];
+    //int dataid=-1;
+//     if(dataid<0)
+//       sprintf(grpname,"/");
+//     else
+//       sprintf(grpname,"/Halo%03d/",dataid);
     
 	if(!try_readfile(datafile))
 	{

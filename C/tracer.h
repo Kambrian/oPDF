@@ -43,7 +43,7 @@ struct Tracer
   TracerView *Views;
 };
 
-extern void load_tracer_particles(char *datafile, Tracer_t * Sample, int AddHubbleFlow);
+extern void load_tracer_particles(char *datafile, char *grpname, Tracer_t * Sample, int AddHubbleFlow);
 extern void cut_tracer_particles(Tracer_t *Sample, double rmin, double rmax);
 extern void shuffle_tracer_particles(unsigned long int seed, Tracer_t *Sample);
 extern void squeeze_tracer_particles(Tracer_t *Sample);
