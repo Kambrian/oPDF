@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="tutorial.html" title="oPDF tutorial"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">oPDF 1.0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">oPDF 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -144,7 +144,7 @@ specify Mass in Msun/h, Length in kpc/h, Velocity in km/s.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><p class="first">If you want to use (1e10Msun, kpc, km/s) as units, and you adopt <img class="math" src="_images/math/c0e0a14e7c3300c80e44a70768a1ba74e1721614.png" alt="h=0.73"/>  in your model, then you can set the units like below</p>
-<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">=</span><span class="mf">0.73</span>
+<div class="last highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">=</span><span class="mf">0.73</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Globals</span><span class="o">.</span><span class="n">set_units</span><span class="p">(</span><span class="mf">1e10</span><span class="o">*</span><span class="n">h</span><span class="p">,</span><span class="n">h</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -202,22 +202,23 @@ specify Mass in Msun/h, Length in kpc/h, Velocity in km/s.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Initializer:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<p>define a halo by specifiying the parametrization, virial definition and redshift of halo</p>
-<table class="docutils field-list" frame="void" rules="none">
+<tr class="field-even field"><th class="field-name">Initializer:</th><td class="field-body"><p class="first">define a halo by specifiying the parametrization, virial definition and redshift of halo</p>
+<table class="last docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>halotype</strong> &#8211; halo parametrization, one of the <a class="reference internal" href="#oPDF.HaloTypes" title="oPDF.HaloTypes"><code class="xref py py-const docutils literal"><span class="pre">HaloTypes</span></code></a> members</li>
-<li><strong>virtype</strong> &#8211; virial definition, one of the <a class="reference internal" href="#oPDF.VirTypes" title="oPDF.VirTypes"><code class="xref py py-const docutils literal"><span class="pre">VirTypes</span></code></a> members</li>
-<li><strong>redshift</strong> &#8211; redshift of halo</li>
-<li><strong>scales</strong> &#8211; scales of halo parameters, array-like, of the same shape as parameters. default to all-ones if None. physical parameters will be params*scales</li>
-<li><strong>TMPid</strong> &#8211; template id. only required when halotype is of template type</li>
-</ul>
+<tr class="field-odd field"><th class="field-name">param halotype:</th><td class="field-body">halo parametrization, one of the <a class="reference internal" href="#oPDF.HaloTypes" title="oPDF.HaloTypes"><code class="xref py py-const docutils literal"><span class="pre">HaloTypes</span></code></a> members</td>
+</tr>
+<tr class="field-even field"><th class="field-name">param virtype:</th><td class="field-body">virial definition, one of the <a class="reference internal" href="#oPDF.VirTypes" title="oPDF.VirTypes"><code class="xref py py-const docutils literal"><span class="pre">VirTypes</span></code></a> members</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param redshift:</th><td class="field-body">redshift of halo</td>
+</tr>
+<tr class="field-even field"><th class="field-name">param scales:</th><td class="field-body">scales of halo parameters, array-like, of the same shape as parameters. default to all-ones if None. physical parameters will be params*scales</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">param TMPid:</th><td class="field-body">template id. only required when halotype is of template type</td>
+</tr>
+</tbody>
+</table>
 </td>
 </tr>
 </tbody>
@@ -280,7 +281,7 @@ is the template of the current halo, just in case the template does not match</p
 <h4>Tracer<a class="headerlink" href="#tracer" title="Permalink to this headline">¶</a></h4>
 <dl class="class">
 <dt id="oPDF.Tracer">
-<em class="property">class </em><code class="descclassname">oPDF.</code><code class="descname">Tracer</code><span class="sig-paren">(</span><em>datafile=None</em>, <em>rmin=None</em>, <em>rmax=None</em>, <em>shuffle=True</em>, <em>AddHubbleFlow=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">oPDF.</code><code class="descname">Tracer</code><span class="sig-paren">(</span><em>datafile=None</em>, <em>grpname='/'</em>, <em>rmin=None</em>, <em>rmax=None</em>, <em>shuffle=True</em>, <em>AddHubbleFlow=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tracer: a population of tracer particles.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -327,7 +328,7 @@ is the template of the current halo, just in case the template does not match</p
 </tr>
 </tbody>
 </table>
-<p>loading a tracer from a datafile.</p>
+<p>loading a tracer from a datafile. grpname specifies the path to the dataset inside the hdf5 file, in case the file contains multiple datasets.</p>
 <p>optionally, can apply radial cut given by rmin and rmax</p>
 <p>if AddHubbleFlow=True, then also add hubble flow to the loaded velocity (only support redshift 0 data now).</p>
 <div class="admonition note">
@@ -516,8 +517,9 @@ it automatically prepares orbits and then calculates the likelihood or TS
 
 <dl class="method">
 <dt id="oPDF.Tracer.load">
-<code class="descname">load</code><span class="sig-paren">(</span><em>datafile</em>, <em>AddHubbleFlow=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.load" title="Permalink to this definition">¶</a></dt>
-<dd><p>load particles from datafile</p>
+<code class="descname">load</code><span class="sig-paren">(</span><em>datafile</em>, <em>grpname='/'</em>, <em>AddHubbleFlow=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oPDF.html#Tracer.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oPDF.Tracer.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>load particles from datafile.
+If the datafile contains multiple datasets, <cite>grpname</cite> can be further used to specify the path of the dataset in the hdf5 file.</p>
 </dd></dl>
 
 <dl class="method">
@@ -719,7 +721,7 @@ otherwise the maximum likelihood is automatically scanned for RBinLike.</p>
 <p>x,y are the vectors specifying the binning along x and y dimensions</p>
 <dl class="docutils">
 <dt>return the likelihood value z on grids, to be used for contour plots as </dt>
-<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">contour</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">)</span>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">contour</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd>
@@ -1073,12 +1075,12 @@ should be set to  1 - 5/(5 + 15)) or 0.75</dd>
         <li class="right" >
           <a href="tutorial.html" title="oPDF tutorial"
              >previous</a> |</li>
-        <li><a href="index.html">oPDF 1.0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">oPDF 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &copy; Copyright 2014, Jiaxin Han.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3b1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.6.
     </div>
   </body>
 </html>

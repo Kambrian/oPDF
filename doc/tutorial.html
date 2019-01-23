@@ -43,7 +43,7 @@
         <li class="right" >
           <a href="index.html" title="oPDF"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">oPDF 1.0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">oPDF 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -60,7 +60,7 @@ check the <a class="reference external" href="http://kambrian.github.io/oPDF">we
 <p>Please consult the science paper(<a class="reference external" href="http://arxiv.org/abs/1507.00769">http://arxiv.org/abs/1507.00769</a>) on how
 it works.</p>
 <p>You can use this tutorial interactively in ipython notebook by running</p>
-<div class="highlight-python"><div class="highlight"><pre>ipython notebook --pylab=inline
+<div class="highlight-python"><div class="highlight"><pre><span></span>ipython notebook --pylab=inline
 </pre></div>
 </div>
 <p>from the root directory of the oPDF code. This will open your browser,
@@ -97,14 +97,14 @@ against the GSL and HDF5 libraries, by specifying the
 <div class="section" id="build-the-library">
 <h3>Build the library<a class="headerlink" href="#build-the-library" title="Permalink to this headline">¶</a></h3>
 <p>under the root directory of the code, run</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">make</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">make</span>
 </pre></div>
 </div>
 <p>This will generate the library <code class="docutils literal"><span class="pre">liboPDF.so</span></code>, the backend of the python
 module. Now you are all set up for the analysis. Open your python shell
 in the code directory, and get ready for the modelling. If you want to
 get rid of all the <code class="docutils literal"><span class="pre">*.o</span></code> files, you can clean them by</p>
-<div class="highlight-python"><div class="highlight"><pre>make clean
+<div class="highlight-python"><div class="highlight"><pre><span></span>make clean
 </pre></div>
 </div>
 </div>
@@ -113,11 +113,11 @@ get rid of all the <code class="docutils literal"><span class="pre">*.o</span></
 <p>From now on, you should either work under the current directory, or have
 added the <code class="docutils literal"><span class="pre">oPDF</span></code> path to your <code class="docutils literal"><span class="pre">PYTHONPATH</span></code> before using <code class="docutils literal"><span class="pre">oPDF</span></code> in
 python. To add the path, do</p>
-<div class="highlight-python"><div class="highlight"><pre>export PYTHONPATH=$PYTHONPATH:$OPDF_DIR
+<div class="highlight-python"><div class="highlight"><pre><span></span>export PYTHONPATH=$PYTHONPATH:$OPDF_DIR
 </pre></div>
 </div>
 <p>in bash, or the following in csh:</p>
-<div class="highlight-python"><div class="highlight"><pre>setenv PYTHONPATH ${PYTHONPATH}:$OPDF_DIR
+<div class="highlight-python"><div class="highlight"><pre><span></span>setenv PYTHONPATH ${PYTHONPATH}:$OPDF_DIR
 </pre></div>
 </div>
 <p>. Replace <code class="docutils literal"><span class="pre">$OPDF_DIR</span></code> with the actual root directory of the <code class="docutils literal"><span class="pre">oPDF</span></code>
@@ -125,14 +125,14 @@ code above.</p>
 </div>
 <div class="section" id="prepare-the-data-files">
 <h3>Prepare the data files<a class="headerlink" href="#prepare-the-data-files" title="Permalink to this headline">¶</a></h3>
-<p>The data files are <a class="reference external" href="http://www.hdfgroup.org/HDF5/">hdf5</a> files listing
-the <em>physical</em> positions and velocities of tracer particles, relative to
-the position and velocity of the center of the halo. The code comes with
-a sample file under data/:</p>
+<p>The data files are <a class="reference external" href="http://www.hdfgroup.org/HDF5/">hdf5</a> files
+listing the <em>physical</em> positions and velocities of tracer particles,
+relative to the position and velocity of the center of the halo. The
+code comes with a sample file under data/:</p>
 <ul class="simple">
 <li>mockhalo.hdf5, a mock stellar halo. The potential is NFW with
-<img class="math" src="_images/math/3765ec709412cb6e345903abc98ffebb13258fb1.png" alt="M=133.96\times 10^{10}M_\odot/h"/>, <img class="math" src="_images/math/ac925496c4eb44cdcde263d8440b82821d86a8a0.png" alt="c=16.16"/>,
-following the <img class="math" src="_images/math/6400c078e4b85bbc9dc4dc6eaee7e78d354bab62.png" alt="\rho_{\rm vir}=200\rho_{\rm crit}"/> definition.</li>
+<img class="math" src="_images/math/3765ec709412cb6e345903abc98ffebb13258fb1.png" alt="M=133.96\times 10^{10}M_\odot/h"/>, <img class="math" src="_images/math/ac925496c4eb44cdcde263d8440b82821d86a8a0.png" alt="c=16.16"/>, following
+the <img class="math" src="_images/math/6400c078e4b85bbc9dc4dc6eaee7e78d354bab62.png" alt="\rho_{\rm vir}=200\rho_{\rm crit}"/> definition.</li>
 </ul>
 <p>Compulsory datasets in a data file:</p>
 <ul class="simple">
@@ -166,12 +166,12 @@ according to their separations, but not dynamics.</p>
 <div class="section" id="load-the-data">
 <h3>Load the data<a class="headerlink" href="#load-the-data" title="Permalink to this headline">¶</a></h3>
 <p>Let&#8217;s import the module first</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">oPDF</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">oPDF</span> <span class="kn">import</span> <span class="o">*</span>
 </pre></div>
 </div>
 <p>Now the <code class="docutils literal"><span class="pre">oPDFdir</span></code> should have been automatically set to the directory
 of the <code class="docutils literal"><span class="pre">oPDF</span></code> code. Let&#8217;s load the sample data</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">datafile</span><span class="o">=</span><span class="n">oPDFdir</span><span class="o">+</span><span class="s">&quot;/data/mockhalo.hdf5&quot;</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">datafile</span><span class="o">=</span><span class="n">oPDFdir</span><span class="o">+</span><span class="s2">&quot;/data/mockhalo.hdf5&quot;</span>
 <span class="n">FullSample</span><span class="o">=</span><span class="n">Tracer</span><span class="p">(</span><span class="n">datafile</span><span class="p">)</span>
 <span class="n">Sample</span><span class="o">=</span><span class="n">FullSample</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1000</span><span class="p">)</span>
 </pre></div>
@@ -186,12 +186,12 @@ this tutorial.</p>
 <h3>Perform the fitting.<a class="headerlink" href="#perform-the-fitting" title="Permalink to this headline">¶</a></h3>
 <p>Now let&#8217;s fit the data with the radial binned likelihood estimator with
 10 logarithmic radial bins.</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="o">.</span><span class="n">nbin</span><span class="o">=</span><span class="mi">10</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="o">.</span><span class="n">nbin</span><span class="o">=</span><span class="mi">10</span>
 <span class="n">x</span><span class="p">,</span><span class="n">fval</span><span class="p">,</span><span class="n">status</span><span class="o">=</span><span class="n">Sample</span><span class="o">.</span><span class="n">dyn_fit</span><span class="p">(</span><span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="p">)</span>
 <span class="k">print</span> <span class="n">x</span><span class="p">,</span><span class="n">fval</span><span class="p">,</span><span class="n">status</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>[ 100.43937117   26.62967127] 5020.3693017 1
+<div class="highlight-python"><div class="highlight"><pre><span></span>[ 100.43937117   26.62967127] 5020.3693017 1
 </pre></div>
 </div>
 <p>In one or two minutes, you will get the results above, where</p>
@@ -203,15 +203,15 @@ this tutorial.</p>
 <p>That&#8217;s it! You have got the best-fitting
 <img class="math" src="_images/math/4a3b66972e8278bc625f194bdd90a7e0209c6b35.png" alt="M=100.44\times10^{10} M_\odot/h"/> and <img class="math" src="_images/math/688b4132d6ed60009c4b01b2a503c4a9d57292ec.png" alt="c=26.63"/>. ###
 Estimate significances How does that compare to the real parameters of
-<img class="math" src="_images/math/3765ec709412cb6e345903abc98ffebb13258fb1.png" alt="M=133.96\times 10^{10}M_\odot/h"/>, <img class="math" src="_images/math/ac925496c4eb44cdcde263d8440b82821d86a8a0.png" alt="c=16.16"/>? Not too
-bad, but let&#8217;s check the likelihood ratio of the two models</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">x0</span><span class="o">=</span><span class="p">[</span><span class="mf">133.96</span><span class="p">,</span><span class="mf">16.16</span><span class="p">]</span>
+<img class="math" src="_images/math/3765ec709412cb6e345903abc98ffebb13258fb1.png" alt="M=133.96\times 10^{10}M_\odot/h"/>, <img class="math" src="_images/math/ac925496c4eb44cdcde263d8440b82821d86a8a0.png" alt="c=16.16"/>? Not too bad,
+but let&#8217;s check the likelihood ratio of the two models</p>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">x0</span><span class="o">=</span><span class="p">[</span><span class="mf">133.96</span><span class="p">,</span><span class="mf">16.16</span><span class="p">]</span>
 <span class="n">f0</span><span class="o">=</span><span class="n">Sample</span><span class="o">.</span><span class="n">likelihood</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="p">)</span>
 <span class="n">likerat</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">fval</span><span class="o">-</span><span class="n">f0</span><span class="p">)</span>
 <span class="k">print</span> <span class="n">likerat</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="mf">2.78983807112</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="mf">2.78983807112</span>
 </pre></div>
 </div>
 <p>So we got a likelihood ratio of 2.79. How significant is that? According
@@ -223,18 +223,17 @@ parameters, we should compare our likelihood ratio to a
 survival function of a <img class="math" src="_images/math/8bd0685e3bf9101859d24cf0e851651f182364c9.png" alt="\chi^2"/> distribution, and convert that to
 a Guassian significance level. This is automatically done by the
 Chi2Sig() utility function</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">myutils</span> <span class="kn">import</span> <span class="n">Chi2Sig</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">myutils</span> <span class="kn">import</span> <span class="n">Chi2Sig</span>
 <span class="n">significance</span><span class="o">=</span><span class="n">Chi2Sig</span><span class="p">(</span><span class="n">likerat</span><span class="p">,</span> <span class="n">dof</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="k">print</span> <span class="n">significance</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="mf">1.15557973053</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="mf">1.15557973053</span>
 </pre></div>
 </div>
 <p>So the best-fitting differs from the real parameters by
-<img class="math" src="_images/math/38b9cdf26104f7469838f494f6b91bdd4bb4f4bd.png" alt="\sim1\sigma"/>. It seems we are not very lucky and the fit is
-only marginally consistent with the real parameters, but still
-acceptable.</p>
+<img class="math" src="_images/math/38b9cdf26104f7469838f494f6b91bdd4bb4f4bd.png" alt="\sim1\sigma"/>. It seems we are not very lucky and the fit is only
+marginally consistent with the real parameters, but still acceptable.</p>
 </div>
 <div class="section" id="confidence-contour">
 <h3>Confidence Contour<a class="headerlink" href="#confidence-contour" title="Permalink to this headline">¶</a></h3>
@@ -248,22 +247,22 @@ best-fitting parameters <code class="docutils literal"><span class="pre">x</span
 levels of RBinLike, we can provide the maximum likelihood value that we
 obtained above, to save the function from searching for maxlike itself.
 Be prepared that the scan can be slow.</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">m</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">sig</span><span class="p">,</span><span class="n">like</span><span class="o">=</span><span class="n">Sample</span><span class="o">.</span><span class="n">scan_confidence</span><span class="p">(</span><span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">ngrids</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span><span class="mi">20</span><span class="p">],</span> <span class="n">dx</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">],</span> <span class="n">logscale</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">maxlike</span><span class="o">=</span><span class="n">fval</span><span class="p">)</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">m</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">sig</span><span class="p">,</span><span class="n">like</span><span class="o">=</span><span class="n">Sample</span><span class="o">.</span><span class="n">scan_confidence</span><span class="p">(</span><span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">ngrids</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span><span class="mi">20</span><span class="p">],</span> <span class="n">dx</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">],</span> <span class="n">logscale</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">maxlike</span><span class="o">=</span><span class="n">fval</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The returned <code class="docutils literal"><span class="pre">m,c</span></code> are the grids (1-d vectors) of the scan, and
 <code class="docutils literal"><span class="pre">sig,like</span></code> are the significance levels and likelihood values on the
 grids (2-d array). Now let&#8217;s plot them in units of the real parameter
 values:</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">plt</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">m</span><span class="o">/</span><span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">c</span><span class="o">/</span><span class="n">x0</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">sig</span><span class="p">,</span><span class="n">levels</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span> <span class="c">#1,2,3sigma contours.</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">x0</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="s">&#39;ro&#39;</span><span class="p">)</span> <span class="c">#the best-fitting</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(),[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="s">&#39;k--&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(),</span>  <span class="s">&#39;k--&#39;</span><span class="p">)</span><span class="c"># the real parameters</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">m</span><span class="o">/</span><span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">c</span><span class="o">/</span><span class="n">x0</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">sig</span><span class="p">,</span><span class="n">levels</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span> <span class="c1">#1,2,3sigma contours.</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">x0</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="s1">&#39;ro&#39;</span><span class="p">)</span> <span class="c1">#the best-fitting</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(),[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;k--&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(),</span>  <span class="s1">&#39;k--&#39;</span><span class="p">)</span><span class="c1"># the real parameters</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">loglog</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">r&#39;$M/M_0$&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">r&#39;$c/c_0$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$M/M_0$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$c/c_0$&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x4585bd0&gt;
+<div class="highlight-python"><div class="highlight"><pre><span></span>&lt;matplotlib.text.Text at 0x4585bd0&gt;
 </pre></div>
 </div>
 <img alt="_images/tutorial_16_1.png" src="_images/tutorial_16_1.png" />
@@ -280,19 +279,19 @@ examine local deviations caused by subhaloes.</p>
 <p>To avoid having too few particles in each pixel we will start by drawing
 a larger sample as NewSample, and then plot the images adopting the real
 potential with parameters <code class="docutils literal"><span class="pre">x0</span></code>.</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">NewSample</span><span class="o">=</span><span class="n">FullSample</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">20000</span><span class="p">)</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">NewSample</span><span class="o">=</span><span class="n">FullSample</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">20000</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">NewSample</span><span class="o">.</span><span class="n">phase_image</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s">&#39;E&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Real Potential&#39;</span><span class="p">)</span>
+<span class="n">NewSample</span><span class="o">.</span><span class="n">phase_image</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s1">&#39;E&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Real Potential&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">NewSample</span><span class="o">.</span><span class="n">phase_image</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Real Potential&#39;</span><span class="p">)</span>
+<span class="n">NewSample</span><span class="o">.</span><span class="n">phase_image</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s1">&#39;L&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Real Potential&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x4d04b50&gt;
+<div class="highlight-python"><div class="highlight"><pre><span></span>&lt;matplotlib.text.Text at 0x4d04b50&gt;
 </pre></div>
 </div>
 <img alt="_images/tutorial_19_1.png" src="_images/tutorial_19_1.png" />
@@ -303,18 +302,18 @@ irrespective of the energy and angular momentum.</p>
 <div class="section" id="ts-profiles">
 <h3>TS profiles<a class="headerlink" href="#ts-profiles" title="Permalink to this headline">¶</a></h3>
 <p>If you want a more quantitative view of how much deviation there is at
-each <img class="math" src="_images/math/cfd13a0f26eb7ef0093319a7669da7dd3771dbac.png" alt="E"/>, <img class="math" src="_images/math/0a5711c7a37994043b2bc3bb374adca232491762.png" alt="L"/> or even <img class="math" src="_images/math/2ede365ad144ab396916ec60458da03860803078.png" alt="r"/>, you can plot the mean
-phase deviation or AD distance (Test Statistics, or TS) inside different
+each <img class="math" src="_images/math/cfd13a0f26eb7ef0093319a7669da7dd3771dbac.png" alt="E"/>, <img class="math" src="_images/math/0a5711c7a37994043b2bc3bb374adca232491762.png" alt="L"/> or even <img class="math" src="_images/math/2ede365ad144ab396916ec60458da03860803078.png" alt="r"/>, you can plot the mean phase
+deviation or AD distance (Test Statistics, or TS) inside different
 <img class="math" src="_images/math/d62beb1f2181bb320e8aea6faf1df3ef75d6ed87.png" alt="(E,L,r)"/> bins.</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
-<span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">proxy</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="s">&#39;rEL&#39;</span><span class="p">):</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">proxy</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="s1">&#39;rEL&#39;</span><span class="p">):</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">NewSample</span><span class="o">.</span><span class="n">plot_TSprof</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">proxy</span><span class="p">,</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="s">&#39;k--&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;k--&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <img alt="_images/tutorial_22_0.png" src="_images/tutorial_22_0.png" />
-<p>See, the mean phase deviations are within 3:math:<cite>sigma</cite> almost
+<p>See, the mean phase deviations are within 3<span class="math">\sigma</span> almost
 everywhere. Note that the raw mean phase is a standard normal variable
 if the tracer is in steady-state under the potential.</p>
 </div>
@@ -326,17 +325,17 @@ non-parametrically. The reconstructed profile is typically noisier than
 that from parametric fitting, but it&#8217;s non-parametric. Now we
 demonstrate how this can be done. First let&#8217;s create some radial bins. A
 natural choice is to create bins with equal sample size,</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">xbin</span><span class="o">=</span><span class="n">Sample</span><span class="o">.</span><span class="n">gen_bin</span><span class="p">(</span><span class="s">&#39;r&#39;</span><span class="p">,</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">equalcount</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">xbin</span><span class="o">=</span><span class="n">Sample</span><span class="o">.</span><span class="n">gen_bin</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">equalcount</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This generates a sequence containing the edges of 3 (<code class="docutils literal"><span class="pre">nbin=3</span></code>) radial
 bins. The &#8220;phase marks&#8221;, i.e., the characteristic mass point in each bin
 can be found with the <code class="docutils literal"><span class="pre">phase_mass_bin</span></code> function:</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">marks</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">Sample</span><span class="o">.</span><span class="n">phase_mass_bin</span><span class="p">(</span><span class="n">xbin</span><span class="p">[[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xbin</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)])</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">marks</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">Sample</span><span class="o">.</span><span class="n">phase_mass_bin</span><span class="p">(</span><span class="n">xbin</span><span class="p">[[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xbin</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)])</span>
 <span class="k">print</span> <span class="n">marks</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>[[  2.57914729   1.00683005   0.49058258   1.36649516   1.           1.
+<div class="highlight-python"><div class="highlight"><pre><span></span>[[  2.57914729   1.00683005   0.49058258   1.36649516   1.           1.
     1.        ]
  [ 10.7295808   34.19465065  23.87852203  41.14360851   1.           1.
     1.        ]
@@ -352,9 +351,9 @@ can be found with the <code class="docutils literal"><span class="pre">phase_mas
 characteristic mass point. The columns are
 <code class="docutils literal"><span class="pre">[r,m,ml,mu,flag,flagl,</span> <span class="pre">flagu]</span></code>, where <code class="docutils literal"><span class="pre">r</span></code> and <code class="docutils literal"><span class="pre">m</span></code> give the
 characteristic radius and characteristic halo mass; <code class="docutils literal"><span class="pre">ml</span></code> and <code class="docutils literal"><span class="pre">mu</span></code>
-give the lower and upper bound on <code class="docutils literal"><span class="pre">m</span></code>; <code class="docutils literal"><span class="pre">flag</span></code>, <code class="docutils literal"><span class="pre">flagl</span></code>,``flagu``
+give the lower and upper bound on <code class="docutils literal"><span class="pre">m</span></code>; <code class="docutils literal"><span class="pre">flag</span></code>, <code class="docutils literal"><span class="pre">flagl</span></code>,<code class="docutils literal"><span class="pre">flagu</span></code>
 are convergence flags indicating whether the method has converged when
-solving for <code class="docutils literal"><span class="pre">m</span></code>,``ml`` and <code class="docutils literal"><span class="pre">mu</span></code> respectively (0:no; 1:yes; 2: no
+solving for <code class="docutils literal"><span class="pre">m</span></code>,<code class="docutils literal"><span class="pre">ml</span></code> and <code class="docutils literal"><span class="pre">mu</span></code> respectively (0:no; 1:yes; 2: no
 solution to the phase equation, but closest point found). The points we
 can trust must at least have <code class="docutils literal"><span class="pre">flag=1</span></code>. If one wants robust error
 estimates, then <code class="docutils literal"><span class="pre">flagl=1</span></code> and <code class="docutils literal"><span class="pre">flagu=1</span></code> is also required. All our
@@ -365,7 +364,7 @@ not need to worry about this below.</p>
 (need <code class="docutils literal"><span class="pre">scipy</span></code> version <code class="docutils literal"><span class="pre">&gt;0.15.1</span></code> in order to use <code class="docutils literal"><span class="pre">absolute_sigma=1</span></code>
 in <code class="docutils literal"><span class="pre">curve_fit</span></code>). We will use the average of the upper and lower
 errors, but this is not essential.</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">halofit</span><span class="o">=</span><span class="n">Halo</span><span class="p">(</span><span class="n">HaloTypes</span><span class="o">.</span><span class="n">NFWMC</span><span class="p">)</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">halofit</span><span class="o">=</span><span class="n">Halo</span><span class="p">(</span><span class="n">HaloTypes</span><span class="o">.</span><span class="n">NFWMC</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">halomass</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span><span class="n">c</span><span class="p">):</span>
   <span class="n">halofit</span><span class="o">.</span><span class="n">set_param</span><span class="p">([</span><span class="n">m</span><span class="p">,</span><span class="n">c</span><span class="p">])</span>
   <span class="k">return</span> <span class="n">halofit</span><span class="o">.</span><span class="n">mass</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
@@ -375,34 +374,34 @@ errors, but this is not essential.</p>
 <span class="n">err2</span><span class="o">=</span><span class="n">marks</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">marks</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>
 <span class="n">err</span><span class="o">=</span><span class="p">(</span><span class="n">err1</span><span class="o">+</span><span class="n">err2</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
 <span class="n">par</span><span class="p">,</span><span class="n">Cov</span><span class="o">=</span><span class="n">curve_fit</span><span class="p">(</span><span class="n">halomass</span><span class="p">,</span> <span class="n">marks</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">marks</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">sigma</span><span class="o">=</span><span class="n">err</span><span class="p">,</span> <span class="n">p0</span><span class="o">=</span><span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="n">absolute_sigma</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="k">print</span> <span class="s">&#39;Fitted parameters:&#39;</span><span class="p">,</span> <span class="n">par</span>
-<span class="k">print</span> <span class="s">&#39;Parameter Errors:&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">Cov</span><span class="p">))</span>
+<span class="k">print</span> <span class="s1">&#39;Fitted parameters:&#39;</span><span class="p">,</span> <span class="n">par</span>
+<span class="k">print</span> <span class="s1">&#39;Parameter Errors:&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">Cov</span><span class="p">))</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>Fitted parameters: [ 123.24507653   14.92927574]
+<div class="highlight-python"><div class="highlight"><pre><span></span>Fitted parameters: [ 123.24507653   14.92927574]
 Parameter Errors: [ 24.43777446   4.36420908]
 </pre></div>
 </div>
 <p>The fitted parameters make sense. Now let&#8217;s plot the marks, the fit to
 marks, and compare to the true mass profile:</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">fig</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">marks</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">marks</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">yerr</span><span class="o">=</span><span class="p">[</span><span class="n">err2</span><span class="p">,</span> <span class="n">err1</span><span class="p">],</span> <span class="n">fmt</span><span class="o">=</span><span class="s">&#39;ro&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Mark&#39;</span><span class="p">)</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">marks</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">marks</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">yerr</span><span class="o">=</span><span class="p">[</span><span class="n">err2</span><span class="p">,</span> <span class="n">err1</span><span class="p">],</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;ro&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Mark&#39;</span><span class="p">)</span>
 <span class="n">r</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">halomass</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">par</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">par</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="s">&#39;r-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Mark Fit&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">halomass</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">par</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">par</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="s1">&#39;r-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Mark Fit&#39;</span><span class="p">)</span>
 
-<span class="c">#true mass profile:</span>
+<span class="c1">#true mass profile:</span>
 <span class="n">halo</span><span class="o">=</span><span class="n">Halo</span><span class="p">()</span>
-<span class="n">halo</span><span class="o">.</span><span class="n">set_param</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="c">#x0 are the true parameters</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">halo</span><span class="o">.</span><span class="n">mass</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="s">&#39;k-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;True&#39;</span><span class="p">)</span>
+<span class="n">halo</span><span class="o">.</span><span class="n">set_param</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="c1">#x0 are the true parameters</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">halo</span><span class="o">.</span><span class="n">mass</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="s1">&#39;k-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;True&#39;</span><span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s">&#39;log&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s">&#39;log&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;r&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;M(&lt;r)&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;M(&lt;r)&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x5217250&gt;
+<div class="highlight-python"><div class="highlight"><pre><span></span>&lt;matplotlib.text.Text at 0x5217250&gt;
 </pre></div>
 </div>
 <img alt="_images/tutorial_31_1.png" src="_images/tutorial_31_1.png" />
@@ -413,13 +412,13 @@ but also leaks some information so the final fit to the marks can be
 less accurate. We provide a compact function to combine the steps for
 fitting phase marks into a single step. For example, to fit with two
 bins, do</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">par2</span><span class="p">,</span><span class="n">Cov2</span><span class="p">,</span><span class="n">marks2</span><span class="o">=</span><span class="n">Sample</span><span class="o">.</span><span class="n">phase_mark_fit</span><span class="p">(</span><span class="n">par0</span><span class="o">=</span><span class="p">[</span><span class="mi">100</span><span class="p">,</span><span class="mi">10</span><span class="p">],</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="k">print</span> <span class="s">&#39;mark flags:</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">marks2</span><span class="p">[:,</span><span class="mi">4</span><span class="p">:]</span>
-<span class="k">print</span> <span class="s">&#39;Fitted parameters:&#39;</span><span class="p">,</span> <span class="n">par2</span>
-<span class="k">print</span> <span class="s">&#39;Parameter Errors:&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">Cov2</span><span class="p">))</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">par2</span><span class="p">,</span><span class="n">Cov2</span><span class="p">,</span><span class="n">marks2</span><span class="o">=</span><span class="n">Sample</span><span class="o">.</span><span class="n">phase_mark_fit</span><span class="p">(</span><span class="n">par0</span><span class="o">=</span><span class="p">[</span><span class="mi">100</span><span class="p">,</span><span class="mi">10</span><span class="p">],</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="k">print</span> <span class="s1">&#39;mark flags:</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">marks2</span><span class="p">[:,</span><span class="mi">4</span><span class="p">:]</span>
+<span class="k">print</span> <span class="s1">&#39;Fitted parameters:&#39;</span><span class="p">,</span> <span class="n">par2</span>
+<span class="k">print</span> <span class="s1">&#39;Parameter Errors:&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">Cov2</span><span class="p">))</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>mark flags:
+<div class="highlight-python"><div class="highlight"><pre><span></span>mark flags:
 [[ 1.  1.  1.]
  [ 1.  1.  1.]]
 Fitted parameters: [ 124.0093333    19.67968255]
@@ -430,24 +429,24 @@ Parameter Errors: [ 16.39555491   3.99462691]
 form of the profile used in the fitting is controlled by the current
 <code class="docutils literal"><span class="pre">Sample.halo</span></code>. To use a disired profile, set the halo type <strong>before</strong>
 fitting. For example,</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">Sample</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">HaloTypes</span><span class="o">.</span><span class="n">NFWMC</span><span class="p">,</span> <span class="n">scales</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">Sample</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">HaloTypes</span><span class="o">.</span><span class="n">NFWMC</span><span class="p">,</span> <span class="n">scales</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>To plot the fit,</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">fig</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">marks2</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">marks2</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">yerr</span><span class="o">=</span><span class="p">[</span><span class="n">marks2</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">marks2</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">marks2</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]</span><span class="o">-</span><span class="n">marks2</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]],</span> <span class="n">fmt</span><span class="o">=</span><span class="s">&#39;ro&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Mark&#39;</span><span class="p">)</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">marks2</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">marks2</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">yerr</span><span class="o">=</span><span class="p">[</span><span class="n">marks2</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">marks2</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">marks2</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]</span><span class="o">-</span><span class="n">marks2</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]],</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;ro&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Mark&#39;</span><span class="p">)</span>
 
 <span class="n">Sample</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">set_param</span><span class="p">(</span><span class="n">par2</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">Sample</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">mass</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="s">&#39;r-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Mark Fit&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">halo</span><span class="o">.</span><span class="n">mass</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="s">&#39;k-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;True&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">Sample</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">mass</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="s1">&#39;r-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Mark Fit&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">halo</span><span class="o">.</span><span class="n">mass</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="s1">&#39;k-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;True&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s">&#39;log&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s">&#39;log&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;r&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;M(&lt;r)&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;M(&lt;r)&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x45946d0&gt;
+<div class="highlight-python"><div class="highlight"><pre><span></span>&lt;matplotlib.text.Text at 0x45946d0&gt;
 </pre></div>
 </div>
 <img alt="_images/tutorial_37_1.png" src="_images/tutorial_37_1.png" />
@@ -471,7 +470,7 @@ a chi-square for MeanPhase).</li>
 <p>For RBinLike, you can also customize the number of radial bins and
 whether to bin in linear or log scales. For example, the following will
 change the RBinLike to use 20 linear bins.</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="o">.</span><span class="n">nbin</span><span class="o">=</span><span class="mi">20</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="o">.</span><span class="n">nbin</span><span class="o">=</span><span class="mi">20</span>
 <span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="o">.</span><span class="n">logscale</span><span class="o">=</span><span class="bp">False</span>
 </pre></div>
 </div>
@@ -490,34 +489,34 @@ halo, although a bin number as low as 5 could still work.</p>
 <p>The system of units is specified in three fundamental units:
 Mass[<img class="math" src="_images/math/bc68f05480b157fadfe5636df94ca999feb14e7f.png" alt="M_\odot/h"/>], Length[kpc/<img class="math" src="_images/math/cbb80ad77aa7a5e227d5a46bc44d235284106cfc.png" alt="h"/>], Velocity[km/s]. You
 can query the current units with</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">Globals</span><span class="o">.</span><span class="n">get_units</span><span class="p">()</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">Globals</span><span class="o">.</span><span class="n">get_units</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>Mass  : 10000000000.0 Msun/h
+<div class="highlight-python"><div class="highlight"><pre><span></span>Mass  : 10000000000.0 Msun/h
 Length: 1.0 kpc/h
 Vel   : 1.0 km/s
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">(</span><span class="mf">10000000000.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="p">(</span><span class="mf">10000000000.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The default units are [<img class="math" src="_images/math/b1666fa286165084e660b7a7f0e7dddd8f389734.png" alt="10^{10} M_\odot/h"/>, kpc/<img class="math" src="_images/math/cbb80ad77aa7a5e227d5a46bc44d235284106cfc.png" alt="h"/>,
 km/s]. The oPDF code does not need to know the value of the hubble
-constant <img class="math" src="_images/math/cbb80ad77aa7a5e227d5a46bc44d235284106cfc.png" alt="h"/>, as long as the units are correctly specified. It
-is the user&#8217;s responsibility to make sure that his/her units are
-consistent with his assumed hubble parameter.</p>
+constant <img class="math" src="_images/math/cbb80ad77aa7a5e227d5a46bc44d235284106cfc.png" alt="h"/>, as long as the units are correctly specified. It is
+the user&#8217;s responsibility to make sure that his/her units are consistent
+with his assumed hubble parameter.</p>
 <p>If you want to change the system of units, you must do it immediately
 after importing the <code class="docutils literal"><span class="pre">oPDF</span></code> module, to avoid inconsistency with units
 of previously loaded tracers. For example, if your data is provided in
 units of (1e10Msun, kpc, km/s), and you adopt <img class="math" src="_images/math/c0e0a14e7c3300c80e44a70768a1ba74e1721614.png" alt="h=0.73"/> in your
 model, then you can set the units like below</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">oPDF</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">oPDF</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="n">h</span><span class="o">=</span><span class="mf">0.73</span>
 <span class="n">Globals</span><span class="o">.</span><span class="n">set_units</span><span class="p">(</span><span class="mf">1e10</span><span class="o">*</span><span class="n">h</span><span class="p">,</span><span class="n">h</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>That is, to set them to (<img class="math" src="_images/math/ff4575eae18e30cefeefd3c02c964ec837bdc2b7.png" alt="10^{10}h"/> Msun/<img class="math" src="_images/math/cbb80ad77aa7a5e227d5a46bc44d235284106cfc.png" alt="h"/>, <img class="math" src="_images/math/cbb80ad77aa7a5e227d5a46bc44d235284106cfc.png" alt="h"/>kpc/<img class="math" src="_images/math/cbb80ad77aa7a5e227d5a46bc44d235284106cfc.png" alt="h"/>,
-km/s).</p>
+<p>That is, to set them to (<img class="math" src="_images/math/ff4575eae18e30cefeefd3c02c964ec837bdc2b7.png" alt="10^{10}h"/> Msun/<img class="math" src="_images/math/cbb80ad77aa7a5e227d5a46bc44d235284106cfc.png" alt="h"/>,
+<img class="math" src="_images/math/cbb80ad77aa7a5e227d5a46bc44d235284106cfc.png" alt="h"/>kpc/<img class="math" src="_images/math/cbb80ad77aa7a5e227d5a46bc44d235284106cfc.png" alt="h"/>, km/s).</p>
 <p>The user should only use Globals.set_units() to change the units, which
 automatically updates several interal constants related to units. Never
 try to change the internal unit variables (e.g.,
@@ -527,14 +526,14 @@ Globals.units.MassInMsunh) manually.</p>
 <h3>cosmology<a class="headerlink" href="#cosmology" title="Permalink to this headline">¶</a></h3>
 <p>The cosmology parameters (<img class="math" src="_images/math/de856b9ac4597201bc8c788149f1e888b3ab4073.png" alt="\Omega_{M0}"/>,
 <img class="math" src="_images/math/75e11cee1e19340a6bdc79c30ad1b0654fa5555d.png" alt="\Omega_{\Lambda0}"/>)can be accessed through</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="k">print</span> <span class="n">Globals</span><span class="o">.</span><span class="n">cosmology</span><span class="o">.</span><span class="n">OmegaM0</span><span class="p">,</span> <span class="n">Globals</span><span class="o">.</span><span class="n">cosmology</span><span class="o">.</span><span class="n">OmegaL0</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="k">print</span> <span class="n">Globals</span><span class="o">.</span><span class="n">cosmology</span><span class="o">.</span><span class="n">OmegaM0</span><span class="p">,</span> <span class="n">Globals</span><span class="o">.</span><span class="n">cosmology</span><span class="o">.</span><span class="n">OmegaL0</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>0.3 0.7
+<div class="highlight-python"><div class="highlight"><pre><span></span>0.3 0.7
 </pre></div>
 </div>
 <p>To change the cosmology to (0.25, 0.75), simply do</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">Globals</span><span class="o">.</span><span class="n">cosmology</span><span class="o">.</span><span class="n">OmegaM0</span><span class="o">=</span><span class="mf">0.25</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">Globals</span><span class="o">.</span><span class="n">cosmology</span><span class="o">.</span><span class="n">OmegaM0</span><span class="o">=</span><span class="mf">0.25</span>
 <span class="n">Globals</span><span class="o">.</span><span class="n">cosmology</span><span class="o">.</span><span class="n">OmegaL0</span><span class="o">=</span><span class="mf">0.75</span>
 </pre></div>
 </div>
@@ -547,7 +546,7 @@ inconsistency in the calculations.</p>
 mass and concentration parameters. You can change the parametrization of
 the halo associated with your tracer. For example, if you want to fit
 for <img class="math" src="_images/math/98b221d714b31c14edce2f33ab6be0c23164c6f0.png" alt="(\rho_s,r_s)"/> instead of (<img class="math" src="_images/math/2a5d0a03e262a6ebff3d09b9cf9abb3e5f2b6022.png" alt="M,c"/>), then</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">Sample</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">halotype</span><span class="o">=</span><span class="n">HaloTypes</span><span class="o">.</span><span class="n">NFWRhosRs</span><span class="p">)</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">Sample</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">halotype</span><span class="o">=</span><span class="n">HaloTypes</span><span class="o">.</span><span class="n">NFWRhosRs</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Available types are listed as members of the <code class="docutils literal"><span class="pre">HaloTypes</span></code> objects,
@@ -565,18 +564,18 @@ slope=0), parametrized by (<img class="math" src="_images/math/80f3e7ed57c124be0
 <img class="math" src="_images/math/7a947bb3fb1e0cc69d0b627a2307ad16cc89e7bf.png" alt="\psi_s/\psi_{s0}, r_s/r_{s0}"/></li>
 </ul>
 <p>To use template profiles, you have to create them first, in the form of
-(<img class="math" src="_images/math/2cb2800f6a05e3f058ab8a355978af183021f8f7.png" alt="r,\psi,\rho(&lt; r)"/>) arrays and the real <img class="math" src="_images/math/5a56f25d5a5f42e0b8d477397dac166f964ba407.png" alt="r_s"/> parameter
-to be added to C/TemplateData.h. You need to recompile the C library
-once this is done. PotentialProf.py can help you in generating the
-templates from DM distributions.</p>
+(<img class="math" src="_images/math/2cb2800f6a05e3f058ab8a355978af183021f8f7.png" alt="r,\psi,\rho(&lt; r)"/>) arrays and the real <img class="math" src="_images/math/5a56f25d5a5f42e0b8d477397dac166f964ba407.png" alt="r_s"/> parameter to
+be added to C/TemplateData.h. You need to recompile the C library once
+this is done. PotentialProf.py can help you in generating the templates
+from DM distributions.</p>
 <p>If you use template profiles, you also need to specify the template id,
 to tell the code which template in TemplateData.h to use. For example,</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">Sample</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">halotype</span><span class="o">=</span><span class="n">HaloTypes</span><span class="o">.</span><span class="n">TMPPotScaleRScale</span><span class="p">,</span> <span class="n">TMPid</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">Sample</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">halotype</span><span class="o">=</span><span class="n">HaloTypes</span><span class="o">.</span><span class="n">TMPPotScaleRScale</span><span class="p">,</span> <span class="n">TMPid</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>You can also change the virial definition and redshift of the halo, for
 example:</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">Sample</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">virtype</span><span class="o">=</span><span class="n">VirTypes</span><span class="o">.</span><span class="n">B200</span><span class="p">,</span> <span class="n">redshift</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">Sample</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">virtype</span><span class="o">=</span><span class="n">VirTypes</span><span class="o">.</span><span class="n">B200</span><span class="p">,</span> <span class="n">redshift</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>When fitting for the potential, it is always a good choice to adjust the
@@ -585,7 +584,7 @@ of order 1. oPDF allows you to change the scale of the parameters. The
 physical values of the parameters will be the raw parameters times the
 scale of parameters. By default, the scales are all set to unity. We can
 change them as</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">Sample</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">scales</span><span class="o">=</span><span class="p">[</span><span class="mi">100</span><span class="p">,</span><span class="mi">10</span><span class="p">])</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">Sample</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">scales</span><span class="o">=</span><span class="p">[</span><span class="mi">100</span><span class="p">,</span><span class="mi">10</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>Now if we fit the Sample again with the RBinLike estimator, instead of
@@ -596,21 +595,21 @@ best fit, but the physical values are not changed.</p>
 <p>Each tracer is associated with a halo. You can also work with a seperate
 halo object. There are several methods associated with a halo object.
 You can set_type(), set_param(), get the mass and potential profiles</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">halo</span><span class="o">=</span><span class="n">Halo</span><span class="p">(</span><span class="n">halotype</span><span class="o">=</span><span class="n">HaloTypes</span><span class="o">.</span><span class="n">NFWMC</span><span class="p">)</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">halo</span><span class="o">=</span><span class="n">Halo</span><span class="p">(</span><span class="n">halotype</span><span class="o">=</span><span class="n">HaloTypes</span><span class="o">.</span><span class="n">NFWMC</span><span class="p">)</span>
 <span class="n">halo</span><span class="o">.</span><span class="n">set_param</span><span class="p">([</span><span class="mi">180</span><span class="p">,</span><span class="mi">15</span><span class="p">])</span>
 <span class="n">r</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">halo</span><span class="o">.</span><span class="n">mass</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;r&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;M(&lt;r)&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;M(&lt;r)&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">122</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="o">-</span><span class="n">halo</span><span class="o">.</span><span class="n">pot</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;r&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">r&#39;$-\psi(r)$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$-\psi(r)$&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>&lt;matplotlib.text.Text at 0x570efd0&gt;
+<div class="highlight-python"><div class="highlight"><pre><span></span>&lt;matplotlib.text.Text at 0x570efd0&gt;
 </pre></div>
 </div>
 <img alt="_images/tutorial_62_1.png" src="_images/tutorial_62_1.png" />
@@ -622,22 +621,22 @@ You can set_type(), set_param(), get the mass and potential profiles</p>
 Note it not only selects particles to have <img class="math" src="_images/math/243befebd4375a61835c07606366646562ddbec2.png" alt="1&lt;r&lt;100"/>, but also
 sets the radial boundary for the dynamical model, so that only dyanmical
 consistency inside the selected radial range is checked.</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">Sample</span><span class="o">.</span><span class="n">radial_cut</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">Sample</span><span class="o">.</span><span class="n">radial_cut</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This creates a subsample by selecting high angular momentum (L&gt;1e4)
 particles:</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">SubSample</span><span class="o">=</span><span class="n">Sample</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">Sample</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;L&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mf">1e4</span><span class="p">)</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">SubSample</span><span class="o">=</span><span class="n">Sample</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">Sample</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mf">1e4</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>All the particle data can be accessed from the record array Sample.data.
 You can do similar selections (and many other operations) on any
 available fields of the data (except for radial selection). Have a look
 at the datatype or <code class="docutils literal"><span class="pre">Particle_t._fields_</span></code> to see the available fields</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="k">print</span> <span class="n">Sample</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="k">print</span> <span class="n">Sample</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">(</span><span class="s">&#39;haloid&#39;</span><span class="p">,</span> <span class="s">&#39;subid&#39;</span><span class="p">,</span> <span class="s">&#39;flag&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">,</span> <span class="s">&#39;K&#39;</span><span class="p">,</span> <span class="s">&#39;L2&#39;</span><span class="p">,</span> <span class="s">&#39;L&#39;</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="s">&#39;v&#39;</span><span class="p">,</span> <span class="s">&#39;E&#39;</span><span class="p">,</span> <span class="s">&#39;T&#39;</span><span class="p">,</span> <span class="s">&#39;vr&#39;</span><span class="p">,</span> <span class="s">&#39;theta&#39;</span><span class="p">,</span> <span class="s">&#39;rlim&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="p">(</span><span class="s1">&#39;haloid&#39;</span><span class="p">,</span> <span class="s1">&#39;subid&#39;</span><span class="p">,</span> <span class="s1">&#39;flag&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;K&#39;</span><span class="p">,</span> <span class="s1">&#39;L2&#39;</span><span class="p">,</span> <span class="s1">&#39;L&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;E&#39;</span><span class="p">,</span> <span class="s1">&#39;T&#39;</span><span class="p">,</span> <span class="s1">&#39;vr&#39;</span><span class="p">,</span> <span class="s1">&#39;theta&#39;</span><span class="p">,</span> <span class="s1">&#39;rlim&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Note:</p>
@@ -657,12 +656,12 @@ These depend on the potential, and are only filled when you have done
 some calculation in a halo or have filled them explicitly with the
 set_phase() function, e.g.,</li>
 </ul>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">Sample</span><span class="o">.</span><span class="n">set_phase</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
-<span class="k">print</span> <span class="n">Sample</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;E&#39;</span><span class="p">][</span><span class="mi">10</span><span class="p">]</span>
-<span class="k">print</span> <span class="n">Sample</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;theta&#39;</span><span class="p">][</span><span class="mi">35</span><span class="p">]</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">Sample</span><span class="o">.</span><span class="n">set_phase</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+<span class="k">print</span> <span class="n">Sample</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;E&#39;</span><span class="p">][</span><span class="mi">10</span><span class="p">]</span>
+<span class="k">print</span> <span class="n">Sample</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">][</span><span class="mi">35</span><span class="p">]</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="mf">16450988.2168</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="mf">16450988.2168</span>
 <span class="mf">0.809988602192</span>
 </pre></div>
 </div>
@@ -723,11 +722,11 @@ distributions.</p>
 <p>The C backend of oPDF is fully parallelized with <code class="docutils literal"><span class="pre">OpenMP</span></code> for parallel
 computation on shared memory machines. To control the number of threads
 used, for example to use 16 threads, set the environment variable</p>
-<div class="highlight-python"><div class="highlight"><pre>export OMP_NUM_THREADS=16
+<div class="highlight-python"><div class="highlight"><pre><span></span>export OMP_NUM_THREADS=16
 </pre></div>
 </div>
 <p>in bash or</p>
-<div class="highlight-python"><div class="highlight"><pre>setenv OMP_NUM_THREADS 16
+<div class="highlight-python"><div class="highlight"><pre><span></span>setenv OMP_NUM_THREADS 16
 </pre></div>
 </div>
 <p>in csh before running.</p>
@@ -741,13 +740,13 @@ power.</p>
 <p>Each loaded tracer is associated with a memory block in C. If you are
 certain you no longer need the tracer, you can clean it to free up
 memory. For example,</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">NewSample</span><span class="o">.</span><span class="n">clean</span><span class="p">()</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">NewSample</span><span class="o">.</span><span class="n">clean</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>will clear our previously created NewSample. If you know you only need
 the tracer for certain operations, you can automate the loading and
 cleaning process by using <code class="docutils literal"><span class="pre">with</span></code> statement:</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="k">with</span> <span class="n">Tracer</span><span class="p">(</span><span class="n">datafile</span><span class="p">)</span> <span class="k">as</span> <span class="n">TempSample</span><span class="p">:</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">Tracer</span><span class="p">(</span><span class="n">datafile</span><span class="p">)</span> <span class="k">as</span> <span class="n">TempSample</span><span class="p">:</span>
     <span class="n">NewSample</span><span class="o">=</span><span class="n">TempSample</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -759,7 +758,7 @@ block.</p>
 <h3>Bootstrap sampling<a class="headerlink" href="#bootstrap-sampling" title="Permalink to this headline">¶</a></h3>
 <p>To create bootstrap samples (sample with replacement), just sample with
 a different seed each time</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">BSSample</span><span class="o">=</span><span class="n">Sample</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">BSSample</span><span class="o">=</span><span class="n">Sample</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -767,7 +766,7 @@ a different seed each time</p>
 <h3>NFW-likelihood<a class="headerlink" href="#nfw-likelihood" title="Permalink to this headline">¶</a></h3>
 <p>To fit a spatial distribution of particles to an NFW profile (e.g.,
 fitting the distribution of dark matter particles in a halo)</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">Sample</span><span class="o">.</span><span class="n">NFW_fit</span><span class="p">()</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">Sample</span><span class="o">.</span><span class="n">NFW_fit</span><span class="p">()</span>
 </pre></div>
 </div>
 <pre class="literal-block">
@@ -801,7 +800,7 @@ m    0 | 1.00 -0.16
 c    1 | -0.16 1.00
 --------------------
 </pre>
-<div class="highlight-python"><div class="highlight"><pre>(({&#39;hesse_failed&#39;: False, &#39;has_reached_call_limit&#39;: False, &#39;has_accurate_covar&#39;: True, &#39;has_posdef_covar&#39;: True, &#39;up&#39;: 0.5, &#39;edm&#39;: 7.617539575663999e-07, &#39;is_valid&#39;: True, &#39;is_above_max_edm&#39;: False, &#39;has_covariance&#39;: True, &#39;has_made_posdef_covar&#39;: False, &#39;has_valid_parameters&#39;: True, &#39;fval&#39;: 6431.376199877737, &#39;nfcn&#39;: 85},
+<div class="highlight-python"><div class="highlight"><pre><span></span>(({&#39;hesse_failed&#39;: False, &#39;has_reached_call_limit&#39;: False, &#39;has_accurate_covar&#39;: True, &#39;has_posdef_covar&#39;: True, &#39;up&#39;: 0.5, &#39;edm&#39;: 7.617539575663999e-07, &#39;is_valid&#39;: True, &#39;is_above_max_edm&#39;: False, &#39;has_covariance&#39;: True, &#39;has_made_posdef_covar&#39;: False, &#39;has_valid_parameters&#39;: True, &#39;fval&#39;: 6431.376199877737, &#39;nfcn&#39;: 85},
   [{&#39;is_const&#39;: False, &#39;name&#39;: &#39;m&#39;, &#39;has_limits&#39;: False, &#39;value&#39;: 15.611655846563332, &#39;number&#39;: 0L, &#39;has_lower_limit&#39;: False, &#39;upper_limit&#39;: 0.0, &#39;lower_limit&#39;: 0.0, &#39;has_upper_limit&#39;: False, &#39;error&#39;: 0.5579761861939552, &#39;is_fixed&#39;: False},
    {&#39;is_const&#39;: False, &#39;name&#39;: &#39;c&#39;, &#39;has_limits&#39;: False, &#39;value&#39;: 22.711151960080375, &#39;number&#39;: 1L, &#39;has_lower_limit&#39;: False, &#39;upper_limit&#39;: 0.0, &#39;lower_limit&#39;: 0.0, &#39;has_upper_limit&#39;: False, &#39;error&#39;: 2.325172837557389, &#39;is_fixed&#39;: False}]),
  &lt;iminuit._libiminuit.Minuit at 0x53f77b0&gt;)
@@ -823,7 +822,7 @@ you need to comment out the <code class="docutils literal"><span class="pre">imi
 <code class="docutils literal"><span class="pre">Globals.tol.rel</span></code>, which defaults to <code class="docutils literal"><span class="pre">1e-3</span></code>. You can adjust the
 numerical accuracy (either for speed or for accuracy concerns), by
 assigning to <code class="docutils literal"><span class="pre">Globals.tol.rel</span></code>. For example,</p>
-<div class="code python highlight-python"><div class="highlight"><pre><span class="n">Globals</span><span class="o">.</span><span class="n">tol</span><span class="o">.</span><span class="n">rel</span><span class="o">=</span><span class="mf">1e-2</span>
+<div class="code ipython2 highlight-python"><div class="highlight"><pre><span></span><span class="n">Globals</span><span class="o">.</span><span class="n">tol</span><span class="o">.</span><span class="n">rel</span><span class="o">=</span><span class="mf">1e-2</span>
 </pre></div>
 </div>
 <p>Typically a value of <code class="docutils literal"><span class="pre">1e-2</span></code> should be sufficient for most applications
@@ -932,12 +931,12 @@ lower the precision, the faster the code will be.</p>
         <li class="right" >
           <a href="index.html" title="oPDF"
              >previous</a> |</li>
-        <li><a href="index.html">oPDF 1.0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">oPDF 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &copy; Copyright 2014, Jiaxin Han.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3b1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.6.
     </div>
   </body>
 </html>

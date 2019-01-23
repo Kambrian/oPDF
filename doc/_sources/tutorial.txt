@@ -4,7 +4,7 @@ oPDF tutorial
 
 ``oPDF`` is a code for modelling the phase space distribution of
 steady-state tracers in spherical potentials. For more information,
-check the `website <http://kambrian.github.io/oPDF>`_.
+check the `website <http://kambrian.github.io/oPDF>`__.
 
 Please consult the science paper(http://arxiv.org/abs/1507.00769) on how
 it works.
@@ -19,7 +19,7 @@ from the root directory of the oPDF code. This will open your browser,
 and you can click ``tutorial.ipynb`` in the opened webpage. If that does
 not work, then simply continue reading this document as a webpage. For
 the full API documentation, check
-`here <http://kambrian.github.io/oPDF/doc/api>`_.
+`here <http://kambrian.github.io/oPDF/doc/api>`__.
 
 Getting Started
 ---------------
@@ -31,15 +31,15 @@ The oPDF code depends on the following libraries:
 
 -  C libraries
 
-   -  `GSL <http://www.gnu.org/software/gsl/>`_
-   -  `HDF5 <http://www.hdfgroup.org/HDF5/>`_
+   -  `GSL <http://www.gnu.org/software/gsl/>`__
+   -  `HDF5 <http://www.hdfgroup.org/HDF5/>`__
 
 -  Python libraries
 
-   -  `numpy <https://pypi.python.org/pypi/numpy>`_,
-      `scipy <https://pypi.python.org/pypi/scipy>`_,
-      `matplotlib <https://pypi.python.org/pypi/matplotlib>`_
-   -  `iminuit <https://pypi.python.org/pypi/iminuit>`_ (optional, only
+   -  `numpy <https://pypi.python.org/pypi/numpy>`__,
+      `scipy <https://pypi.python.org/pypi/scipy>`__,
+      `matplotlib <https://pypi.python.org/pypi/matplotlib>`__
+   -  `iminuit <https://pypi.python.org/pypi/iminuit>`__ (optional, only
       needed if you want to do NFW-likelihood fit to the density profile
       of dark matter. If you don't have it, you need to comment out the
       ``iminuit`` related imports in the header of oPDF.py.)
@@ -89,14 +89,14 @@ code above.
 Prepare the data files
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The data files are `hdf5 <http://www.hdfgroup.org/HDF5/>`_ files listing
-the *physical* positions and velocities of tracer particles, relative to
-the position and velocity of the center of the halo. The code comes with
-a sample file under data/:
+The data files are `hdf5 <http://www.hdfgroup.org/HDF5/>`__ files
+listing the *physical* positions and velocities of tracer particles,
+relative to the position and velocity of the center of the halo. The
+code comes with a sample file under data/:
 
 -  mockhalo.hdf5, a mock stellar halo. The potential is NFW with
-   :math:`M=133.96\times 10^{10}M_\odot/h`\ , :math:`c=16.16`\ ,
-   following the :math:`\rho_{\rm vir}=200\rho_{\rm crit}` definition.
+   :math:`M=133.96\times 10^{10}M_\odot/h`, :math:`c=16.16`, following
+   the :math:`\rho_{\rm vir}=200\rho_{\rm crit}` definition.
 
 Compulsory datasets in a data file:
 
@@ -133,17 +133,19 @@ Load the data
 
 Let's import the module first
 
-.. code:: python
+.. code:: ipython2
 
     from oPDF import *
+
 Now the ``oPDFdir`` should have been automatically set to the directory
 of the ``oPDF`` code. Let's load the sample data
 
-.. code:: python
+.. code:: ipython2
 
     datafile=oPDFdir+"/data/mockhalo.hdf5"
     FullSample=Tracer(datafile)
     Sample=FullSample.copy(0,1000)
+
 This will load the data into FullSample, and make a subsample of 1000
 particles from the FullSample (starting from particle 0 in FullSample).
 You may want to do your analysis with the full sample. We extract the
@@ -156,11 +158,12 @@ Perform the fitting.
 Now let's fit the data with the radial binned likelihood estimator with
 10 logarithmic radial bins.
 
-.. code:: python
+.. code:: ipython2
 
     Estimators.RBinLike.nbin=10
     x,fval,status=Sample.dyn_fit(Estimators.RBinLike)
     print x,fval,status
+
 
 .. parsed-literal::
 
@@ -174,17 +177,18 @@ In one or two minutes, you will get the results above, where
 -  ``status`` =1 means fitting is successful, =0 means fit failed.
 
 That's it! You have got the best-fitting
-:math:`M=100.44\times10^{10} M_\odot/h` and :math:`c=26.63`\ . ###
+:math:`M=100.44\times10^{10} M_\odot/h` and :math:`c=26.63`. ###
 Estimate significances How does that compare to the real parameters of
-:math:`M=133.96\times 10^{10}M_\odot/h`\ , :math:`c=16.16`\ ? Not too
-bad, but let's check the likelihood ratio of the two models
+:math:`M=133.96\times 10^{10}M_\odot/h`, :math:`c=16.16`? Not too bad,
+but let's check the likelihood ratio of the two models
 
-.. code:: python
+.. code:: ipython2
 
     x0=[133.96,16.16]
     f0=Sample.likelihood(x0, Estimators.RBinLike)
     likerat=2*(fval-f0)
     print likerat
+
 
 .. parsed-literal::
 
@@ -201,11 +205,12 @@ survival function of a :math:`\chi^2` distribution, and convert that to
 a Guassian significance level. This is automatically done by the
 Chi2Sig() utility function
 
-.. code:: python
+.. code:: ipython2
 
     from myutils import Chi2Sig
     significance=Chi2Sig(likerat, dof=2)
     print significance
+
 
 .. parsed-literal::
 
@@ -213,9 +218,8 @@ Chi2Sig() utility function
 
 
 So the best-fitting differs from the real parameters by
-:math:`\sim1\sigma`\ . It seems we are not very lucky and the fit is
-only marginally consistent with the real parameters, but still
-acceptable.
+:math:`\sim1\sigma`. It seems we are not very lucky and the fit is only
+marginally consistent with the real parameters, but still acceptable.
 
 Confidence Contour
 ~~~~~~~~~~~~~~~~~~
@@ -231,15 +235,16 @@ levels of RBinLike, we can provide the maximum likelihood value that we
 obtained above, to save the function from searching for maxlike itself.
 Be prepared that the scan can be slow.
 
-.. code:: python
+.. code:: ipython2
 
     m,c,sig,like=Sample.scan_confidence(Estimators.RBinLike, x, ngrids=[20,20], dx=[0.5,0.5], logscale=True, maxlike=fval)
+
 The returned ``m,c`` are the grids (1-d vectors) of the scan, and
 ``sig,like`` are the significance levels and likelihood values on the
 grids (2-d array). Now let's plot them in units of the real parameter
 values:
 
-.. code:: python
+.. code:: ipython2
 
     plt.contour(m/x0[0],c/x0[1],sig,levels=[1,2,3]) #1,2,3sigma contours.
     plt.plot(x[0]/x0[0],x[1]/x0[1],'ro') #the best-fitting
@@ -247,6 +252,7 @@ values:
     plt.loglog()
     plt.xlabel(r'$M/M_0$')
     plt.ylabel(r'$c/c_0$')
+
 
 
 
@@ -266,7 +272,7 @@ Phase Images
 How does the data look in :math:`(\theta,E,L)` space? We can create
 images showing the distribution of particles in these coordinates. These
 images give a direct visualization of how uniformly the tracer are
-distributed along :math:`\theta`\ -direction, on different (:math:`E,L`\ )
+distributed along :math:`\theta`-direction, on different (:math:`E,L`)
 orbits. They are quite useful for spotting deviations from
 steady-stateness in particular regions in phase space, for example, to
 examine local deviations caused by subhaloes.
@@ -275,10 +281,11 @@ To avoid having too few particles in each pixel we will start by drawing
 a larger sample as NewSample, and then plot the images adopting the real
 potential with parameters ``x0``.
 
-.. code:: python
+.. code:: ipython2
 
     NewSample=FullSample.copy(0,20000)
-.. code:: python
+
+.. code:: ipython2
 
     plt.figure(figsize=(12,5))
     plt.subplot(1,2,1)
@@ -287,6 +294,7 @@ potential with parameters ``x0``.
     plt.subplot(1,2,2)
     NewSample.phase_image(x0, proxy='L')
     plt.title('Real Potential')
+
 
 
 
@@ -301,18 +309,18 @@ potential with parameters ``x0``.
 
 
 We can see that the particle distribution is indeed uniform (roughly
-given the current resolution) along the :math:`\theta`\ -direction,
+given the current resolution) along the :math:`\theta`-direction,
 irrespective of the energy and angular momentum.
 
 TS profiles
 ~~~~~~~~~~~
 
 If you want a more quantitative view of how much deviation there is at
-each :math:`E`\ , :math:`L` or even :math:`r`\ , you can plot the mean
-phase deviation or AD distance (Test Statistics, or TS) inside different
+each :math:`E`, :math:`L` or even :math:`r`, you can plot the mean phase
+deviation or AD distance (Test Statistics, or TS) inside different
 :math:`(E,L,r)` bins.
 
-.. code:: python
+.. code:: ipython2
 
     plt.figure(figsize=(15,5))
     for i,proxy in enumerate('rEL'):
@@ -321,10 +329,11 @@ phase deviation or AD distance (Test Statistics, or TS) inside different
         plt.plot(plt.xlim(), [0,0], 'k--')
 
 
+
 .. image:: tutorial_files/tutorial_22_0.png
 
 
-See, the mean phase deviations are within 3:math:`\sigma` almost
+See, the mean phase deviations are within 3\ :math:`\sigma` almost
 everywhere. Note that the raw mean phase is a standard normal variable
 if the tracer is in steady-state under the potential.
 
@@ -337,17 +346,19 @@ that from parametric fitting, but it's non-parametric. Now we
 demonstrate how this can be done. First let's create some radial bins. A
 natural choice is to create bins with equal sample size,
 
-.. code:: python
+.. code:: ipython2
 
     xbin=Sample.gen_bin('r', nbin=5, equalcount=True)
+
 This generates a sequence containing the edges of 3 (``nbin=3``) radial
 bins. The "phase marks", i.e., the characteristic mass point in each bin
 can be found with the ``phase_mass_bin`` function:
 
-.. code:: python
+.. code:: ipython2
 
     marks=np.array([Sample.phase_mass_bin(xbin[[i,i+1]]) for i in xrange(len(xbin)-1)])
     print marks
+
 
 .. parsed-literal::
 
@@ -367,9 +378,9 @@ The ``marks`` is now a [nbin, 6] array, where each row contains one
 characteristic mass point. The columns are
 ``[r,m,ml,mu,flag,flagl, flagu]``, where ``r`` and ``m`` give the
 characteristic radius and characteristic halo mass; ``ml`` and ``mu``
-give the lower and upper bound on ``m``; ``flag``, ``flagl``,``flagu``
+give the lower and upper bound on ``m``; ``flag``, ``flagl``,\ ``flagu``
 are convergence flags indicating whether the method has converged when
-solving for ``m``,``ml`` and ``mu`` respectively (0:no; 1:yes; 2: no
+solving for ``m``,\ ``ml`` and ``mu`` respectively (0:no; 1:yes; 2: no
 solution to the phase equation, but closest point found). The points we
 can trust must at least have ``flag=1``. If one wants robust error
 estimates, then ``flagl=1`` and ``flagu=1`` is also required. All our
@@ -382,7 +393,7 @@ We can also fit a functional form to the phase marks. We use the
 in ``curve_fit``). We will use the average of the upper and lower
 errors, but this is not essential.
 
-.. code:: python
+.. code:: ipython2
 
     halofit=Halo(HaloTypes.NFWMC)
     def halomass(r, m,c):
@@ -397,6 +408,7 @@ errors, but this is not essential.
     print 'Fitted parameters:', par
     print 'Parameter Errors:', np.sqrt(np.diagonal(Cov))
 
+
 .. parsed-literal::
 
     Fitted parameters: [ 123.24507653   14.92927574]
@@ -406,7 +418,7 @@ errors, but this is not essential.
 The fitted parameters make sense. Now let's plot the marks, the fit to
 marks, and compare to the true mass profile:
 
-.. code:: python
+.. code:: ipython2
 
     fig=plt.figure()
     plt.errorbar(marks[:,0], marks[:,1], yerr=[err2, err1], fmt='ro', label='Mark')
@@ -423,6 +435,7 @@ marks, and compare to the true mass profile:
     plt.yscale('log')
     plt.xlabel('r')
     plt.ylabel('M(<r)')
+
 
 
 
@@ -444,12 +457,13 @@ less accurate. We provide a compact function to combine the steps for
 fitting phase marks into a single step. For example, to fit with two
 bins, do
 
-.. code:: python
+.. code:: ipython2
 
     par2,Cov2,marks2=Sample.phase_mark_fit(par0=[100,10], nbin=2)
     print 'mark flags:\n', marks2[:,4:]
     print 'Fitted parameters:', par2
     print 'Parameter Errors:', np.sqrt(np.diagonal(Cov2))
+
 
 .. parsed-literal::
 
@@ -465,12 +479,13 @@ form of the profile used in the fitting is controlled by the current
 ``Sample.halo``. To use a disired profile, set the halo type **before**
 fitting. For example,
 
-.. code:: python
+.. code:: ipython2
 
     Sample.halo.set_type(HaloTypes.NFWMC, scales=[1,1])
+
 To plot the fit,
 
-.. code:: python
+.. code:: ipython2
 
     fig=plt.figure()
     plt.errorbar(marks2[:,0], marks2[:,1], yerr=[marks2[:,1]-marks2[:,2], marks2[:,3]-marks2[:,1]], fmt='ro', label='Mark')
@@ -483,6 +498,7 @@ To plot the fit,
     plt.yscale('log')
     plt.xlabel('r')
     plt.ylabel('M(<r)')
+
 
 
 
@@ -518,10 +534,11 @@ For RBinLike, you can also customize the number of radial bins and
 whether to bin in linear or log scales. For example, the following will
 change the RBinLike to use 20 linear bins.
 
-.. code:: python
+.. code:: ipython2
 
     Estimators.RBinLike.nbin=20
     Estimators.RBinLike.logscale=False
+
 You can then pass this customized ``Estimators.RBinLike`` to your
 likelihood functions. Since the purpose of the binning is purely to
 suppress shot noise, a larger number of bins is generally better, as
@@ -536,12 +553,13 @@ units
 ~~~~~
 
 The system of units is specified in three fundamental units:
-Mass[:math:`M_\odot/h`\ ], Length[kpc/:math:`h`\ ], Velocity[km/s]. You
+Mass[:math:`M_\odot/h`], Length[kpc/\ :math:`h`], Velocity[km/s]. You
 can query the current units with
 
-.. code:: python
+.. code:: ipython2
 
     Globals.get_units()
+
 
 .. parsed-literal::
 
@@ -558,11 +576,11 @@ can query the current units with
 
 
 
-The default units are [:math:`10^{10} M_\odot/h`\ , kpc/:math:`h`\ ,
+The default units are [:math:`10^{10} M_\odot/h`, kpc/\ :math:`h`,
 km/s]. The oPDF code does not need to know the value of the hubble
-constant :math:`h`\ , as long as the units are correctly specified. It
-is the user's responsibility to make sure that his/her units are
-consistent with his assumed hubble parameter.
+constant :math:`h`, as long as the units are correctly specified. It is
+the user's responsibility to make sure that his/her units are consistent
+with his assumed hubble parameter.
 
 If you want to change the system of units, you must do it immediately
 after importing the ``oPDF`` module, to avoid inconsistency with units
@@ -570,13 +588,14 @@ of previously loaded tracers. For example, if your data is provided in
 units of (1e10Msun, kpc, km/s), and you adopt :math:`h=0.73` in your
 model, then you can set the units like below
 
-.. code:: python
+.. code:: ipython2
 
     from oPDF import *
     h=0.73
     Globals.set_units(1e10*h,h,1)
-That is, to set them to (:math:`10^{10}h` Msun/:math:`h`\ , :math:`h`\ kpc/:math:`h`\ ,
-km/s).
+
+That is, to set them to (:math:`10^{10}h` Msun/\ :math:`h`,
+:math:`h`\ kpc/\ :math:`h`, km/s).
 
 The user should only use Globals.set\_units() to change the units, which
 automatically updates several interal constants related to units. Never
@@ -586,12 +605,13 @@ Globals.units.MassInMsunh) manually.
 cosmology
 ~~~~~~~~~
 
-The cosmology parameters (:math:`\Omega_{M0}`\ ,
-:math:`\Omega_{\Lambda0}`\ )can be accessed through
+The cosmology parameters (:math:`\Omega_{M0}`,
+:math:`\Omega_{\Lambda0}`)can be accessed through
 
-.. code:: python
+.. code:: ipython2
 
     print Globals.cosmology.OmegaM0, Globals.cosmology.OmegaL0
+
 
 .. parsed-literal::
 
@@ -600,10 +620,11 @@ The cosmology parameters (:math:`\Omega_{M0}`\ ,
 
 To change the cosmology to (0.25, 0.75), simply do
 
-.. code:: python
+.. code:: ipython2
 
     Globals.cosmology.OmegaM0=0.25
     Globals.cosmology.OmegaL0=0.75
+
 Again this is advised to be done in the beginning, to avoid
 inconsistency in the calculations.
 
@@ -613,43 +634,46 @@ parametrization of the potential
 The default parameterization of the potential is a NFW potential with
 mass and concentration parameters. You can change the parametrization of
 the halo associated with your tracer. For example, if you want to fit
-for :math:`(\rho_s,r_s)` instead of (:math:`M,c`\ ), then
+for :math:`(\rho_s,r_s)` instead of (:math:`M,c`), then
 
-.. code:: python
+.. code:: ipython2
 
     Sample.halo.set_type(halotype=HaloTypes.NFWRhosRs)
+
 Available types are listed as members of the ``HaloTypes`` objects,
 including:
 
 -  HaloTypes.NFWMC: NFW halo parametrized by :math:`(M,c)`
 -  HaloTypes.NFWRhosRs: NFW, :math:`(\rho_s,r_s)`
--  HaloTypes.NFWPotsRs: NFW, (:math:`\psi_s, r_s`\ ), with
-   :math:`\psi_s=4\pi G\rho_s r_s^2`\ .
+-  HaloTypes.NFWPotsRs: NFW, (:math:`\psi_s, r_s`), with
+   :math:`\psi_s=4\pi G\rho_s r_s^2`.
 -  HaloTypes.CorePotsRs: Cored Generalized NFW Potential (inner density
-   slope=0), parametrized by (:math:`\psi_s,r_s`\ )
+   slope=0), parametrized by (:math:`\psi_s,r_s`)
 -  HaloTypes.CoreRhosRs: Cored GNFW, :math:`(\rho_s,r_s)`
 -  HaloTypes.TMPMC: Template profile, :math:`(M,c)` parametrization
 -  HaloTypes.TMPPotScaleRScale: Template,
    :math:`\psi_s/\psi_{s0}, r_s/r_{s0}`
 
 To use template profiles, you have to create them first, in the form of
-(:math:`r,\psi,\rho(< r)`\ ) arrays and the real :math:`r_s` parameter
-to be added to C/TemplateData.h. You need to recompile the C library
-once this is done. PotentialProf.py can help you in generating the
-templates from DM distributions.
+(:math:`r,\psi,\rho(< r)`) arrays and the real :math:`r_s` parameter to
+be added to C/TemplateData.h. You need to recompile the C library once
+this is done. PotentialProf.py can help you in generating the templates
+from DM distributions.
 
 If you use template profiles, you also need to specify the template id,
 to tell the code which template in TemplateData.h to use. For example,
 
-.. code:: python
+.. code:: ipython2
 
     Sample.halo.set_type(halotype=HaloTypes.TMPPotScaleRScale, TMPid=5)
+
 You can also change the virial definition and redshift of the halo, for
 example:
 
-.. code:: python
+.. code:: ipython2
 
     Sample.halo.set_type(virtype=VirTypes.B200, redshift=0.1)
+
 When fitting for the potential, it is always a good choice to adjust the
 scales of parameters so that the numerical values of the parameters are
 of order 1. oPDF allows you to change the scale of the parameters. The
@@ -657,9 +681,10 @@ physical values of the parameters will be the raw parameters times the
 scale of parameters. By default, the scales are all set to unity. We can
 change them as
 
-.. code:: python
+.. code:: ipython2
 
     Sample.halo.set_type(scales=[100,10])
+
 Now if we fit the Sample again with the RBinLike estimator, instead of
 ``x=[ 118.18    19.82]``, we will get ``x=[1.1818    1.982]`` as the
 best fit, but the physical values are not changed.
@@ -671,7 +696,7 @@ Each tracer is associated with a halo. You can also work with a seperate
 halo object. There are several methods associated with a halo object.
 You can set\_type(), set\_param(), get the mass and potential profiles
 
-.. code:: python
+.. code:: ipython2
 
     halo=Halo(halotype=HaloTypes.NFWMC)
     halo.set_param([180,15])
@@ -685,6 +710,7 @@ You can set\_type(), set\_param(), get the mass and potential profiles
     plt.loglog(r, -halo.pot(r))
     plt.xlabel('r')
     plt.ylabel(r'$-\psi(r)$')
+
 
 
 
@@ -702,27 +728,30 @@ selecting and cutting
 ~~~~~~~~~~~~~~~~~~~~~
 
 The following line applies a radial cut from 1 to 100 in system unit.
-Note it not only selects particles to have :math:`1<r<100`\ , but also
+Note it not only selects particles to have :math:`1<r<100`, but also
 sets the radial boundary for the dynamical model, so that only dyanmical
 consistency inside the selected radial range is checked.
 
-.. code:: python
+.. code:: ipython2
 
     Sample.radial_cut(1,100)
+
 This creates a subsample by selecting high angular momentum (L>1e4)
 particles:
 
-.. code:: python
+.. code:: ipython2
 
     SubSample=Sample.select(Sample.data['L']>1e4)
+
 All the particle data can be accessed from the record array Sample.data.
 You can do similar selections (and many other operations) on any
 available fields of the data (except for radial selection). Have a look
 at the datatype or ``Particle_t._fields_`` to see the available fields
 
-.. code:: python
+.. code:: ipython2
 
     print Sample.data.dtype.names
+
 
 .. parsed-literal::
 
@@ -746,11 +775,12 @@ Note:
    some calculation in a halo or have filled them explicitly with the
    set\_phase() function, e.g.,
 
-.. code:: python
+.. code:: ipython2
 
     Sample.set_phase(x0)
     print Sample.data['E'][10]
     print Sample.data['theta'][35]
+
 
 .. parsed-literal::
 
@@ -780,7 +810,7 @@ To add new types of potential:
 To add new template profiles:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
--  Generate your template in the form of (:math:`r,\psi,\rho(< r)`\ )
+-  Generate your template in the form of (:math:`r,\psi,\rho(< r)`)
    arrays, and append to ``PotentialTemplate`` in ``C/TemplateData.h``.
 -  Append the scale radius of the new template to ``TemplateScale`` in
    ``C/TemplateData.h``. This is only used if you want to use ``TMPMC``
@@ -822,6 +852,7 @@ in bash or
 ::
 
      setenv OMP_NUM_THREADS 16
+     
 
 in csh before running.
 
@@ -837,17 +868,19 @@ Each loaded tracer is associated with a memory block in C. If you are
 certain you no longer need the tracer, you can clean it to free up
 memory. For example,
 
-.. code:: python
+.. code:: ipython2
 
     NewSample.clean()
+
 will clear our previously created NewSample. If you know you only need
 the tracer for certain operations, you can automate the loading and
 cleaning process by using ``with`` statement:
 
-.. code:: python
+.. code:: ipython2
 
     with Tracer(datafile) as TempSample:
         NewSample=TempSample.copy(0,100)
+
 This will load the datafile into ``TempSample``, create ``NewSample``
 from ``TempSample``, and clear ``TempSample`` when exiting the ``with``
 block.
@@ -858,18 +891,20 @@ Bootstrap sampling
 To create bootstrap samples (sample with replacement), just sample with
 a different seed each time
 
-.. code:: python
+.. code:: ipython2
 
     BSSample=Sample.resample(seed=123)
+
 NFW-likelihood
 ~~~~~~~~~~~~~~
 
 To fit a spatial distribution of particles to an NFW profile (e.g.,
 fitting the distribution of dark matter particles in a halo)
 
-.. code:: python
+.. code:: ipython2
 
     Sample.NFW_fit()
+
 
 .. parsed-literal::
 
@@ -921,7 +956,7 @@ matter particles of equal particle mass given in ``Sample.mP``, and the
 number density profile times ``Sample.mP`` should give the physical
 density profile.
 
-You also need the `iminuit <https://pypi.python.org/pypi/iminuit>`_
+You also need the `iminuit <https://pypi.python.org/pypi/iminuit>`__
 python package before you can use this function. If you don't have that,
 you need to comment out the ``iminuit`` related imports in the header of
 ``oPDF.py``. Please consult the ``iminuit`` documentation for the
@@ -935,9 +970,10 @@ The relative precision for integration of orbits is controlled by
 numerical accuracy (either for speed or for accuracy concerns), by
 assigning to ``Globals.tol.rel``. For example,
 
-.. code:: python
+.. code:: ipython2
 
     Globals.tol.rel=1e-2
+
 Typically a value of ``1e-2`` should be sufficient for most applications
 such as likelihood inference or phase angle evaluation. Of course, the
 lower the precision, the faster the code will be.

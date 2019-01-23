@@ -36,8 +36,8 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../index.html">oPDF 1.0 documentation</a> &raquo;</li>
-          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">oPDF 1.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -47,7 +47,7 @@
           <div class="body" role="main">
             
   <h1>Source code for oPDF</h1><div class="highlight"><pre>
-<span class="sd">&quot;&quot;&quot; Python interface to the C code for oPDF modelling.</span>
+<span></span><span class="sd">&quot;&quot;&quot; Python interface to the C code for oPDF modelling.</span>
 
 <span class="sd">It wraps the C functions into python classes with ctypes.</span>
 <span class="sd">&quot;&quot;&quot;</span>
@@ -55,50 +55,50 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">ctypes</span><span class="o">,</span><span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">myutils</span> <span class="kn">import</span> <span class="n">Chi2Sig</span><span class="p">,</span><span class="n">AD2Sig</span><span class="p">,</span><span class="n">density_of_points</span><span class="p">,</span><span class="n">get_extent</span><span class="p">,</span><span class="n">NamedValues</span><span class="p">,</span><span class="n">NamedEnum</span>
-<span class="c">#from myutils import fmin_gsl</span>
-<span class="c">#from scipy.optimize import fmin, fmin_powell</span>
+<span class="c1">#from myutils import fmin_gsl</span>
+<span class="c1">#from scipy.optimize import fmin, fmin_powell</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
 <span class="kn">from</span> <span class="nn">iminuit</span> <span class="kn">import</span> <span class="n">Minuit</span>
-<span class="kn">from</span> <span class="nn">iminuit.ConsoleFrontend</span> <span class="kn">import</span> <span class="n">ConsoleFrontend</span>
+<span class="kn">from</span> <span class="nn">iminuit.frontends</span> <span class="kn">import</span> <span class="n">ConsoleFrontend</span>
 <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">newton</span><span class="p">,</span><span class="n">brentq</span><span class="p">,</span><span class="n">fmin</span><span class="p">,</span><span class="n">curve_fit</span>
-<span class="c">#import copy</span>
+<span class="c1">#import copy</span>
 
-<span class="n">oPDFdir</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">)</span>
-<span class="k">if</span> <span class="n">oPDFdir</span><span class="o">==</span><span class="s">&#39;&#39;</span><span class="p">:</span>
-  <span class="n">oPDFdir</span><span class="o">=</span><span class="s">&#39;.&#39;</span>
-<span class="c">#=======================load the library===============================</span>
-<span class="n">lib</span><span class="o">=</span><span class="n">ctypes</span><span class="o">.</span><span class="n">CDLL</span><span class="p">(</span><span class="n">oPDFdir</span><span class="o">+</span><span class="s">&quot;/liboPDF.so&quot;</span><span class="p">)</span>
-<span class="c">#=======================prototype the library==========================</span>
-<span class="c">#==globals.h</span>
+<span class="n">oPDFdir</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">oPDFdir</span><span class="o">==</span><span class="s1">&#39;&#39;</span><span class="p">:</span>
+  <span class="n">oPDFdir</span><span class="o">=</span><span class="s1">&#39;.&#39;</span>
+<span class="c1">#=======================load the library===============================</span>
+<span class="n">lib</span><span class="o">=</span><span class="n">ctypes</span><span class="o">.</span><span class="n">CDLL</span><span class="p">(</span><span class="n">oPDFdir</span><span class="o">+</span><span class="s2">&quot;/liboPDF.so&quot;</span><span class="p">)</span>
+<span class="c1">#=======================prototype the library==========================</span>
+<span class="c1">#==globals.h</span>
 <span class="k">class</span> <span class="nc">global_tol</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">Structure</span><span class="p">):</span>
-  <span class="n">_fields_</span><span class="o">=</span><span class="p">[(</span><span class="s">&#39;bin&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-			<span class="p">(</span><span class="s">&#39;bin_abs&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-			<span class="p">(</span><span class="s">&#39;rel&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">)]</span>
+  <span class="n">_fields_</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;bin&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+			<span class="p">(</span><span class="s1">&#39;bin_abs&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+			<span class="p">(</span><span class="s1">&#39;rel&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">)]</span>
 <span class="k">class</span> <span class="nc">global_cosm</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">Structure</span><span class="p">):</span>
-  <span class="n">_fields_</span><span class="o">=</span><span class="p">[(</span><span class="s">&#39;OmegaM0&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-			<span class="p">(</span><span class="s">&#39;OmegaL0&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">)]</span>
+  <span class="n">_fields_</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;OmegaM0&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+			<span class="p">(</span><span class="s1">&#39;OmegaL0&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">)]</span>
 <span class="k">class</span> <span class="nc">global_const</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">Structure</span><span class="p">):</span>
-  <span class="n">_fields_</span><span class="o">=</span><span class="p">[(</span><span class="s">&#39;G&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-			<span class="p">(</span><span class="s">&#39;H0&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">)]</span>
+  <span class="n">_fields_</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;G&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+			<span class="p">(</span><span class="s1">&#39;H0&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">)]</span>
 <span class="k">class</span> <span class="nc">global_units</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">Structure</span><span class="p">):</span>
-  <span class="n">_fields_</span><span class="o">=</span><span class="p">[(</span><span class="s">&#39;MassInMsunh&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-			<span class="p">(</span><span class="s">&#39;LengthInKpch&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-			<span class="p">(</span><span class="s">&#39;VelInKms&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-			<span class="p">(</span><span class="s">&#39;Const&#39;</span><span class="p">,</span><span class="n">global_const</span><span class="p">)]</span>
+  <span class="n">_fields_</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;MassInMsunh&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+			<span class="p">(</span><span class="s1">&#39;LengthInKpch&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+			<span class="p">(</span><span class="s1">&#39;VelInKms&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+			<span class="p">(</span><span class="s1">&#39;Const&#39;</span><span class="p">,</span><span class="n">global_const</span><span class="p">)]</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">set_units</span><span class="o">.</span><span class="n">restype</span><span class="o">=</span><span class="bp">None</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">set_units</span><span class="o">.</span><span class="n">argtypes</span><span class="o">=</span><span class="p">[</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">]</span>
 <div class="viewcode-block" id="globals_t"><a class="viewcode-back" href="../api.html#oPDF.globals_t">[docs]</a><span class="k">class</span> <span class="nc">globals_t</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">Structure</span><span class="p">):</span>
   <span class="sd">&#39;&#39;&#39; global variables of the module. It controls numerical precision, internal units, and cosmology. </span>
 <span class="sd">  The numerical precision for orbit integration is controlled by Globals.tol.rel, which defaults to 1e-3 </span>
 <span class="sd">  (Globals.tol.rel=1e-2 should already be sufficient for likelihood inference and phase calculations).&#39;&#39;&#39;</span>
-  <span class="n">_fields_</span><span class="o">=</span><span class="p">[(</span><span class="s">&#39;tol&#39;</span><span class="p">,</span><span class="n">global_tol</span><span class="p">),</span>
-			<span class="p">(</span><span class="s">&#39;cosmology&#39;</span><span class="p">,</span><span class="n">global_cosm</span><span class="p">),</span>
-			<span class="p">(</span><span class="s">&#39;units&#39;</span><span class="p">,</span><span class="n">global_units</span><span class="p">)]</span>
+  <span class="n">_fields_</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;tol&#39;</span><span class="p">,</span><span class="n">global_tol</span><span class="p">),</span>
+			<span class="p">(</span><span class="s1">&#39;cosmology&#39;</span><span class="p">,</span><span class="n">global_cosm</span><span class="p">),</span>
+			<span class="p">(</span><span class="s1">&#39;units&#39;</span><span class="p">,</span><span class="n">global_units</span><span class="p">)]</span>
 <div class="viewcode-block" id="globals_t.set_defaults"><a class="viewcode-back" href="../api.html#oPDF.globals_t.set_defaults">[docs]</a>  <span class="k">def</span> <span class="nf">set_defaults</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;set default global parameters, </span>
 <span class="sd">	including precision, cosmology and units&#39;&#39;&#39;</span>
-	<span class="n">lib</span><span class="o">.</span><span class="n">default_global_pars</span><span class="p">()</span>
-  </div>
+	<span class="n">lib</span><span class="o">.</span><span class="n">default_global_pars</span><span class="p">()</span></div>
+  
 <div class="viewcode-block" id="globals_t.set_units"><a class="viewcode-back" href="../api.html#oPDF.globals_t.set_units">[docs]</a>  <span class="k">def</span> <span class="nf">set_units</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">MassInMsunh</span><span class="o">=</span><span class="mf">1.e10</span><span class="p">,</span> <span class="n">LengthInKpch</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">VelInKms</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;set system of units.</span>
 <span class="sd">	specify Mass in Msun/h, Length in kpc/h, Velocity in km/s.</span>
@@ -116,51 +116,51 @@
 <span class="sd">	   - The user should only use Globals.set_units() to change the units, which automatically updates several interal constants related to units. Never try to change the internal unit variables (e.g., Globals.units.MassInMsunh) manually.</span>
 <span class="sd">	   -  To avoid inconsistency with units of previously loaded tracers, you must do it immediately after importing the :module:`oPDF` module if you need to call :func:`set_units`.&#39;&#39;&#39;</span>
 	   
-	<span class="n">lib</span><span class="o">.</span><span class="n">set_units</span><span class="p">(</span><span class="n">MassInMsunh</span><span class="p">,</span> <span class="n">LengthInKpch</span><span class="p">,</span> <span class="n">VelInKms</span><span class="p">)</span>
-</div>
+	<span class="n">lib</span><span class="o">.</span><span class="n">set_units</span><span class="p">(</span><span class="n">MassInMsunh</span><span class="p">,</span> <span class="n">LengthInKpch</span><span class="p">,</span> <span class="n">VelInKms</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="globals_t.get_units"><a class="viewcode-back" href="../api.html#oPDF.globals_t.get_units">[docs]</a>  <span class="k">def</span> <span class="nf">get_units</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;query the units&#39;&#39;&#39;</span>
-	<span class="k">print</span> <span class="s">&#39;Mass  :&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">MassInMsunh</span><span class="p">,</span> <span class="s">&#39;Msun/h&#39;</span>
-	<span class="k">print</span> <span class="s">&#39;Length:&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">LengthInKpch</span><span class="p">,</span> <span class="s">&#39;kpc/h&#39;</span>
-	<span class="k">print</span> <span class="s">&#39;Vel   :&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">VelInKms</span><span class="p">,</span> <span class="s">&#39;km/s&#39;</span>
+	<span class="k">print</span> <span class="s1">&#39;Mass  :&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">MassInMsunh</span><span class="p">,</span> <span class="s1">&#39;Msun/h&#39;</span>
+	<span class="k">print</span> <span class="s1">&#39;Length:&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">LengthInKpch</span><span class="p">,</span> <span class="s1">&#39;kpc/h&#39;</span>
+	<span class="k">print</span> <span class="s1">&#39;Vel   :&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">VelInKms</span><span class="p">,</span> <span class="s1">&#39;km/s&#39;</span>
 	<span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">MassInMsunh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">LengthInKpch</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">VelInKms</span><span class="p">)</span></div></div>
 <span class="k">class</span> <span class="nc">_NamedEnum</span><span class="p">(</span><span class="n">NamedEnum</span><span class="p">):</span>
-<span class="c">#just an alias of NamedEnum</span>
-<span class="c">#it is here just because sphinx does not auto-doc instances of imported classes,</span>
-<span class="c">#so we make it a native class by aliasing it.</span>
+<span class="c1">#just an alias of NamedEnum</span>
+<span class="c1">#it is here just because sphinx does not auto-doc instances of imported classes,</span>
+<span class="c1">#so we make it a native class by aliasing it.</span>
   <span class="k">pass</span>
 
-<span class="n">VirTypes</span><span class="o">=</span><span class="n">_NamedEnum</span><span class="p">(</span><span class="s">&#39;TH C200 B200&#39;</span><span class="p">)</span>
+<span class="n">VirTypes</span><span class="o">=</span><span class="n">_NamedEnum</span><span class="p">(</span><span class="s1">&#39;TH C200 B200&#39;</span><span class="p">)</span>
 <span class="sd">&#39;&#39;&#39;Collection of virial definitions. It contains </span>
 
 <span class="sd">    - ``VirTH``: the spherical collapse prediction (i.e, Bryan &amp; Norman 98 fitting).</span>
 <span class="sd">    - ``VirB200``: the 200 times mean density deifinition.</span>
 <span class="sd">    - ``VirC200``: the 200 times critical density definition.</span>
 <span class="sd">&#39;&#39;&#39;</span>
-<span class="n">Globals</span><span class="o">=</span><span class="n">globals_t</span><span class="o">.</span><span class="n">in_dll</span><span class="p">(</span><span class="n">lib</span><span class="p">,</span> <span class="s">&#39;Globals&#39;</span><span class="p">)</span>
+<span class="n">Globals</span><span class="o">=</span><span class="n">globals_t</span><span class="o">.</span><span class="n">in_dll</span><span class="p">(</span><span class="n">lib</span><span class="p">,</span> <span class="s1">&#39;Globals&#39;</span><span class="p">)</span>
 <span class="sd">&#39;&#39;&#39;    Collection of global variables of the module, of class :class:`globals_t`. It controls numerical precision, internal units, and cosmology. </span>
 <span class="sd">&#39;&#39;&#39;</span>
 
-<span class="c">#===halo.h</span>
+<span class="c1">#===halo.h</span>
 <span class="n">MaxNPar</span><span class="o">=</span><span class="mi">10</span>
 <span class="n">Param_t</span><span class="o">=</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="o">*</span><span class="n">MaxNPar</span>
 <span class="k">class</span> <span class="nc">Halo_t</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">Structure</span><span class="p">):</span>
-  <span class="n">_fields_</span><span class="o">=</span><span class="p">[(</span><span class="s">&#39;pars&#39;</span><span class="p">,</span> <span class="n">Param_t</span><span class="p">),</span> <span class="c">#parameter values</span>
-			<span class="p">(</span><span class="s">&#39;scales&#39;</span><span class="p">,</span> <span class="n">Param_t</span><span class="p">),</span> <span class="c">#parameter scales. real parameters are set by pars*scales</span>
-			<span class="p">(</span><span class="s">&#39;z&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-			<span class="p">(</span><span class="s">&#39;M&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-			<span class="p">(</span><span class="s">&#39;c&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-			<span class="p">(</span><span class="s">&#39;Rv&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-			<span class="p">(</span><span class="s">&#39;Pots&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span><span class="c">#-4*pi*G*rhos*rs^2, the potential at r=0</span>
-			<span class="p">(</span><span class="s">&#39;Rs&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-			<span class="p">(</span><span class="s">&#39;Rhos&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-			<span class="p">(</span><span class="s">&#39;Ms&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span><span class="c">#4*pi*rs^3*rhos</span>
-			<span class="p">(</span><span class="s">&#39;RScale&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span><span class="c">#for TMP profile, Rs/Rs0</span>
-			<span class="p">(</span><span class="s">&#39;PotScale&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span><span class="c">#for TMP profile, Pots/Pots0</span>
-			<span class="p">(</span><span class="s">&#39;K&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span> <span class="c">#M=KR, for isothermal profile, where K=Vc^2/G.</span>
-			<span class="p">(</span><span class="s">&#39;IsForbidden&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span> <span class="c">#whether the halo parameters are forbidden(e.g, negative mass)</span>
-			<span class="p">(</span><span class="s">&#39;virtype&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span>
-			<span class="p">(</span><span class="s">&#39;type&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">)</span>
+  <span class="n">_fields_</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;pars&#39;</span><span class="p">,</span> <span class="n">Param_t</span><span class="p">),</span> <span class="c1">#parameter values</span>
+			<span class="p">(</span><span class="s1">&#39;scales&#39;</span><span class="p">,</span> <span class="n">Param_t</span><span class="p">),</span> <span class="c1">#parameter scales. real parameters are set by pars*scales</span>
+			<span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+			<span class="p">(</span><span class="s1">&#39;M&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+			<span class="p">(</span><span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+			<span class="p">(</span><span class="s1">&#39;Rv&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+			<span class="p">(</span><span class="s1">&#39;Pots&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span><span class="c1">#-4*pi*G*rhos*rs^2, the potential at r=0</span>
+			<span class="p">(</span><span class="s1">&#39;Rs&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+			<span class="p">(</span><span class="s1">&#39;Rhos&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+			<span class="p">(</span><span class="s1">&#39;Ms&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span><span class="c1">#4*pi*rs^3*rhos</span>
+			<span class="p">(</span><span class="s1">&#39;RScale&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span><span class="c1">#for TMP profile, Rs/Rs0</span>
+			<span class="p">(</span><span class="s1">&#39;PotScale&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span><span class="c1">#for TMP profile, Pots/Pots0</span>
+			<span class="p">(</span><span class="s1">&#39;K&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span> <span class="c1">#M=KR, for isothermal profile, where K=Vc^2/G.</span>
+			<span class="p">(</span><span class="s1">&#39;IsForbidden&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span> <span class="c1">#whether the halo parameters are forbidden(e.g, negative mass)</span>
+			<span class="p">(</span><span class="s1">&#39;virtype&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span>
+			<span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">)</span>
 			<span class="p">]</span>
 <span class="n">Halo_p</span><span class="o">=</span><span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">Halo_t</span><span class="p">)</span> 
 <span class="n">lib</span><span class="o">.</span><span class="n">halo_set_type</span><span class="o">.</span><span class="n">restype</span><span class="o">=</span><span class="bp">None</span>
@@ -174,7 +174,7 @@
 <span class="n">lib</span><span class="o">.</span><span class="n">isNFW</span><span class="o">.</span><span class="n">restype</span><span class="o">=</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">isNFW</span><span class="o">.</span><span class="n">argtypes</span><span class="o">=</span><span class="p">[</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">]</span>
 
-<span class="n">HaloTypes</span><span class="o">=</span><span class="n">_NamedEnum</span><span class="p">(</span><span class="s">&#39;NFWMC NFWPotsRs NFWRhosRs TMPMC TMPPotScaleRScale CoreRhosRs CorePotsRs PointM IsothermalK&#39;</span><span class="p">)</span>
+<span class="n">HaloTypes</span><span class="o">=</span><span class="n">_NamedEnum</span><span class="p">(</span><span class="s1">&#39;NFWMC NFWPotsRs NFWRhosRs TMPMC TMPPotScaleRScale CoreRhosRs CorePotsRs PointM IsothermalK&#39;</span><span class="p">)</span>
 <span class="sd">&#39;&#39;&#39; Collection of halo types. It contains</span>
 
 <span class="sd">    -  ``NFWMC``: NFW halo parametrized by :math:`(M,c)`</span>
@@ -208,7 +208,7 @@
 <span class="sd">  :ivar PotScale: :math:`\psi_s/\psi_{s0}` for TMP profile</span>
 <span class="sd">  </span>
 <span class="sd">  &#39;&#39;&#39;</span>
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">halotype</span><span class="o">=</span><span class="n">HaloTypes</span><span class="o">.</span><span class="n">NFWMC</span><span class="p">,</span> <span class="n">virtype</span><span class="o">=</span><span class="n">VirTypes</span><span class="o">.</span><span class="n">C200</span><span class="p">,</span> <span class="n">redshift</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scales</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">TMPid</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">halotype</span><span class="o">=</span><span class="n">HaloTypes</span><span class="o">.</span><span class="n">NFWMC</span><span class="p">,</span> <span class="n">virtype</span><span class="o">=</span><span class="n">VirTypes</span><span class="o">.</span><span class="n">C200</span><span class="p">,</span> <span class="n">redshift</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scales</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">TMPid</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">	:initializer:</span>
 <span class="sd">	</span>
@@ -225,8 +225,8 @@
 <span class="sd">	  :param TMPid: template id. only required when halotype is of template type</span>
 <span class="sd">	</span>
 <span class="sd">	&#39;&#39;&#39;</span>
-	<span class="n">Halo_t</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-	<span class="c">#print &quot;initing halo&quot;</span>
+	<span class="n">Halo_t</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+	<span class="c1">#print &quot;initing halo&quot;</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">halotype</span><span class="p">,</span> <span class="n">virtype</span><span class="p">,</span> <span class="n">redshift</span><span class="p">,</span> <span class="n">scales</span><span class="p">,</span> <span class="n">TMPid</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Halo.set_type"><a class="viewcode-back" href="../api.html#oPDF.Halo.set_type">[docs]</a>  <span class="k">def</span> <span class="nf">set_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">halotype</span><span class="o">=</span><span class="n">HaloTypes</span><span class="o">.</span><span class="n">NFWMC</span><span class="p">,</span> <span class="n">virtype</span><span class="o">=</span><span class="n">VirTypes</span><span class="o">.</span><span class="n">C200</span><span class="p">,</span> <span class="n">redshift</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">scales</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">TMPid</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
@@ -241,8 +241,8 @@
 <span class="sd">	scales: scales of halo parameters, array-like, of the same shape as parameters. default to ones if not specified. physical parameters will be params*scales&#39;&#39;&#39;</span>	
 	<span class="k">if</span> <span class="n">scales</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
 	  <span class="n">scales</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">MaxNPar</span><span class="p">)</span>
-	<span class="n">lib</span><span class="o">.</span><span class="n">halo_set_type</span><span class="p">(</span><span class="n">halotype</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">virtype</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">redshift</span><span class="p">,</span> <span class="n">Param_t</span><span class="p">(</span><span class="o">*</span><span class="n">scales</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">byref</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">TMPid</span><span class="p">)</span>
-	</div>
+	<span class="n">lib</span><span class="o">.</span><span class="n">halo_set_type</span><span class="p">(</span><span class="n">halotype</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">virtype</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">redshift</span><span class="p">,</span> <span class="n">Param_t</span><span class="p">(</span><span class="o">*</span><span class="n">scales</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">byref</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">TMPid</span><span class="p">)</span></div>
+	
 <div class="viewcode-block" id="Halo.set_param"><a class="viewcode-back" href="../api.html#oPDF.Halo.set_param">[docs]</a>  <span class="k">def</span> <span class="nf">set_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="o">=</span><span class="p">[</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">]):</span>
 	<span class="sd">&#39;&#39;&#39;set the parameters of the halo</span>
 <span class="sd">	</span>
@@ -269,12 +269,12 @@
 <span class="sd">	</span>
 <span class="sd">	this func can be used to check whether the loaded template </span>
 <span class="sd">	is the template of the current halo, just in case the template does not match&#39;&#39;&#39;</span>
-	<span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">get_current_TMPid</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">byref</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
-</div>
+	<span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">get_current_TMPid</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">byref</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+
 <div class="viewcode-block" id="Halo.isNFW"><a class="viewcode-back" href="../api.html#oPDF.Halo.isNFW">[docs]</a>  <span class="k">def</span> <span class="nf">isNFW</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39; return True if halo is NFW, False if not &#39;&#39;&#39;</span>
-	<span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">lib</span><span class="o">.</span><span class="n">isNFW</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">))</span>
-  </div>
+	<span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">lib</span><span class="o">.</span><span class="n">isNFW</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">))</span></div>
+  
 <div class="viewcode-block" id="Halo.vr_inv"><a class="viewcode-back" href="../api.html#oPDF.Halo.vr_inv">[docs]</a>  <span class="k">def</span> <span class="nf">vr_inv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">L</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39; inverse of radial velocity, 1/v_r, for a particle at r with binding energy E and angular momentum L&#39;&#39;&#39;</span>
 	<span class="n">vr2</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="n">E</span><span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">L</span><span class="o">/</span><span class="n">r</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">pot</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
@@ -284,26 +284,26 @@
 	<span class="k">except</span><span class="p">:</span>
 	  <span class="k">if</span> <span class="n">vr2</span><span class="o">&lt;=</span><span class="mi">0</span><span class="p">:</span>
 		<span class="n">ivr</span><span class="o">=</span><span class="mf">0.</span>
-	<span class="k">return</span> <span class="n">ivr</span>
+	<span class="k">return</span> <span class="n">ivr</span></div></div>
   
-<span class="c">#==tracer.h</span></div></div>
+<span class="c1">#==tracer.h</span>
 <span class="k">class</span> <span class="nc">Particle_t</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">Structure</span><span class="p">):</span>
-  <span class="n">_fields_</span><span class="o">=</span><span class="p">[(</span><span class="s">&#39;haloid&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span>
-		<span class="p">(</span><span class="s">&#39;subid&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span>
-		<span class="c">#(&#39;strmid&#39;, ctypes.c_int),</span>
-		<span class="p">(</span><span class="s">&#39;flag&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span>
-		<span class="p">(</span><span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-	    <span class="p">(</span><span class="s">&#39;r&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-	    <span class="p">(</span><span class="s">&#39;K&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span> <span class="c">#kinetic energy</span>
-	    <span class="p">(</span><span class="s">&#39;L2&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span><span class="c">#L^2</span>
-	    <span class="p">(</span><span class="s">&#39;L&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span> <span class="c">#angular momentum</span>
-	    <span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="o">*</span><span class="mi">3</span><span class="p">),</span>
-	    <span class="p">(</span><span class="s">&#39;v&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="o">*</span><span class="mi">3</span><span class="p">),</span>
-	    <span class="p">(</span><span class="s">&#39;E&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-	    <span class="p">(</span><span class="s">&#39;T&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-	    <span class="p">(</span><span class="s">&#39;vr&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-	    <span class="p">(</span><span class="s">&#39;theta&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-	    <span class="p">(</span><span class="s">&#39;rlim&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
+  <span class="n">_fields_</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;haloid&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span>
+		<span class="p">(</span><span class="s1">&#39;subid&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span>
+		<span class="c1">#(&#39;strmid&#39;, ctypes.c_int),</span>
+		<span class="p">(</span><span class="s1">&#39;flag&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span>
+		<span class="p">(</span><span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+	    <span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+	    <span class="p">(</span><span class="s1">&#39;K&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span> <span class="c1">#kinetic energy</span>
+	    <span class="p">(</span><span class="s1">&#39;L2&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span><span class="c1">#L^2</span>
+	    <span class="p">(</span><span class="s1">&#39;L&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span> <span class="c1">#angular momentum</span>
+	    <span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="o">*</span><span class="mi">3</span><span class="p">),</span>
+	    <span class="p">(</span><span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="o">*</span><span class="mi">3</span><span class="p">),</span>
+	    <span class="p">(</span><span class="s1">&#39;E&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+	    <span class="p">(</span><span class="s1">&#39;T&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+	    <span class="p">(</span><span class="s1">&#39;vr&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+	    <span class="p">(</span><span class="s1">&#39;theta&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+	    <span class="p">(</span><span class="s1">&#39;rlim&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
 	    <span class="p">]</span>
   
 <span class="n">Particle_p</span><span class="o">=</span><span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">Particle_t</span><span class="p">)</span>  
@@ -311,23 +311,23 @@
 <span class="k">class</span> <span class="nc">Tracer_t</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">Structure</span><span class="p">):</span>
   <span class="k">pass</span>
 <span class="n">Tracer_p</span><span class="o">=</span><span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">Tracer_t</span><span class="p">)</span>
-<span class="n">Tracer_t</span><span class="o">.</span><span class="n">_fields_</span><span class="o">=</span><span class="p">[(</span><span class="s">&#39;lnL&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-				   <span class="p">(</span><span class="s">&#39;nP&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span>
-				   <span class="p">(</span><span class="s">&#39;mP&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-				   <span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="n">Particle_p</span><span class="p">),</span>
-				   <span class="p">(</span><span class="s">&#39;nbin_r&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span>
-				   <span class="p">(</span><span class="s">&#39;FlagRLogBin&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span>
-				   <span class="p">(</span><span class="s">&#39;RadialCount&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">)),</span>
-				   <span class="p">(</span><span class="s">&#39;rmin&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-				   <span class="p">(</span><span class="s">&#39;rmax&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
-				   <span class="p">(</span><span class="s">&#39;proxybin&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="o">*</span><span class="mi">2</span><span class="p">),</span>
-				   <span class="p">(</span><span class="s">&#39;halo&#39;</span><span class="p">,</span> <span class="n">Halo</span><span class="p">),</span>
-				   <span class="p">(</span><span class="s">&#39;nView&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span>
-				   <span class="p">(</span><span class="s">&#39;ViewType&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_char</span><span class="p">),</span>
-				   <span class="p">(</span><span class="s">&#39;Views&#39;</span><span class="p">,</span> <span class="n">Tracer_p</span><span class="p">)</span>
-				  <span class="p">]</span><span class="c">#: Tracer fields</span>
+<span class="n">Tracer_t</span><span class="o">.</span><span class="n">_fields_</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;lnL&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+				   <span class="p">(</span><span class="s1">&#39;nP&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span>
+				   <span class="p">(</span><span class="s1">&#39;mP&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+				   <span class="p">(</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="n">Particle_p</span><span class="p">),</span>
+				   <span class="p">(</span><span class="s1">&#39;nbin_r&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span>
+				   <span class="p">(</span><span class="s1">&#39;FlagRLogBin&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span>
+				   <span class="p">(</span><span class="s1">&#39;RadialCount&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">)),</span>
+				   <span class="p">(</span><span class="s1">&#39;rmin&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+				   <span class="p">(</span><span class="s1">&#39;rmax&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span>
+				   <span class="p">(</span><span class="s1">&#39;proxybin&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="o">*</span><span class="mi">2</span><span class="p">),</span>
+				   <span class="p">(</span><span class="s1">&#39;halo&#39;</span><span class="p">,</span> <span class="n">Halo</span><span class="p">),</span>
+				   <span class="p">(</span><span class="s1">&#39;nView&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">),</span>
+				   <span class="p">(</span><span class="s1">&#39;ViewType&#39;</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_char</span><span class="p">),</span>
+				   <span class="p">(</span><span class="s1">&#39;Views&#39;</span><span class="p">,</span> <span class="n">Tracer_p</span><span class="p">)</span>
+				  <span class="p">]</span><span class="c1">#: Tracer fields</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">load_tracer_particles</span><span class="o">.</span><span class="n">restype</span><span class="o">=</span><span class="bp">None</span>
-<span class="n">lib</span><span class="o">.</span><span class="n">load_tracer_particles</span><span class="o">.</span><span class="n">argtypes</span><span class="o">=</span><span class="p">[</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_char_p</span><span class="p">,</span> <span class="n">Tracer_p</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">]</span>
+<span class="n">lib</span><span class="o">.</span><span class="n">load_tracer_particles</span><span class="o">.</span><span class="n">argtypes</span><span class="o">=</span><span class="p">[</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_char_p</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_char_p</span><span class="p">,</span> <span class="n">Tracer_p</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">]</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">cut_tracer_particles</span><span class="o">.</span><span class="n">restype</span><span class="o">=</span><span class="bp">None</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">cut_tracer_particles</span><span class="o">.</span><span class="n">argtypes</span><span class="o">=</span><span class="p">[</span><span class="n">Tracer_p</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">]</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">shuffle_tracer_particles</span><span class="o">.</span><span class="n">restype</span><span class="o">=</span><span class="bp">None</span>
@@ -367,24 +367,24 @@
 <span class="n">lib</span><span class="o">.</span><span class="n">tracer_set_orbits</span><span class="o">.</span><span class="n">restype</span><span class="o">=</span><span class="bp">None</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">tracer_set_orbits</span><span class="o">.</span><span class="n">argtypes</span><span class="o">=</span><span class="p">[</span><span class="n">Tracer_p</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">]</span>
 
-<span class="c">#==nfw.h</span>
+<span class="c1">#==nfw.h</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">NFW_like</span><span class="o">.</span><span class="n">restype</span><span class="o">=</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">NFW_like</span><span class="o">.</span><span class="n">argtypes</span><span class="o">=</span><span class="p">[</span><span class="n">Param_t</span><span class="p">,</span> <span class="n">Tracer_p</span><span class="p">]</span>
 
-<span class="c">#==template.h</span>
+<span class="c1">#==template.h</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">get_current_TMPid</span><span class="o">.</span><span class="n">restype</span><span class="o">=</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">get_current_TMPid</span><span class="o">.</span><span class="n">argtypes</span><span class="o">=</span><span class="p">[]</span>
 
-<span class="c">#==models.h</span>
+<span class="c1">#==models.h</span>
 <span class="k">class</span> <span class="nc">NamedValuesEst</span><span class="p">(</span><span class="n">NamedValues</span><span class="p">):</span>
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-	<span class="n">NamedValues</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">value</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+	<span class="n">NamedValues</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">value</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">need_phase</span><span class="o">=</span><span class="bp">True</span>
 <span class="k">class</span> <span class="nc">NamedEstimators</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">):</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">):</span>
 	<span class="k">for</span> <span class="n">number</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">names</span><span class="o">.</span><span class="n">split</span><span class="p">()):</span>
 	  <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">NamedValuesEst</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
-<span class="n">Estimators</span><span class="o">=</span><span class="n">NamedEstimators</span><span class="p">(</span><span class="s">&#39;RBinLike AD MeanPhase MeanPhaseRaw&#39;</span><span class="p">)</span>
+<span class="n">Estimators</span><span class="o">=</span><span class="n">NamedEstimators</span><span class="p">(</span><span class="s1">&#39;RBinLike AD MeanPhase MeanPhaseRaw&#39;</span><span class="p">)</span>
 <span class="sd">&#39;&#39;&#39;   Collection of dynamical estimators. It contains</span>
 
 <span class="sd">    - ``RBinLike``: binned radial likelihood. </span>
@@ -396,7 +396,7 @@
 <span class="sd">    - ``MeanPhaseRaw``: Normalized mean phase deviation :math:`\\bar{\\Theta}=(\\bar{\\theta}-0.5)/\\sigma_{\\theta}`\ , to be compared to a standard normal variable.</span>
 <span class="sd">    - ``MeanPhase``: :math:`\\bar{\\Theta}^2`\ , to be compared to a chi-square variable.&#39;&#39;&#39;</span>
 <span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="o">.</span><span class="n">need_phase</span><span class="o">=</span><span class="bp">False</span>
-<span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="o">.</span><span class="n">nbin</span><span class="o">=</span><span class="mi">20</span> <span class="c">#: The number of radial bins.</span>
+<span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="o">.</span><span class="n">nbin</span><span class="o">=</span><span class="mi">20</span> <span class="c1">#: The number of radial bins.</span>
 <span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="o">.</span><span class="n">logscale</span><span class="o">=</span><span class="bp">True</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">alloc_integration_space</span><span class="o">.</span><span class="n">restype</span><span class="o">=</span><span class="bp">None</span>
 <span class="n">lib</span><span class="o">.</span><span class="n">alloc_integration_space</span><span class="o">.</span><span class="n">argtypes</span><span class="o">=</span><span class="p">[]</span>
@@ -445,11 +445,11 @@
 <span class="sd">  :ivar rmin: lower radial cut.</span>
 <span class="sd">  :ivar rmax: upper radial cut.</span>
 <span class="sd">  &#39;&#39;&#39;</span>
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datafile</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">rmin</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">rmax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">AddHubbleFlow</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datafile</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">grpname</span><span class="o">=</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="n">rmin</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">rmax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">AddHubbleFlow</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">	:Initializer: </span>
 <span class="sd">	</span>
-<span class="sd">	loading a tracer from a datafile. </span>
+<span class="sd">	loading a tracer from a datafile. grpname specifies the path to the dataset inside the hdf5 file, in case the file contains multiple datasets.</span>
 <span class="sd">	</span>
 <span class="sd">	optionally, can apply radial cut given by rmin and rmax</span>
 <span class="sd">	</span>
@@ -459,52 +459,53 @@
 <span class="sd">	   The datafile should contain physical positions and velocities of the tracer particles, relative to the center of the halo.</span>
 <span class="sd">	   By default, the tracer particles will be shuffled after loading, for easy creation of subsamples by copying later.</span>
 <span class="sd">	   To keep the original ordering of particles, set shuffle=False&#39;&#39;&#39;</span>
-	<span class="n">Tracer_t</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+	<span class="n">Tracer_t</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="o">=</span><span class="n">ctypes</span><span class="o">.</span><span class="n">byref</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">nP</span><span class="o">=</span><span class="mi">0</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">nView</span><span class="o">=</span><span class="mi">0</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">halo</span><span class="o">=</span><span class="n">Halo</span><span class="p">()</span>
 	<span class="k">if</span> <span class="n">datafile</span><span class="o">!=</span><span class="bp">None</span><span class="p">:</span>
-	  <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span> <span class="n">AddHubbleFlow</span><span class="p">)</span>
+	  <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span> <span class="n">grpname</span><span class="p">,</span> <span class="n">AddHubbleFlow</span><span class="p">)</span>
 	  <span class="bp">self</span><span class="o">.</span><span class="n">radial_cut</span><span class="p">(</span><span class="n">rmin</span><span class="p">,</span><span class="n">rmax</span><span class="p">)</span>
 	  <span class="k">if</span> <span class="n">shuffle</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">shuffle</span><span class="p">()</span>
 
-  <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+  <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="k">return</span> <span class="bp">self</span>
   
-  <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+  <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">clean</span><span class="p">()</span>
 
   <span class="k">def</span> <span class="nf">__update_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;this should be called whenever the pointer self.P has changed</span>
 <span class="sd">	to point the numpy array to the new memory&#39;&#39;&#39;</span>
-	<span class="n">Parr</span><span class="o">=</span><span class="p">(</span><span class="n">Particle_t</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nP</span><span class="p">)</span><span class="o">.</span><span class="n">from_address</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">addressof</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">contents</span><span class="p">))</span> <span class="c">#struct array</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">Parr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">Parr</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span> <span class="c">#the numpy array</span>
+	<span class="n">Parr</span><span class="o">=</span><span class="p">(</span><span class="n">Particle_t</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nP</span><span class="p">)</span><span class="o">.</span><span class="n">from_address</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">addressof</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">contents</span><span class="p">))</span> <span class="c1">#struct array</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">Parr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">Parr</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">#the numpy array</span>
 
-<div class="viewcode-block" id="Tracer.load"><a class="viewcode-back" href="../api.html#oPDF.Tracer.load">[docs]</a>  <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datafile</span><span class="p">,</span> <span class="n">AddHubbleFlow</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
-	<span class="sd">&#39;&#39;&#39;load particles from datafile&#39;&#39;&#39;</span>
+<div class="viewcode-block" id="Tracer.load"><a class="viewcode-back" href="../api.html#oPDF.Tracer.load">[docs]</a>  <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datafile</span><span class="p">,</span> <span class="n">grpname</span><span class="o">=</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="n">AddHubbleFlow</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39;load particles from datafile.</span>
+<span class="sd">	If the datafile contains multiple datasets, `grpname` can be further used to specify the path of the dataset in the hdf5 file.&#39;&#39;&#39;</span>
 	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nP</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
 	  <span class="n">lib</span><span class="o">.</span><span class="n">free_tracer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span>
-	<span class="n">lib</span><span class="o">.</span><span class="n">load_tracer_particles</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">,</span> <span class="n">AddHubbleFlow</span><span class="p">)</span>
+	<span class="n">lib</span><span class="o">.</span><span class="n">load_tracer_particles</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span> <span class="n">grpname</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">,</span> <span class="n">AddHubbleFlow</span><span class="p">)</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">__update_array</span><span class="p">()</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">rmin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;r&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">rmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;r&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">rmin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">rmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span></div>
 
-  <span class="c">#def fill(x,v):</span>
-	<span class="c">#&#39;&#39;&#39;load particles from array. To be implemented.&#39;&#39;&#39;</span>
-	<span class="c">#FIXME.</span>
-	<span class="c">#pass</span>
-	</div>
+  <span class="c1">#def fill(x,v):</span>
+	<span class="c1">#&#39;&#39;&#39;load particles from array. To be implemented.&#39;&#39;&#39;</span>
+	<span class="c1">#FIXME.</span>
+	<span class="c1">#pass</span>
+	
 <div class="viewcode-block" id="Tracer.clean"><a class="viewcode-back" href="../api.html#oPDF.Tracer.clean">[docs]</a>  <span class="k">def</span> <span class="nf">clean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;release the C-allocated memory for the tracer&#39;&#39;&#39;</span>
-	<span class="c">#never define it as __del__ and rely on the garbage collector.</span>
-	<span class="c">#it&#39;s dangerous. gc may never call your __del__.</span>
-	<span class="c">#call it yourself.</span>
-	<span class="c">#print &quot;cleaning Tracer &quot;, id(self)</span>
-	<span class="n">lib</span><span class="o">.</span><span class="n">free_tracer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span>
-	<span class="c">#print self.nView</span>
-</div>
+	<span class="c1">#never define it as __del__ and rely on the garbage collector.</span>
+	<span class="c1">#it&#39;s dangerous. gc may never call your __del__.</span>
+	<span class="c1">#call it yourself.</span>
+	<span class="c1">#print &quot;cleaning Tracer &quot;, id(self)</span>
+	<span class="n">lib</span><span class="o">.</span><span class="n">free_tracer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span></div>
+	<span class="c1">#print self.nView</span>
+
 <div class="viewcode-block" id="Tracer.copy"><a class="viewcode-back" href="../api.html#oPDF.Tracer.copy">[docs]</a>  <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;create a subsample by copying n particles starting from offset.</span>
 <span class="sd">	if n==0, then copy all the particles starting from offset.</span>
@@ -515,8 +516,8 @@
 	<span class="n">newsample</span><span class="o">=</span><span class="n">Tracer</span><span class="p">()</span>
 	<span class="n">lib</span><span class="o">.</span><span class="n">copy_tracer_particles</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">offset</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">newsample</span><span class="o">.</span><span class="n">_pointer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span>
 	<span class="n">newsample</span><span class="o">.</span><span class="n">__update_array</span><span class="p">()</span>
-	<span class="k">return</span> <span class="n">newsample</span>
-  </div>
+	<span class="k">return</span> <span class="n">newsample</span></div>
+  
 <div class="viewcode-block" id="Tracer.select"><a class="viewcode-back" href="../api.html#oPDF.Tracer.select">[docs]</a>  <span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flags</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;select particles according to flags array, into a new sample. </span>
 <span class="sd">	</span>
@@ -525,21 +526,21 @@
 <span class="sd">	   - When doing dynamical tests, one should avoid distorting the radial distribution with any radial selection. One can still apply radial cuts, but should only do this with the :func:`radial_cut` function. So never use :func:`select` on data[&#39;r&#39;].&#39;&#39;&#39;</span>
 	   
 	<span class="n">sample</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
-	<span class="n">sample</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;flag&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">flags</span>
-	<span class="n">sample</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span> <span class="c"># __update_array() is called automatically</span>
-	<span class="k">return</span> <span class="n">sample</span>
-</div>
+	<span class="n">sample</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;flag&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">flags</span>
+	<span class="n">sample</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span> <span class="c1"># __update_array() is called automatically</span>
+	<span class="k">return</span> <span class="n">sample</span></div>
+
 <div class="viewcode-block" id="Tracer.squeeze"><a class="viewcode-back" href="../api.html#oPDF.Tracer.squeeze">[docs]</a>  <span class="k">def</span> <span class="nf">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;remove P.flag==0 (data[&#39;flag&#39;]==0) particles&#39;&#39;&#39;</span>
 	<span class="n">lib</span><span class="o">.</span><span class="n">squeeze_tracer_particles</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">__update_array</span><span class="p">()</span>
-	</div>
+	<span class="bp">self</span><span class="o">.</span><span class="n">__update_array</span><span class="p">()</span></div>
+	
 <div class="viewcode-block" id="Tracer.shuffle"><a class="viewcode-back" href="../api.html#oPDF.Tracer.shuffle">[docs]</a>  <span class="k">def</span> <span class="nf">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;shuffle particles randomly.</span>
 <span class="sd">	</span>
 <span class="sd">	seed: optional, seeds the random number generator for the shuffle&#39;&#39;&#39;</span>
-	<span class="n">lib</span><span class="o">.</span><span class="n">shuffle_tracer_particles</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_ulong</span><span class="p">(</span><span class="n">seed</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span>
-</div>
+	<span class="n">lib</span><span class="o">.</span><span class="n">shuffle_tracer_particles</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_ulong</span><span class="p">(</span><span class="n">seed</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="Tracer.sort"><a class="viewcode-back" href="../api.html#oPDF.Tracer.sort">[docs]</a>  <span class="k">def</span> <span class="nf">sort</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;sort the particles according to proxy</span>
 <span class="sd">	</span>
@@ -549,17 +550,17 @@
 <span class="sd">	  n=0 means sort all particles starting from offset.&#39;&#39;&#39;</span>
 	<span class="k">if</span> <span class="n">n</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
 	  <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nP</span><span class="o">-</span><span class="n">offset</span>
-	<span class="n">sort_func</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;flag&#39;</span><span class="p">:</span> <span class="n">lib</span><span class="o">.</span><span class="n">sort_part_flag</span><span class="p">,</span> <span class="s">&#39;E&#39;</span><span class="p">:</span> <span class="n">lib</span><span class="o">.</span><span class="n">sort_part_E</span><span class="p">,</span> <span class="s">&#39;L&#39;</span><span class="p">:</span> <span class="n">lib</span><span class="o">.</span><span class="n">sort_part_L</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">:</span> <span class="n">lib</span><span class="o">.</span><span class="n">sort_part_R</span><span class="p">}</span>
-	<span class="n">sort_func</span><span class="p">[</span><span class="n">proxy</span><span class="p">](</span><span class="n">ctypes</span><span class="o">.</span><span class="n">byref</span><span class="p">(</span><span class="n">Particle_t</span><span class="o">.</span><span class="n">from_buffer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">offset</span><span class="p">])),</span> <span class="n">n</span><span class="p">)</span>
-</div>
+	<span class="n">sort_func</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;flag&#39;</span><span class="p">:</span> <span class="n">lib</span><span class="o">.</span><span class="n">sort_part_flag</span><span class="p">,</span> <span class="s1">&#39;E&#39;</span><span class="p">:</span> <span class="n">lib</span><span class="o">.</span><span class="n">sort_part_E</span><span class="p">,</span> <span class="s1">&#39;L&#39;</span><span class="p">:</span> <span class="n">lib</span><span class="o">.</span><span class="n">sort_part_L</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">:</span> <span class="n">lib</span><span class="o">.</span><span class="n">sort_part_R</span><span class="p">}</span>
+	<span class="n">sort_func</span><span class="p">[</span><span class="n">proxy</span><span class="p">](</span><span class="n">ctypes</span><span class="o">.</span><span class="n">byref</span><span class="p">(</span><span class="n">Particle_t</span><span class="o">.</span><span class="n">from_buffer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">offset</span><span class="p">])),</span> <span class="n">n</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="Tracer.resample"><a class="viewcode-back" href="../api.html#oPDF.Tracer.resample">[docs]</a>  <span class="k">def</span> <span class="nf">resample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39; create a bootstrap sample (sampling with replacement) of the same size from tracer</span>
 <span class="sd">	return the new sample&#39;&#39;&#39;</span>
 	<span class="n">newsample</span><span class="o">=</span><span class="n">Tracer</span><span class="p">()</span>
 	<span class="n">lib</span><span class="o">.</span><span class="n">resample_tracer_particles</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">newsample</span><span class="o">.</span><span class="n">_pointer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span>
 	<span class="n">newsample</span><span class="o">.</span><span class="n">__update_array</span><span class="p">()</span>
-	<span class="k">return</span> <span class="n">newsample</span>
-</div>
+	<span class="k">return</span> <span class="n">newsample</span></div>
+
 <div class="viewcode-block" id="Tracer.radial_cut"><a class="viewcode-back" href="../api.html#oPDF.Tracer.radial_cut">[docs]</a>  <span class="k">def</span> <span class="nf">radial_cut</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rmin</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">rmax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;cut the tracer with bounds [rmin, rmax]. </span>
 <span class="sd">	if only rmin or rmax is given, the other bound is not changed.</span>
@@ -573,8 +574,8 @@
 	  <span class="k">if</span> <span class="n">rmax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
 		<span class="n">rmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rmax</span>
 	  <span class="n">lib</span><span class="o">.</span><span class="n">cut_tracer_particles</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">,</span> <span class="n">rmin</span><span class="p">,</span> <span class="n">rmax</span><span class="p">)</span>
-	  <span class="bp">self</span><span class="o">.</span><span class="n">__update_array</span><span class="p">()</span>
-	  </div>
+	  <span class="bp">self</span><span class="o">.</span><span class="n">__update_array</span><span class="p">()</span></div>
+	  
 <div class="viewcode-block" id="Tracer.radial_count"><a class="viewcode-back" href="../api.html#oPDF.Tracer.radial_count">[docs]</a>  <span class="k">def</span> <span class="nf">radial_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">logscale</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;bin the particles radially, to be used for radial likelihood calculation.</span>
 <span class="sd">	The histogram will be recorded in Tracer.RadialCount[]. </span>
@@ -584,19 +585,19 @@
 <span class="sd">	   :func:`dyn_fit`, :func:`scan_confidence` when the estimator is :const:`Estimators` ``.RBinLike``. In these cases,</span>
 <span class="sd">	   `nbin` and `logscale` will be determined according to :attr:`Estimators.RBinLike.nbin` and :attr:`Estimators.RBinLike.logscale`.</span>
 <span class="sd">	   So usually you do not need to call this function explicitly.&#39;&#39;&#39;</span>
-	<span class="n">lib</span><span class="o">.</span><span class="n">count_tracer_radial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">,</span> <span class="n">nbin</span><span class="p">,</span> <span class="n">logscale</span><span class="p">)</span>
-</div>
+	<span class="n">lib</span><span class="o">.</span><span class="n">count_tracer_radial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">,</span> <span class="n">nbin</span><span class="p">,</span> <span class="n">logscale</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="Tracer.predict_radial_count"><a class="viewcode-back" href="../api.html#oPDF.Tracer.predict_radial_count">[docs]</a>  <span class="k">def</span> <span class="nf">predict_radial_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">logscale</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;predict radial counts according to oPDF.</span>
 <span class="sd">	</span>
 <span class="sd">	:func:`set_phase` must have been called prior to calling this.</span>
 <span class="sd">	</span>
 <span class="sd">	return predicted counts.&#39;&#39;&#39;</span>
-	<span class="n">n</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">nbin</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="s">&#39;f8&#39;</span><span class="p">)</span>
+	<span class="n">n</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">nbin</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;f8&#39;</span><span class="p">)</span>
 	<span class="n">lib</span><span class="o">.</span><span class="n">predict_radial_count</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">)),</span> <span class="n">nbin</span><span class="p">,</span> <span class="n">logscale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span>
-	<span class="c">#lib.predict_radial_count(n.ctypes.data, nbin) //also work?</span>
-	<span class="k">return</span> <span class="n">n</span>
-  		</div>
+	<span class="c1">#lib.predict_radial_count(n.ctypes.data, nbin) //also work?</span>
+	<span class="k">return</span> <span class="n">n</span></div>
+  		
 <div class="viewcode-block" id="Tracer.gen_bin"><a class="viewcode-back" href="../api.html#oPDF.Tracer.gen_bin">[docs]</a>  <span class="k">def</span> <span class="nf">gen_bin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">bintype</span><span class="p">,</span><span class="n">nbin</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span><span class="n">logscale</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">equalcount</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;return bin edges. divide into nbin bins, with nbin+1 edges.&#39;&#39;&#39;</span>
 	<span class="n">proxy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">bintype</span><span class="p">]</span>
@@ -608,9 +609,9 @@
 			<span class="n">x</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">proxy</span><span class="p">[</span><span class="n">proxy</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">proxy</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span><span class="n">n</span><span class="p">)</span>
 		<span class="k">else</span><span class="p">:</span>
 			<span class="n">x</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">proxy</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span><span class="n">proxy</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span><span class="n">n</span><span class="p">)</span>
-	<span class="k">return</span> <span class="n">x</span>
-  </div>
-<div class="viewcode-block" id="Tracer.create_views"><a class="viewcode-back" href="../api.html#oPDF.Tracer.create_views">[docs]</a>  <span class="k">def</span> <span class="nf">create_views</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">):</span>
+	<span class="k">return</span> <span class="n">x</span></div>
+  
+<div class="viewcode-block" id="Tracer.create_views"><a class="viewcode-back" href="../api.html#oPDF.Tracer.create_views">[docs]</a>  <span class="k">def</span> <span class="nf">create_views</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s1">&#39;L&#39;</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;sort the particles according to proxy, </span>
 <span class="sd">	and divide into n equal-size subsamples sequentially.</span>
 <span class="sd">	these subsamples does not copy the particle data,</span>
@@ -618,34 +619,34 @@
 <span class="sd">	so they are called views, and can be accessed through Tracer.Views[i] from</span>
 <span class="sd">	the parent sample.</span>
 <span class="sd">	the energy need to have been set before calling if proxy is E&#39;&#39;&#39;</span>
-	<span class="n">lib</span><span class="o">.</span><span class="n">create_tracer_views</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">proxy</span><span class="p">)</span>
-	</div>
+	<span class="n">lib</span><span class="o">.</span><span class="n">create_tracer_views</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">proxy</span><span class="p">)</span></div>
+	
 <div class="viewcode-block" id="Tracer.destroy_views"><a class="viewcode-back" href="../api.html#oPDF.Tracer.destroy_views">[docs]</a>  <span class="k">def</span> <span class="nf">destroy_views</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;erase any views from a tracer&#39;&#39;&#39;</span>
-	<span class="n">lib</span><span class="o">.</span><span class="n">free_tracer_views</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span>  
-  </div>
+	<span class="n">lib</span><span class="o">.</span><span class="n">free_tracer_views</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span>  </div>
+  
 <div class="viewcode-block" id="Tracer.print_data"><a class="viewcode-back" href="../api.html#oPDF.Tracer.print_data">[docs]</a>  <span class="k">def</span> <span class="nf">print_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;print information of particle i&#39;&#39;&#39;</span>
-	<span class="k">print</span> <span class="s">&#39;---from python---&#39;</span>
-	<span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">nP</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%0x</span><span class="s">&#39;</span><span class="o">%</span><span class="n">ctypes</span><span class="o">.</span><span class="n">addressof</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">contents</span><span class="p">)</span>
+	<span class="k">print</span> <span class="s1">&#39;---from python---&#39;</span>
+	<span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">nP</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">%0x</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">ctypes</span><span class="o">.</span><span class="n">addressof</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">contents</span><span class="p">)</span>
 	<span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">r</span>
-	<span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">&#39;x&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">&#39;r&#39;</span><span class="p">]</span>
-	<span class="k">print</span> <span class="s">&#39;---  from C   ---&#39;</span>
+	<span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;x&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;r&#39;</span><span class="p">]</span>
+	<span class="k">print</span> <span class="s1">&#39;---  from C   ---&#39;</span>
 	<span class="n">lib</span><span class="o">.</span><span class="n">print_tracer_particle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
-	<span class="k">print</span> <span class="s">&#39;=================&#39;</span>
-</div>
+	<span class="k">print</span> <span class="s1">&#39;=================&#39;</span></div>
+
 <div class="viewcode-block" id="Tracer.NFW_like"><a class="viewcode-back" href="../api.html#oPDF.Tracer.NFW_like">[docs]</a>  <span class="k">def</span> <span class="nf">NFW_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]):</span>
 	<span class="sd">&#39;&#39;&#39;NFW log-likelihood. the halo should have been set to one of the NFW types before calling this.</span>
 <span class="sd">	</span>
 <span class="sd">	pars are the parameters to be passed to the halo.</span>
 <span class="sd">	</span>
 <span class="sd">	return log(likelihood)&#39;&#39;&#39;</span>
-	<span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">NFW_like</span><span class="p">(</span><span class="n">Param_t</span><span class="p">(</span><span class="o">*</span><span class="n">pars</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span>
-	</div>
+	<span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">NFW_like</span><span class="p">(</span><span class="n">Param_t</span><span class="p">(</span><span class="o">*</span><span class="n">pars</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span></div>
+	
 <div class="viewcode-block" id="Tracer.set_energy"><a class="viewcode-back" href="../api.html#oPDF.Tracer.set_energy">[docs]</a>  <span class="k">def</span> <span class="nf">set_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;determine particle energy in the attached halo&#39;&#39;&#39;</span>
-	<span class="n">lib</span><span class="o">.</span><span class="n">tracer_set_energy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span>
-</div>
+	<span class="n">lib</span><span class="o">.</span><span class="n">tracer_set_energy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="Tracer.set_orbits"><a class="viewcode-back" href="../api.html#oPDF.Tracer.set_orbits">[docs]</a>  <span class="k">def</span> <span class="nf">set_orbits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">set_phase</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;prepare particle orbits inside the attached halo</span>
 <span class="sd">	</span>
@@ -653,14 +654,14 @@
 <span class="sd">	  phase angle is needed by AD and MeanPhase estimators, but not by RBinLike</span>
 <span class="sd">	  see estimator.need_phase for each estimator.</span>
 <span class="sd">	&#39;&#39;&#39;</span>
-	<span class="n">lib</span><span class="o">.</span><span class="n">tracer_set_orbits</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">,</span> <span class="n">set_phase</span><span class="p">)</span>
-</div>
+	<span class="n">lib</span><span class="o">.</span><span class="n">tracer_set_orbits</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">,</span> <span class="n">set_phase</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="Tracer.set_phase"><a class="viewcode-back" href="../api.html#oPDF.Tracer.set_phase">[docs]</a>  <span class="k">def</span> <span class="nf">set_phase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">need_theta</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;prepare the phases for phase-related calculations such as like_eval or phase_density&#39;&#39;&#39;</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">set_param</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">set_energy</span><span class="p">()</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">set_orbits</span><span class="p">(</span><span class="n">need_theta</span><span class="p">)</span>
-</div>
+	<span class="bp">self</span><span class="o">.</span><span class="n">set_orbits</span><span class="p">(</span><span class="n">need_theta</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="Tracer.like_eval"><a class="viewcode-back" href="../api.html#oPDF.Tracer.like_eval">[docs]</a>  <span class="k">def</span> <span class="nf">like_eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">estimator</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;evaluate likelihood or TS with the given estimator. </span>
 <span class="sd">	</span>
@@ -672,8 +673,8 @@
 <span class="sd">	</span>
 <span class="sd">	:returns: the likelihood (if estimator= :const:`Estimators` ``.RBin``) or TS value (:math:`\\bar{\\Theta}`\  for :const:`Estimators` ``.MeanPhaseRaw``, :math:`\\bar{\\Theta}^2`\  for :const:`Estimators` ``.MeanPhase``, or AD distance for :const:`Estimators` ``.AD``).</span>
 <span class="sd">	&#39;&#39;&#39;</span>
-	<span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">like_eval</span><span class="p">(</span><span class="n">estimator</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span>
-  	</div>
+	<span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">like_eval</span><span class="p">(</span><span class="n">estimator</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span></div>
+  	
 <div class="viewcode-block" id="Tracer.likelihood"><a class="viewcode-back" href="../api.html#oPDF.Tracer.likelihood">[docs]</a>  <span class="k">def</span> <span class="nf">likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">estimator</span><span class="o">=</span><span class="n">Estimators</span><span class="o">.</span><span class="n">MeanPhaseRaw</span><span class="p">,</span> <span class="n">auto_rbin</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;calculate likelihood or test-statistic.</span>
 <span class="sd">	it automatically prepares orbits and then calculates the likelihood or TS</span>
@@ -688,9 +689,9 @@
 	<span class="k">if</span> <span class="n">auto_rbin</span> <span class="ow">and</span> <span class="n">estimator</span><span class="o">==</span><span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="p">:</span>
 	  <span class="bp">self</span><span class="o">.</span><span class="n">radial_count</span><span class="p">(</span><span class="n">estimator</span><span class="o">.</span><span class="n">nbin</span><span class="p">,</span> <span class="n">estimator</span><span class="o">.</span><span class="n">logscale</span><span class="p">)</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">set_phase</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">estimator</span><span class="o">.</span><span class="n">need_phase</span><span class="p">)</span>
-	<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">like_eval</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span>
-</div>
-<div class="viewcode-block" id="Tracer.create_nested_views"><a class="viewcode-back" href="../api.html#oPDF.Tracer.create_nested_views">[docs]</a>  <span class="k">def</span> <span class="nf">create_nested_views</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">viewtypes</span><span class="o">=</span><span class="s">&#39;EL&#39;</span><span class="p">,</span> <span class="n">nbins</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">]):</span>
+	<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">like_eval</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Tracer.create_nested_views"><a class="viewcode-back" href="../api.html#oPDF.Tracer.create_nested_views">[docs]</a>  <span class="k">def</span> <span class="nf">create_nested_views</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">viewtypes</span><span class="o">=</span><span class="s1">&#39;EL&#39;</span><span class="p">,</span> <span class="n">nbins</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">]):</span>
 	<span class="sd">&#39;&#39;&#39;create nested views, i.e., create views according to first proxy,</span>
 <span class="sd">	then create sub-views for each view according to the second proxy and so on.</span>
 <span class="sd">	</span>
@@ -703,8 +704,8 @@
 	  <span class="n">nbins</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">nbins</span><span class="p">)</span>
 	<span class="k">except</span><span class="p">:</span>
 	  <span class="n">nbins</span><span class="o">=</span><span class="p">[</span><span class="n">nbins</span><span class="p">]</span>
-	<span class="n">lib</span><span class="o">.</span><span class="n">create_nested_views</span><span class="p">((</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="o">*</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nbins</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">))(</span><span class="o">*</span><span class="n">nbins</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_char_p</span><span class="p">(</span><span class="n">viewtypes</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span>
-  </div>
+	<span class="n">lib</span><span class="o">.</span><span class="n">create_nested_views</span><span class="p">((</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="o">*</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nbins</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">))(</span><span class="o">*</span><span class="n">nbins</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_char_p</span><span class="p">(</span><span class="n">viewtypes</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span></div>
+  
 <div class="viewcode-block" id="Tracer.nested_views_like"><a class="viewcode-back" href="../api.html#oPDF.Tracer.nested_views_like">[docs]</a>  <span class="k">def</span> <span class="nf">nested_views_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">Estimators</span><span class="o">.</span><span class="n">AD</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;evaluate likelihood in at the deepest views, and return the sum of them.</span>
 <span class="sd">	The likelihood for each view is also availabel in Views[i].lnL&#39;&#39;&#39;</span>
@@ -713,8 +714,8 @@
 	<span class="k">if</span> <span class="n">estimator</span><span class="o">==</span><span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="p">:</span>
 	  <span class="n">nbin_r</span><span class="o">=</span><span class="n">estimator</span><span class="o">.</span><span class="n">nbin</span>
 	  <span class="n">logscale</span><span class="o">=</span><span class="n">estimator</span><span class="o">.</span><span class="n">logscale</span>
-	<span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">nested_views_like</span><span class="p">(</span><span class="n">estimator</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">,</span> <span class="n">nbin_r</span><span class="p">,</span> <span class="n">logscale</span><span class="p">)</span>
-  </div>
+	<span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">nested_views_like</span><span class="p">(</span><span class="n">estimator</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">,</span> <span class="n">nbin_r</span><span class="p">,</span> <span class="n">logscale</span><span class="p">)</span></div>
+  
 <div class="viewcode-block" id="Tracer.scan_like"><a class="viewcode-back" href="../api.html#oPDF.Tracer.scan_like">[docs]</a>  <span class="k">def</span> <span class="nf">scan_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">estimator</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;scan a likelihood surface.</span>
 <span class="sd">	</span>
@@ -726,8 +727,8 @@
 	<span class="k">if</span> <span class="n">estimator</span><span class="o">==</span><span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="p">:</span>
 	  <span class="bp">self</span><span class="o">.</span><span class="n">radial_count</span><span class="p">(</span><span class="n">estimator</span><span class="o">.</span><span class="n">nbin</span><span class="p">,</span> <span class="n">estimator</span><span class="o">.</span><span class="n">logscale</span><span class="p">)</span>
 	<span class="n">z</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="p">([</span><span class="n">m</span><span class="p">,</span><span class="n">c</span><span class="p">],</span> <span class="n">estimator</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">x</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">y</span><span class="p">]</span>
-	<span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)],</span> <span class="n">order</span><span class="o">=</span><span class="s">&quot;F&quot;</span><span class="p">)</span>
-  </div>
+	<span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)],</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;F&quot;</span><span class="p">)</span></div>
+  
 <div class="viewcode-block" id="Tracer.scan_confidence"><a class="viewcode-back" href="../api.html#oPDF.Tracer.scan_confidence">[docs]</a>  <span class="k">def</span> <span class="nf">scan_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">estimator</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">ngrids</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">],</span> <span class="n">dx</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="n">logscale</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">maxlike</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;scan significance levels around parameter value x0.</span>
 <span class="sd">	</span>
@@ -766,9 +767,9 @@
 	  <span class="n">sig</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">like</span><span class="p">)</span>
 	<span class="k">elif</span> <span class="n">estimator</span><span class="o">==</span><span class="n">Estimators</span><span class="o">.</span><span class="n">MeanPhaseRaw</span><span class="p">:</span>
 	  <span class="n">sig</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">like</span><span class="p">)</span>
-	<span class="k">return</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">sig</span><span class="p">,</span><span class="n">like</span>
-    </div>
-<div class="viewcode-block" id="Tracer.TSprof"><a class="viewcode-back" href="../api.html#oPDF.Tracer.TSprof">[docs]</a>  <span class="k">def</span> <span class="nf">TSprof</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">,</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">Estimators</span><span class="o">.</span><span class="n">MeanPhaseRaw</span><span class="p">):</span>
+	<span class="k">return</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">sig</span><span class="p">,</span><span class="n">like</span></div>
+    
+<div class="viewcode-block" id="Tracer.TSprof"><a class="viewcode-back" href="../api.html#oPDF.Tracer.TSprof">[docs]</a>  <span class="k">def</span> <span class="nf">TSprof</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s1">&#39;L&#39;</span><span class="p">,</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">Estimators</span><span class="o">.</span><span class="n">MeanPhaseRaw</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;calculate the likelihood inside equal-count bins of proxy.</span>
 <span class="sd">	</span>
 <span class="sd">	return the loglike or f.o.m. for the estimator in each bin, and the bin edges.</span>
@@ -778,16 +779,16 @@
 <span class="sd">	to get the likelihood and bins in each node&#39;&#39;&#39;</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">set_param</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">set_energy</span><span class="p">()</span>
-	<span class="k">if</span> <span class="n">proxy</span><span class="o">!=</span><span class="s">&#39;r&#39;</span><span class="p">:</span> <span class="c">#r-view orbits will be updated internally.</span>
+	<span class="k">if</span> <span class="n">proxy</span><span class="o">!=</span><span class="s1">&#39;r&#39;</span><span class="p">:</span> <span class="c1">#r-view orbits will be updated internally.</span>
 	  <span class="bp">self</span><span class="o">.</span><span class="n">set_orbits</span><span class="p">()</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">create_nested_views</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span> <span class="n">nbin</span><span class="p">)</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">nested_views_like</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span>
 	<span class="n">ts</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">Views</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lnL</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nView</span><span class="p">)]</span>
 	<span class="n">ts</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ts</span><span class="p">)</span>
 	<span class="n">x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gen_bin</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span> <span class="n">nbin</span><span class="p">,</span> <span class="n">equalcount</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-	<span class="k">return</span> <span class="n">ts</span><span class="p">,</span><span class="n">x</span>
-  </div>
-<div class="viewcode-block" id="Tracer.plot_TSprof"><a class="viewcode-back" href="../api.html#oPDF.Tracer.plot_TSprof">[docs]</a>  <span class="k">def</span> <span class="nf">plot_TSprof</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">,</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">Estimators</span><span class="o">.</span><span class="n">MeanPhaseRaw</span><span class="p">,</span> <span class="n">xtype</span><span class="o">=</span><span class="s">&#39;percent-phys&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s">&#39;r-&#39;</span><span class="p">):</span>
+	<span class="k">return</span> <span class="n">ts</span><span class="p">,</span><span class="n">x</span></div>
+  
+<div class="viewcode-block" id="Tracer.plot_TSprof"><a class="viewcode-back" href="../api.html#oPDF.Tracer.plot_TSprof">[docs]</a>  <span class="k">def</span> <span class="nf">plot_TSprof</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s1">&#39;L&#39;</span><span class="p">,</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">Estimators</span><span class="o">.</span><span class="n">MeanPhaseRaw</span><span class="p">,</span> <span class="n">xtype</span><span class="o">=</span><span class="s1">&#39;percent-phys&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;r-&#39;</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;plot the TS profile in equal-count bins of proxy.</span>
 <span class="sd">	</span>
 <span class="sd">	xtype: can be one of &#39;percent&#39;, &#39;physical&#39;, and &#39;percent-phys&#39;. </span>
@@ -801,53 +802,53 @@
 	<span class="n">ts</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">TSprof</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">proxy</span><span class="p">,</span> <span class="n">nbin</span><span class="p">,</span> <span class="n">estimator</span><span class="p">)</span>
 	<span class="n">percents</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nbin</span><span class="p">)</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)</span><span class="o">/</span><span class="n">nbin</span><span class="o">*</span><span class="mi">100</span>
 	<span class="n">xmid</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span><span class="o">/</span><span class="mi">2</span>
-	<span class="k">if</span> <span class="n">xtype</span><span class="o">==</span><span class="s">&#39;percent&#39;</span><span class="p">:</span>
+	<span class="k">if</span> <span class="n">xtype</span><span class="o">==</span><span class="s1">&#39;percent&#39;</span><span class="p">:</span>
 	  <span class="n">h</span><span class="p">,</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">percents</span><span class="p">,</span> <span class="n">ts</span><span class="p">,</span> <span class="n">linestyle</span><span class="p">)</span>
-	  <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Percentile in &#39;</span><span class="o">+</span><span class="n">proxy</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">xtype</span><span class="o">==</span><span class="s">&#39;percent-phys&#39;</span><span class="p">:</span>
+	  <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Percentile in &#39;</span><span class="o">+</span><span class="n">proxy</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">xtype</span><span class="o">==</span><span class="s1">&#39;percent-phys&#39;</span><span class="p">:</span>
 	  <span class="n">h</span><span class="p">,</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">percents</span><span class="p">,</span> <span class="n">ts</span><span class="p">,</span> <span class="n">linestyle</span><span class="p">)</span>
-	  <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">percents</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">3</span><span class="p">],[</span><span class="s">&#39;</span><span class="si">%.1f</span><span class="s">&#39;</span><span class="o">%</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">x</span><span class="p">][</span><span class="mi">1</span><span class="p">::</span><span class="mi">3</span><span class="p">])</span>
-	  <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">r&#39;$\log(&#39;</span><span class="o">+</span><span class="n">proxy</span><span class="o">+</span><span class="s">&#39;)$&#39;</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">xtype</span><span class="o">==</span><span class="s">&#39;phys&#39;</span><span class="p">:</span>
+	  <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">percents</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">3</span><span class="p">],[</span><span class="s1">&#39;</span><span class="si">%.1f</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">x</span><span class="p">][</span><span class="mi">1</span><span class="p">::</span><span class="mi">3</span><span class="p">])</span>
+	  <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\log(&#39;</span><span class="o">+</span><span class="n">proxy</span><span class="o">+</span><span class="s1">&#39;)$&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">xtype</span><span class="o">==</span><span class="s1">&#39;phys&#39;</span><span class="p">:</span>
 	  <span class="n">h</span><span class="p">,</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">xmid</span><span class="p">),</span> <span class="n">ts</span><span class="p">,</span> <span class="n">linestyle</span><span class="p">)</span>
-	  <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">r&#39;$\log(</span><span class="si">%s</span><span class="s">)$&#39;</span><span class="o">%</span><span class="n">proxy</span><span class="p">)</span>
+	  <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\log(</span><span class="si">%s</span><span class="s1">)$&#39;</span><span class="o">%</span><span class="n">proxy</span><span class="p">)</span>
 	<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span>
 	<span class="k">if</span> <span class="n">estimator</span><span class="o">==</span><span class="n">Estimators</span><span class="o">.</span><span class="n">MeanPhaseRaw</span><span class="p">:</span>
-	  <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="s">&#39;k--&#39;</span><span class="p">)</span>
-	<span class="k">return</span> <span class="n">h</span> 
-	</div>
-<div class="viewcode-block" id="Tracer.TSprofCum"><a class="viewcode-back" href="../api.html#oPDF.Tracer.TSprofCum">[docs]</a>  <span class="k">def</span> <span class="nf">TSprofCum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s">&#39;r&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">Estimators</span><span class="o">.</span><span class="n">AD</span><span class="p">):</span>
+	  <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;k--&#39;</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">h</span> </div>
+	
+<div class="viewcode-block" id="Tracer.TSprofCum"><a class="viewcode-back" href="../api.html#oPDF.Tracer.TSprofCum">[docs]</a>  <span class="k">def</span> <span class="nf">TSprofCum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">Estimators</span><span class="o">.</span><span class="n">AD</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;cumulative TS profile.</span>
 <span class="sd">	reuturn bin edges, ts, counts&#39;&#39;&#39;</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">set_param</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">set_energy</span><span class="p">()</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">proxy</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">proxy</span><span class="o">==</span><span class="s">&#39;E&#39;</span><span class="p">:</span>
-	  <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="c">#reverse the order</span>
+	<span class="k">if</span> <span class="n">proxy</span><span class="o">==</span><span class="s1">&#39;E&#39;</span><span class="p">:</span>
+	  <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="c1">#reverse the order</span>
 	<span class="n">n</span><span class="p">,</span><span class="n">bins</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">proxy</span><span class="p">],</span><span class="n">bins</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">proxy</span><span class="o">==</span><span class="s">&#39;E&#39;</span><span class="p">:</span>
+	<span class="k">if</span> <span class="n">proxy</span><span class="o">==</span><span class="s1">&#39;E&#39;</span><span class="p">:</span>
 	  <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
 	<span class="k">else</span><span class="p">:</span>
 	  <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
 	<span class="n">ts</span><span class="o">=</span><span class="p">[]</span>
-	<span class="k">if</span> <span class="n">proxy</span><span class="o">!=</span><span class="s">&#39;r&#39;</span><span class="p">:</span>
+	<span class="k">if</span> <span class="n">proxy</span><span class="o">!=</span><span class="s1">&#39;r&#39;</span><span class="p">:</span>
 	  <span class="bp">self</span><span class="o">.</span><span class="n">set_orbits</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
 	<span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bins</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
 	  <span class="k">if</span> <span class="n">n</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
 		<span class="n">y</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 	  <span class="k">else</span><span class="p">:</span>
 		<span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">as</span> <span class="n">s</span><span class="p">:</span>
-		  <span class="k">if</span> <span class="n">proxy</span><span class="o">!=</span><span class="s">&#39;r&#39;</span><span class="p">:</span>
+		  <span class="k">if</span> <span class="n">proxy</span><span class="o">!=</span><span class="s1">&#39;r&#39;</span><span class="p">:</span>
 			<span class="n">y</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">like_eval</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">estimator</span><span class="p">)</span>
 		  <span class="k">else</span><span class="p">:</span>
 			<span class="n">s</span><span class="o">.</span><span class="n">rmax</span><span class="o">=</span><span class="n">x</span>
 			<span class="n">s</span><span class="o">.</span><span class="n">set_orbits</span><span class="p">()</span>
 			<span class="n">y</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">like_eval</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span><span class="n">estimator</span><span class="p">)</span>
 	  <span class="n">ts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">proxy</span><span class="o">==</span><span class="s">&#39;E&#39;</span><span class="p">:</span>
+	<span class="k">if</span> <span class="n">proxy</span><span class="o">==</span><span class="s1">&#39;E&#39;</span><span class="p">:</span>
 	  <span class="n">ts</span><span class="o">=</span><span class="n">ts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-	<span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bins</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ts</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-</div>
+	<span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bins</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ts</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">n</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="Tracer.solve_meanphase"><a class="viewcode-back" href="../api.html#oPDF.Tracer.solve_meanphase">[docs]</a>  <span class="k">def</span> <span class="nf">solve_meanphase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;find the halo parameter x at which MeanPhaseRaw(x)=y0.</span>
 <span class="sd">	</span>
@@ -874,7 +875,7 @@
 	<span class="n">likeraw</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="p">([</span><span class="n">m</span><span class="p">],</span> <span class="n">Estimators</span><span class="o">.</span><span class="n">MeanPhaseRaw</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span><span class="o">-</span><span class="n">y0</span>
 	<span class="n">likeln</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">likeraw</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
 	<span class="n">like</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">likeraw</span><span class="p">(</span><span class="n">m</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
-	<span class="c">#initialize the interval bracketing the root</span>
+	<span class="c1">#initialize the interval bracketing the root</span>
 	<span class="n">d</span><span class="o">=</span><span class="mf">2.</span>
 	<span class="n">a</span><span class="o">=</span><span class="p">[</span><span class="n">x0</span><span class="o">*</span><span class="n">d</span><span class="p">,</span><span class="n">x0</span><span class="p">]</span>
 	<span class="n">f</span><span class="o">=</span><span class="p">[</span><span class="n">likeraw</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">a</span><span class="p">]</span>
@@ -885,32 +886,32 @@
 	<span class="n">niter</span><span class="o">=</span><span class="mi">0</span>
 	<span class="k">while</span> <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">niter</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">:</span>
 	  <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-	  <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*=</span><span class="n">d</span> <span class="c">#push a[0] toward root</span>
+	  <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*=</span><span class="n">d</span> <span class="c1">#push a[0] toward root</span>
 	  <span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 	  <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="n">likeraw</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 	  <span class="n">niter</span><span class="o">+=</span><span class="mi">1</span>
 	<span class="k">if</span> <span class="n">niter</span><span class="o">&gt;=</span><span class="mi">10</span><span class="p">:</span>
 	  <span class="k">if</span> <span class="n">verbose</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
-		<span class="k">print</span> <span class="s">&quot;Failed to bracket root after </span><span class="si">%d</span><span class="s"> iterations; now search for func minimum instead.&quot;</span><span class="o">%</span><span class="n">niter</span>
+		<span class="k">print</span> <span class="s2">&quot;Failed to bracket root after </span><span class="si">%d</span><span class="s2"> iterations; now search for func minimum instead.&quot;</span><span class="o">%</span><span class="n">niter</span>
 	  <span class="n">result</span><span class="o">=</span><span class="n">fmin</span><span class="p">(</span><span class="n">like</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">full_output</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">disp</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
-	  <span class="n">success</span><span class="o">=</span><span class="mi">2</span> <span class="c">#retreat to fmin</span>
+	  <span class="n">success</span><span class="o">=</span><span class="mi">2</span> <span class="c1">#retreat to fmin</span>
 	  <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
-		<span class="n">success</span><span class="o">=</span><span class="mi">0</span> <span class="c">#failed to converge</span>
+		<span class="n">success</span><span class="o">=</span><span class="mi">0</span> <span class="c1">#failed to converge</span>
 	  <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">success</span>
 	
-	<span class="c">#find the root</span>
-	<span class="c">#print a,f, np.log(a), [likeln(np.log(a[0])), likeln(np.log(a[1]))]</span>
+	<span class="c1">#find the root</span>
+	<span class="c1">#print a,f, np.log(a), [likeln(np.log(a[0])), likeln(np.log(a[1]))]</span>
 	<span class="n">x</span><span class="o">=</span><span class="n">brentq</span><span class="p">(</span><span class="n">likeln</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
 	<span class="n">x0</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-	<span class="c">#x=newton(likeln, np.log(x0),tol=1e-4)</span>
+	<span class="c1">#x=newton(likeln, np.log(x0),tol=1e-4)</span>
 	<span class="n">y</span><span class="o">=</span><span class="n">likeln</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 	<span class="n">x</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-	<span class="c">#x=brentq(likeraw, a[0],a[1], rtol=1e-2)</span>
-	<span class="c">#x=newton(likeraw, x0,tol=1e-4)</span>
-	<span class="c">#y=likeraw(x)</span>
+	<span class="c1">#x=brentq(likeraw, a[0],a[1], rtol=1e-2)</span>
+	<span class="c1">#x=newton(likeraw, x0,tol=1e-4)</span>
+	<span class="c1">#y=likeraw(x)</span>
 	<span class="n">success</span><span class="o">=</span><span class="nb">abs</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">&lt;</span><span class="mf">1e-2</span>
-	<span class="k">return</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">success</span>
-  </div>
+	<span class="k">return</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">success</span></div>
+  
 <div class="viewcode-block" id="Tracer.mark_phase_mass"><a class="viewcode-back" href="../api.html#oPDF.Tracer.mark_phase_mass">[docs]</a>  <span class="k">def</span> <span class="nf">mark_phase_mass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m0</span><span class="o">=</span><span class="mf">100.</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39; estimate mass :math:`M(&lt;r_c)` using the &quot;PhaseMark&quot; method.</span>
 <span class="sd">	</span>
@@ -935,7 +936,7 @@
 <span class="sd">		  flagu: whether mu has converged</span>
 <span class="sd">	&#39;&#39;&#39;</span>
 	
-	<span class="n">rmed</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;r&#39;</span><span class="p">])</span>
+	<span class="n">rmed</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">])</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">HaloTypes</span><span class="o">.</span><span class="n">PointM</span><span class="p">)</span>
 	
 	<span class="n">result</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">solve_meanphase</span><span class="p">(</span><span class="n">m0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
@@ -952,21 +953,21 @@
 	<span class="k">if</span> <span class="n">verbose</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
 	  <span class="k">print</span> <span class="n">result</span>
 	<span class="n">k</span><span class="o">=</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-	<span class="c">#kl=self.solve_meanphase(k, -1.)[0]</span>
-	<span class="c">#ku=self.solve_meanphase(k, 1.)[0]</span>
+	<span class="c1">#kl=self.solve_meanphase(k, -1.)[0]</span>
+	<span class="c1">#ku=self.solve_meanphase(k, 1.)[0]</span>
 	
 	<span class="n">r</span><span class="o">=</span><span class="n">m</span><span class="o">/</span><span class="n">k</span>
-	<span class="c">#rl,ru=rlim</span>
-	<span class="c">#rl=max(ml/ku,rlim[0])</span>
-	<span class="c">#ru=min(mu/kl,rlim[1])</span>
+	<span class="c1">#rl,ru=rlim</span>
+	<span class="c1">#rl=max(ml/ku,rlim[0])</span>
+	<span class="c1">#ru=min(mu/kl,rlim[1])</span>
 	
 	<span class="n">flag</span><span class="o">=</span><span class="n">flag1</span><span class="o">&amp;</span><span class="n">flag2</span>
 	<span class="k">if</span> <span class="n">flag</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
-	  <span class="n">flag</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">flag1</span><span class="p">,</span> <span class="n">flag2</span><span class="p">)</span> <span class="c">#in case any of them equal to 2</span>
+	  <span class="n">flag</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">flag1</span><span class="p">,</span> <span class="n">flag2</span><span class="p">)</span> <span class="c1">#in case any of them equal to 2</span>
 	  
-	<span class="k">return</span> <span class="n">r</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">ml</span><span class="p">,</span><span class="n">mu</span><span class="p">,</span><span class="n">flag</span><span class="p">,</span><span class="n">flagl</span><span class="p">,</span><span class="n">flagu</span> 
-	</div>
-<div class="viewcode-block" id="Tracer.phase_mass_bin"><a class="viewcode-back" href="../api.html#oPDF.Tracer.phase_mass_bin">[docs]</a>  <span class="k">def</span> <span class="nf">phase_mass_bin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xlim</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s">&#39;r&#39;</span><span class="p">,</span> <span class="n">m0</span><span class="o">=</span><span class="mf">100.</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+	<span class="k">return</span> <span class="n">r</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">ml</span><span class="p">,</span><span class="n">mu</span><span class="p">,</span><span class="n">flag</span><span class="p">,</span><span class="n">flagl</span><span class="p">,</span><span class="n">flagu</span> </div>
+	
+<div class="viewcode-block" id="Tracer.phase_mass_bin"><a class="viewcode-back" href="../api.html#oPDF.Tracer.phase_mass_bin">[docs]</a>  <span class="k">def</span> <span class="nf">phase_mass_bin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xlim</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">m0</span><span class="o">=</span><span class="mf">100.</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39; estimate mass :math:`M(&lt;r_c)` for tracer with property &quot;proxy&quot; selected in between xlim, using the &quot;PhaseMark&quot; method.</span>
 <span class="sd">	</span>
 <span class="sd">	:param xlim: the range of property to select the tracer.</span>
@@ -991,16 +992,16 @@
 <span class="sd">		  flagu: whether mu has converged</span>
 <span class="sd">	&#39;&#39;&#39;</span>
 	
-	<span class="k">if</span> <span class="n">proxy</span> <span class="ow">in</span> <span class="s">&#39;rR&#39;</span><span class="p">:</span>
+	<span class="k">if</span> <span class="n">proxy</span> <span class="ow">in</span> <span class="s1">&#39;rR&#39;</span><span class="p">:</span>
 	  <span class="n">S</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 	  <span class="n">S</span><span class="o">.</span><span class="n">radial_cut</span><span class="p">(</span><span class="n">xlim</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xlim</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 	<span class="k">else</span><span class="p">:</span>
 	  <span class="n">S</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">select</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">proxy</span><span class="p">]</span><span class="o">&gt;</span><span class="n">xlim</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">&amp;</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">proxy</span><span class="p">]</span><span class="o">&lt;</span><span class="n">xlim</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
 	<span class="n">out</span><span class="o">=</span><span class="n">S</span><span class="o">.</span><span class="n">mark_phase_mass</span><span class="p">(</span><span class="n">m0</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
 	<span class="n">S</span><span class="o">.</span><span class="n">clean</span><span class="p">()</span>
-	<span class="k">return</span> <span class="n">out</span>
-  </div>
-<div class="viewcode-block" id="Tracer.phase_mark_fit"><a class="viewcode-back" href="../api.html#oPDF.Tracer.phase_mark_fit">[docs]</a>  <span class="k">def</span> <span class="nf">phase_mark_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par0</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s">&#39;r&#39;</span><span class="p">,</span> <span class="n">equalcount</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+	<span class="k">return</span> <span class="n">out</span></div>
+  
+<div class="viewcode-block" id="Tracer.phase_mark_fit"><a class="viewcode-back" href="../api.html#oPDF.Tracer.phase_mark_fit">[docs]</a>  <span class="k">def</span> <span class="nf">phase_mark_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">par0</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">nbin</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">equalcount</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;fit halo potential with phase mark. The halo of the tracer need to be initialized to the desired type before fitting.</span>
 <span class="sd">	</span>
 <span class="sd">	:param par0: initial parameter values. len(par0) also gives the number of free parameters.</span>
@@ -1030,9 +1031,9 @@
 	<span class="k">def</span> <span class="nf">halomass</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="o">*</span><span class="n">pars</span><span class="p">):</span>
 	  <span class="bp">self</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">set_param</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
 	  <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">mass</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
-	<span class="n">par</span><span class="p">,</span><span class="n">Cov</span><span class="o">=</span><span class="n">curve_fit</span><span class="p">(</span><span class="n">halomass</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">flag</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="n">flag</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sig</span><span class="p">[</span><span class="n">flag</span><span class="p">],</span> <span class="n">p0</span><span class="o">=</span><span class="n">par0</span><span class="p">,</span> <span class="n">absolute_sigma</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="c">#need scipy version &gt;0.15.1</span>
-	<span class="k">return</span> <span class="n">par</span><span class="p">,</span><span class="n">Cov</span><span class="p">,</span><span class="n">data</span>
-  </div>
+	<span class="n">par</span><span class="p">,</span><span class="n">Cov</span><span class="o">=</span><span class="n">curve_fit</span><span class="p">(</span><span class="n">halomass</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">flag</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="n">flag</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sig</span><span class="p">[</span><span class="n">flag</span><span class="p">],</span> <span class="n">p0</span><span class="o">=</span><span class="n">par0</span><span class="p">,</span> <span class="n">absolute_sigma</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="c1">#need scipy version &gt;0.15.1</span>
+	<span class="k">return</span> <span class="n">par</span><span class="p">,</span><span class="n">Cov</span><span class="p">,</span><span class="n">data</span></div>
+  
 <div class="viewcode-block" id="Tracer.NFW_fit"><a class="viewcode-back" href="../api.html#oPDF.Tracer.NFW_fit">[docs]</a>  <span class="k">def</span> <span class="nf">NFW_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">minuittol</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39; to fit an NFW density PDF with maximum likelihood.</span>
 <span class="sd">	</span>
@@ -1054,17 +1055,17 @@
 <span class="sd">	   remember to adjust the mP of the sample to be mP0*n0/n, so that total mass is conserved.</span>
 <span class="sd">	&#39;&#39;&#39;</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">isNFW</span><span class="p">():</span>
-	  <span class="k">print</span> <span class="s">&quot;Error: not an NFW halo. use Tracer.halo.set_type() to set halo type to NFW before NFW_fit()&quot;</span>
+	  <span class="k">print</span> <span class="s2">&quot;Error: not an NFW halo. use Tracer.halo.set_type() to set halo type to NFW before NFW_fit()&quot;</span>
 	  
 	<span class="n">like</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">,</span><span class="n">c</span><span class="p">:</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">NFW_like</span><span class="p">([</span><span class="n">m</span><span class="p">,</span><span class="n">c</span><span class="p">])</span>
-	<span class="c">#profilelikelihood ratio error-def: chi-square1</span>
+	<span class="c1">#profilelikelihood ratio error-def: chi-square1</span>
 	<span class="n">m</span><span class="o">=</span><span class="n">Minuit</span><span class="p">(</span><span class="n">like</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="n">x0</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">print_level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">pedantic</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">error_m</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">error_c</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">errordef</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span><span class="n">frontend</span><span class="o">=</span><span class="n">ConsoleFrontend</span><span class="p">())</span>
-	<span class="n">m</span><span class="o">.</span><span class="n">tol</span><span class="o">=</span><span class="n">minuittol</span>   <span class="c">#default convergence edm&lt;1e-4*tol*errordef, but we do not need that high accuracy</span>
+	<span class="n">m</span><span class="o">.</span><span class="n">tol</span><span class="o">=</span><span class="n">minuittol</span>   <span class="c1">#default convergence edm&lt;1e-4*tol*errordef, but we do not need that high accuracy</span>
 	<span class="n">result</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">migrad</span><span class="p">()</span>
 	<span class="n">m</span><span class="o">.</span><span class="n">print_fmin</span><span class="p">()</span>
 	<span class="n">m</span><span class="o">.</span><span class="n">print_matrix</span><span class="p">()</span>
-	<span class="k">return</span> <span class="n">result</span><span class="p">,</span><span class="n">m</span>
-  </div>
+	<span class="k">return</span> <span class="n">result</span><span class="p">,</span><span class="n">m</span></div>
+  
 <div class="viewcode-block" id="Tracer.dyn_fit"><a class="viewcode-back" href="../api.html#oPDF.Tracer.dyn_fit">[docs]</a>  <span class="k">def</span> <span class="nf">dyn_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">xtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">ftol_abs</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39; </span>
 <span class="sd">	dynamical fit with the given estimator</span>
@@ -1096,17 +1097,17 @@
 	  <span class="bp">self</span><span class="o">.</span><span class="n">radial_count</span><span class="p">(</span><span class="n">estimator</span><span class="o">.</span><span class="n">nbin</span><span class="p">,</span> <span class="n">estimator</span><span class="o">.</span><span class="n">logscale</span><span class="p">)</span>
 	<span class="n">status_success</span><span class="o">=</span><span class="n">lib</span><span class="o">.</span><span class="n">DynFit</span><span class="p">(</span><span class="n">Param_t</span><span class="p">(</span><span class="o">*</span><span class="n">x0</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">),</span> <span class="n">xtol</span><span class="p">,</span> <span class="n">ftol_abs</span><span class="p">,</span> <span class="n">maxiter</span><span class="p">,</span> <span class="n">verbose</span><span class="p">,</span> <span class="n">estimator</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span><span class="p">)</span>	
 	<span class="n">x</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">pars</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)])</span>
-	<span class="k">return</span> <span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">lnL</span><span class="p">,</span><span class="n">status_success</span>
-</div>
-<div class="viewcode-block" id="Tracer.phase_density"><a class="viewcode-back" href="../api.html#oPDF.Tracer.phase_density">[docs]</a>  <span class="k">def</span> <span class="nf">phase_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s">&#39;E&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;hist&#39;</span><span class="p">,</span> <span class="n">logscale</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">return_data</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+	<span class="k">return</span> <span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">lnL</span><span class="p">,</span><span class="n">status_success</span></div>
+
+<div class="viewcode-block" id="Tracer.phase_density"><a class="viewcode-back" href="../api.html#oPDF.Tracer.phase_density">[docs]</a>  <span class="k">def</span> <span class="nf">phase_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="s1">&#39;E&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;hist&#39;</span><span class="p">,</span> <span class="n">logscale</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">return_data</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;estimate density in proxy-theta space&#39;&#39;&#39;</span>
 	<span class="k">if</span> <span class="n">logscale</span><span class="p">:</span>
 	  <span class="n">f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">proxy</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span>
-	  <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">proxy</span><span class="p">][</span><span class="n">f</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;theta&#39;</span><span class="p">][</span><span class="n">f</span><span class="p">]))</span>
-	  <span class="n">w</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;w&#39;</span><span class="p">][</span><span class="n">f</span><span class="p">]</span>
+	  <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">proxy</span><span class="p">][</span><span class="n">f</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">][</span><span class="n">f</span><span class="p">]))</span>
+	  <span class="n">w</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;w&#39;</span><span class="p">][</span><span class="n">f</span><span class="p">]</span>
 	<span class="k">else</span><span class="p">:</span>
-	  <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">proxy</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;theta&#39;</span><span class="p">]))</span>
-	  <span class="n">w</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;w&#39;</span><span class="p">]</span>
+	  <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">proxy</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">]))</span>
+	  <span class="n">w</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;w&#39;</span><span class="p">]</span>
 	<span class="k">if</span> <span class="n">weight</span><span class="p">:</span>
 	  <span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Z</span><span class="o">=</span><span class="n">density_of_points</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">w</span><span class="p">)</span>
 	<span class="k">else</span><span class="p">:</span>
@@ -1115,8 +1116,8 @@
 	<span class="k">if</span> <span class="n">return_data</span><span class="p">:</span>
 	  <span class="k">return</span> <span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="n">extent</span><span class="p">,</span><span class="n">data</span>
 	<span class="k">else</span><span class="p">:</span>
-	  <span class="k">return</span> <span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="n">extent</span>
-	</div>
+	  <span class="k">return</span> <span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="n">extent</span></div>
+	
 <div class="viewcode-block" id="Tracer.phase_image"><a class="viewcode-back" href="../api.html#oPDF.Tracer.phase_image">[docs]</a>  <span class="k">def</span> <span class="nf">phase_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">proxy</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">logscale</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
 	<span class="sd">&#39;&#39;&#39;plot an image of the particle distribution in proxy-theta space</span>
 <span class="sd">	:param pars: parameters specifying the potential</span>
@@ -1124,53 +1125,53 @@
 <span class="sd">	:param bins: binning in proxy. if an integer, create the input number of bins. If an array, use the array as the bins.</span>
 <span class="sd">	:param logscale: True or False, whether to bin in logscale or not when bins is an integer.&#39;&#39;&#39;</span>
 	
-	<span class="bp">self</span><span class="o">.</span><span class="n">set_phase</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span> <span class="c">#determine the phase-angles with the real halo parameters x0</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">set_phase</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span> <span class="c1">#determine the phase-angles with the real halo parameters x0</span>
 	<span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="n">extent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">phase_density</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">,</span> <span class="n">logscale</span><span class="o">=</span><span class="n">logscale</span><span class="p">)</span>
 	<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span><span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">)</span>
-	<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s">&#39;tight&#39;</span><span class="p">)</span>
+	<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
 	<span class="k">if</span> <span class="n">logscale</span><span class="p">:</span>
-	  <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">r&#39;$\log(&#39;</span><span class="o">+</span><span class="n">proxy</span><span class="o">+</span><span class="s">&#39;)$&#39;</span><span class="p">)</span>
+	  <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\log(&#39;</span><span class="o">+</span><span class="n">proxy</span><span class="o">+</span><span class="s1">&#39;)$&#39;</span><span class="p">)</span>
 	<span class="k">else</span><span class="p">:</span>
-	  <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">r&#39;$&#39;</span><span class="o">+</span><span class="n">proxy</span><span class="o">+</span><span class="s">&#39;$&#39;</span><span class="p">)</span>
-	<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">r&#39;$\theta$&#39;</span><span class="p">)</span>
+	  <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$&#39;</span><span class="o">+</span><span class="n">proxy</span><span class="o">+</span><span class="s1">&#39;$&#39;</span><span class="p">)</span>
+	<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\theta$&#39;</span><span class="p">)</span></div></div>
 
-  <span class="c">#def gfmin_like(self, estimator, x0=[1,1], xtol=1e-3, ftolabs=0.01):</span>
-	<span class="c">#like=lambda x: lib.like_to_chi2(self.freeze_and_like(x, estimator), estimator) #the real likelihood prob</span>
-	<span class="c">#return fmin_gsl(like, x0, xtol=xtol, ftolabs=ftolabs, maxiter=500, full_output=True)</span>
+  <span class="c1">#def gfmin_like(self, estimator, x0=[1,1], xtol=1e-3, ftolabs=0.01):</span>
+	<span class="c1">#like=lambda x: lib.like_to_chi2(self.freeze_and_like(x, estimator), estimator) #the real likelihood prob</span>
+	<span class="c1">#return fmin_gsl(like, x0, xtol=xtol, ftolabs=ftolabs, maxiter=500, full_output=True)</span>
   
-  <span class="c">#def gfmin_dist(self, estimator, x0=[1,1], xtol=1e-3, ftolabs=0.01):</span>
-	<span class="c">#like=lambda x: -self.freeze_and_like(x, estimator) #distance</span>
-	<span class="c">#return fmin_gsl(like, x0, xtol=xtol, ftolabs=ftolabs, maxiter=500, full_output=True)</span>
-</div></div>
-<span class="n">_lib_open</span><span class="p">()</span> <span class="c">#allocate integration space</span>
+  <span class="c1">#def gfmin_dist(self, estimator, x0=[1,1], xtol=1e-3, ftolabs=0.01):</span>
+	<span class="c1">#like=lambda x: -self.freeze_and_like(x, estimator) #distance</span>
+	<span class="c1">#return fmin_gsl(like, x0, xtol=xtol, ftolabs=ftolabs, maxiter=500, full_output=True)</span>
 
-<span class="k">if</span> <span class="n">__name__</span><span class="o">==</span><span class="s">&quot;__main__&quot;</span><span class="p">:</span>
-  <span class="n">datafile</span><span class="o">=</span><span class="n">oPDFdir</span><span class="o">+</span><span class="s">&#39;/data/mockhalo.hdf5&#39;</span>
+<span class="n">_lib_open</span><span class="p">()</span> <span class="c1">#allocate integration space</span>
+
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+  <span class="n">datafile</span><span class="o">=</span><span class="n">oPDFdir</span><span class="o">+</span><span class="s1">&#39;/data/mockhalo.hdf5&#39;</span>
   <span class="n">FullSample</span><span class="o">=</span><span class="n">Tracer</span><span class="p">(</span><span class="n">datafile</span><span class="o">=</span><span class="n">datafile</span><span class="p">)</span>
   <span class="n">Sample</span><span class="o">=</span><span class="n">FullSample</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1000</span><span class="p">)</span>
   <span class="n">FullSample</span><span class="o">.</span><span class="n">print_data</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
   <span class="n">Sample</span><span class="o">.</span><span class="n">print_data</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
-  <span class="c">#Sample.data[1][&#39;r&#39;]=2</span>
+  <span class="c1">#Sample.data[1][&#39;r&#39;]=2</span>
   <span class="n">Sample</span><span class="o">.</span><span class="n">radial_cut</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1000</span><span class="p">)</span>
   <span class="n">Sample</span><span class="o">.</span><span class="n">print_data</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-  <span class="n">Sample</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s">&#39;L&#39;</span><span class="p">)</span>
+  <span class="n">Sample</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s1">&#39;L&#39;</span><span class="p">)</span>
   <span class="n">Sample</span><span class="o">.</span><span class="n">print_data</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
   <span class="n">Sample</span><span class="o">.</span><span class="n">halo</span><span class="o">.</span><span class="n">set_type</span><span class="p">(</span><span class="n">HaloTypes</span><span class="o">.</span><span class="n">NFWMC</span><span class="p">,</span> <span class="n">scales</span><span class="o">=</span><span class="p">[</span><span class="mf">183.5017</span><span class="p">,</span><span class="mf">16.1560</span><span class="p">])</span>
   <span class="n">Sample</span><span class="o">.</span><span class="n">radial_count</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
   <span class="n">result</span><span class="o">=</span><span class="n">Sample</span><span class="o">.</span><span class="n">dyn_fit</span><span class="p">(</span><span class="n">Estimators</span><span class="o">.</span><span class="n">RBinLike</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
   <span class="k">print</span> <span class="n">Sample</span><span class="o">.</span><span class="n">likelihood</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">Estimators</span><span class="o">.</span><span class="n">MeanPhase</span><span class="p">)</span>
-  <span class="c">#FullSample.clean()</span>
-  <span class="c">#Sample.clean()</span>
+  <span class="c1">#FullSample.clean()</span>
+  <span class="c1">#Sample.clean()</span>
   
-  <span class="c">#good practice: use with!</span>
-  <span class="c">#with Tracer(datafile) as FullSample:</span>
-	<span class="c">#with FullSample.copy() as Sample:</span>
-	  <span class="c">#FullSample.print_data()</span>
-	  <span class="c">#Sample.print_data()</span>
-	  <span class="c">#Sample.data[1][&#39;r&#39;]=2</span>
-	  <span class="c">#Sample.radial_cut(rmin=10)</span>
-	  <span class="c">#Sample.print_data()</span>
-<span class="c">#_lib_close()</span>
+  <span class="c1">#good practice: use with!</span>
+  <span class="c1">#with Tracer(datafile) as FullSample:</span>
+	<span class="c1">#with FullSample.copy() as Sample:</span>
+	  <span class="c1">#FullSample.print_data()</span>
+	  <span class="c1">#Sample.print_data()</span>
+	  <span class="c1">#Sample.data[1][&#39;r&#39;]=2</span>
+	  <span class="c1">#Sample.radial_cut(rmin=10)</span>
+	  <span class="c1">#Sample.print_data()</span>
+<span class="c1">#_lib_close()</span>
 </pre></div>
 
           </div>
@@ -1204,13 +1205,13 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../index.html">oPDF 1.0 documentation</a> &raquo;</li>
-          <li><a href="index.html" >Module code</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">oPDF 1.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &copy; Copyright 2014, Jiaxin Han.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3b1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.6.
     </div>
   </body>
 </html>
