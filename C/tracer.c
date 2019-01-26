@@ -385,7 +385,7 @@ void sort_part_R(Particle_t *P, int nP)
   qsort(P, nP, sizeof(Particle_t), cmpPartR);
 }
 void create_tracer_views(Tracer_t *Sample, int nView, char proxy)
-{//sort Sample and divide into nView equal-size subsamples, discarding remainders.
+{//sort Sample and divide into nView (approximately) equal-size subsamples. remainders are distributed into the leading subsamples.
   //the data are not copied. so only views are generated.
   //tracer need to have called tracer_set_energy() if creating E views.
   if(nView>1)//otherwise no need to sort
@@ -411,10 +411,15 @@ void create_tracer_views(Tracer_t *Sample, int nView, char proxy)
   }
   free_tracer_views(Sample); //always try to clean up first.
   Sample->Views=calloc(nView, sizeof(TracerView));//now safe to re-alloc
-  int i,nP,offset;
-  nP=Sample->nP/nView;
+  int i,nPbase, nPremain, nP,offset;
+  nPbase=Sample->nP/nView;
+  nPremain=Sample->nP%nView;
   for(i=0,offset=0;i<nView;i++)
   {
+    if(i<nPremain) 
+        nP=nPbase+1;
+    else
+        nP=nPbase;
 	copy_tracer_particles(0, -1, Sample->Views+i, Sample);
 	Sample->Views[i].nP=nP;
 	Sample->Views[i].P=Sample->P+offset;

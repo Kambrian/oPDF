@@ -55,11 +55,19 @@ VPATH=C $(DOC_SRC_DIR)
 #-----File Dependencies----------------------
 SRC_COMM = hdf_util.c globals.c cosmology.c mymath.c models.c tracer.c halo.c template.c nfw.c
 OBJS_COMM= $(patsubst %.f90,%.f.o,$(SRC_COMM:%.c=%.o))
+SRC_MAIN = mock_sats.c
+OBJS_MAIN= $(patsubst %.f90,%.f.o,$(SRC_MAIN:%.c=%.o))
+EXEC=$(basename $(SRC_MAIN))
+
 DOC= html latexpdf
 
 OPDF_LIB=liboPDF.so
 #-----targets and common rules--------------------------------
 default: lib
+
+$(EXEC): $(OPDF_LIB)
+$(EXEC): LDLIBS+=-L. -loPDF -Wl,-rpath=$(CURDIR)
+#use -Wl,-rpath to tell the linker to hard-code the path for the shared library
 
 lib: $(OPDF_LIB)
 
