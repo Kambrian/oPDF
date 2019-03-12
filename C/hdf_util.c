@@ -26,6 +26,7 @@ status=H5LTget_dataset_ndims ( file_id,var[i].name, &var[i].dim);
 if(status<0) 
 {
   printf("Warning: dataset %s does not exist in %s\n", var[i].name, datafile);
+  H5Fclose(file_id);
   return 0;
 }//failed to find the data
 var[i].size=malloc(sizeof(hsize_t)*var[i].dim);
@@ -34,6 +35,7 @@ status = H5LTget_dataset_info(file_id,var[i].name,var[i].size,&dataclass,&elemen
 if(dataclass!=H5T_FLOAT||element_size!=sizeof(float))
 {
 	printf("error: dataset not float! %d, %zd\n", dataclass,element_size);
+    H5Fclose(file_id);
 	exit(1);
 }
 /* allocate memory */
@@ -82,6 +84,7 @@ status=H5LTget_dataset_ndims ( file_id,var[i].name, &var[i].dim);
 if(status<0) 
 {
   printf("Warning: dataset %s does not exist in %s\n", var[i].name, datafile);
+  H5Fclose(file_id);
   return 0;
 }//failed to find the data
 var[i].size=malloc(sizeof(hsize_t)*var[i].dim);
@@ -90,6 +93,7 @@ status = H5LTget_dataset_info(file_id,var[i].name,var[i].size,&dataclass,&elemen
 if(dataclass!=H5T_FLOAT||element_size!=sizeof(double))
 {
 	printf("error: dataset not double! %d, %zd\n", dataclass,element_size);
+    H5Fclose(file_id);
 	exit(1);
 }
 /* allocate memory */
@@ -137,6 +141,7 @@ status=H5LTget_dataset_ndims ( file_id,var[i].name, &var[i].dim);
 if(status<0) 
 {
   printf("Warning: dataset %s does not exist in %s\n", var[i].name, datafile);
+  H5Fclose(file_id);
   return 0;
 }//failed to find the data
 var[i].size=malloc(sizeof(hsize_t)*var[i].dim);
@@ -147,6 +152,7 @@ if(var[i].dataclass!=H5Tget_class(datatype)||var[i].element_size!=H5Tget_size(da
 	printf("error: datatype do not match, %d,%d; %zd,%zd\n",
 				var[i].dataclass, H5Tget_class(datatype),
 				var[i].element_size, H5Tget_size(datatype));
+    H5Fclose(file_id);
 	exit(1);
 }
 /* allocate memory */
