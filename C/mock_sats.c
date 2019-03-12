@@ -16,6 +16,7 @@
 #include "models.h"
 #include "hdf_util.h"
 
+int SAMPLE_SIZE_FACTOR;
 #define DATADIR "/cosma/home/durham/jvbq85/data/SatDyn/data"
 
 extern void mock_stars(int HaloId, int seed, Tracer_t *NewStar);
@@ -25,14 +26,21 @@ int main(int argc, char **argv)
   float hubble=0.73;
   set_units(1e10*hubble, hubble, 1);
 
+  SAMPLE_SIZE_FACTOR=1;
+  if(argc>2) SAMPLE_SIZE_FACTOR=atoi(argv[2]);
+  
   hid_t file_id;
   char datafile[1024];
-  sprintf(datafile,"%s/IsolatedMWHalosSublist.FromDM.hdf5", DATADIR);
-  file_id = H5Fcreate (datafile, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT); //always create a new file or overwite existing file
+  sprintf(datafile,"%s/IsolatedMWHalosSublist.FromDM.Factor%d.hdf5", DATADIR, SAMPLE_SIZE_FACTOR);
+  if(try_readfile(datafile))
+      file_id=H5Fopen(datafile, H5F_ACC_RDWR, H5P_DEFAULT);
+  else
+      file_id = H5Fcreate (datafile, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT); //always create a new file or overwite existing file
 
   int HaloId;
-  for(HaloId=0;HaloId<944;HaloId++)
+ // for(HaloId=0;HaloId<944;HaloId++)
   {
+    HaloId=atoi(argv[1]);
       printf("Halo %d==============================\n", HaloId);
     Tracer_t NewStar={};
     mock_stars(HaloId, 100, &NewStar);
@@ -108,7 +116,7 @@ void mock_stars(int HaloId, int seed, Tracer_t *NewStar)
   squeeze_tracer_particles(&Star);
   printf("DM: %d, Star: %d\n", DM.nP, Star.nP);
   
-  NewStar->nP=Star.nP;
+  NewStar->nP=Star.nP*SAMPLE_SIZE_FACTOR;
   NewStar->P=malloc(sizeof(Particle_t)*NewStar->nP);
   
   double scales[NUM_PAR_MAX]={100.,1.}, pars[NUM_PAR_MAX]={1.,1.};
@@ -153,6 +161,7 @@ void mock_stars(int HaloId, int seed, Tracer_t *NewStar)
               {
 //                   printf("%d:%d,%d\t", lid, cid0, cid);
                   int nP=cid-cid0;
+                  nP*=SAMPLE_SIZE_FACTOR;
                   if(nP>View->nP)
                   {
                     printf("Warning: nstar=%d, nDM=%d\n", nP, View->nP); 
@@ -187,6 +196,7 @@ void save_mockstars(int HaloId, Tracer_t *NewStar, hid_t file_id)
 */
   char grpname[1024];
   sprintf(grpname, "Halo%03d", HaloId);
+  //H5Gunlink(file_id, grpname);
   grp_id=H5Gcreate(file_id, grpname, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   
   dims[0]=NewStar->nP;
