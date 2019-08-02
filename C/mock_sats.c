@@ -111,9 +111,9 @@ void mock_stars(int HaloId, int seed, Tracer_t *NewStar)
   for(i=0;i<DM.nP;i++)
 	DM.P[i].flag=(DM.P[i].subid<=0);
   squeeze_tracer_particles(&DM);
-  for(i=0;i<Star.nP;i++)
+  /*for(i=0;i<Star.nP;i++)
 	Star.P[i].flag=(Star.P[i].subid<=0);
-  squeeze_tracer_particles(&Star);
+  squeeze_tracer_particles(&Star);*/ //the sats may not have a subid 
   printf("DM: %d, Star: %d\n", DM.nP, Star.nP);
   
   NewStar->nP=Star.nP*SAMPLE_SIZE_FACTOR;
