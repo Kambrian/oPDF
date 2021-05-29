@@ -496,7 +496,7 @@ class Tracer(Tracer_t):
         if self.nP > 0:
             lib.free_tracer(self._pointer)
         lib.load_tracer_particles(
-            datafile, grpname, self._pointer, AddHubbleFlow)
+            datafile.encode('utf-8'), grpname.encode('utf-8'), self._pointer, AddHubbleFlow)
         self.__update_array()
         self.rmin = self.data['r'].min()
         self.rmax = self.data['r'].max()
@@ -718,7 +718,7 @@ class Tracer(Tracer_t):
         except:
             nbins = [nbins]
         lib.create_nested_views((ctypes.c_int *(len(nbins)+1))(
-            *nbins), ctypes.c_char_p(viewtypes), self._pointer)
+            *nbins), ctypes.c_char_p(viewtypes.encode('utf-8')), self._pointer)
 
     def nested_views_like(self, estimator=Estimators.AD):
         '''evaluate likelihood in at the deepest views, and return the sum of them.
