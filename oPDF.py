@@ -1144,7 +1144,7 @@ class Tracer(Tracer_t):
         '''plot an image of the particle distribution in proxy-theta space
         :param pars: parameters specifying the potential
         :param proxy: proxy to use for the proxy-theta plot, 'E' or 'L'.
-        :param bins: binning in proxy. if an integer, create the input number of bins. If an array, use the array as the bins.
+        :param bins: binning in proxy. if an integer, create the input number of bins. If a list of two arrays [xbins, ybins], use the array as the bins.
         :param logscale: True or False, whether to bin in logscale or not when bins is an integer.'''
 
         self.set_phase(pars)
